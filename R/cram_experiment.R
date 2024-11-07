@@ -1,3 +1,41 @@
+#' CRAM Experiment with Confidence Interval and Standard Error Calculation
+#'
+#' This function performs a cumulative randomized assignment model (CRAM) experiment to estimate treatment effects. It calculates confidence intervals, standard errors, and the proportion of treated individuals under the learned policy.
+#'
+#' @param X A matrix or data frame of covariates for each sample.
+#' @param D A vector of binary treatment indicators (1 for treated, 0 for untreated).
+#' @param Y A vector of outcome values for each sample.
+#' @param batch Either an integer specifying the number of batches (to be created by random sampling) or a list/vector providing specific batch indices.
+#' @param model_type The model type for policy learning. Options include \code{"Causal Forest"}, \code{"S-learner"}, and \code{"M-learner"}. Default is \code{"Causal Forest"}.
+#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"FNN"} for Feedforward Neural Network. Default is \code{"ridge"}.
+#' @param alpha Significance level for confidence intervals. Default is 0.05 (95% confidence).
+#' @param baseline_policy A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, defaults to a list of zeros with the same length as the number of samples in \code{X}.
+#' @return A list containing:
+#'   \item{final_policy_model}{The final fitted policy model, depending on \code{model_type} and \code{learner_type}.}
+#'   \item{proportion_treated}{The proportion of individuals treated under the final policy.}
+#'   \item{delta_estimate}{The estimated treatment effect (delta) across the batches.}
+#'   \item{delta_standard_error}{The standard error of the delta estimate.}
+#'   \item{delta_confidence_interval}{The confidence interval for the delta estimate.}
+#'   \item{policy_value_estimate}{The estimated policy value.}
+#'   \item{policy_value_standard_error}{The standard error of the policy value estimate.}
+#'   \item{policy_value_confidence_interval}{The confidence interval for the policy value estimate.}
+#' @examples
+#' # Example data
+#' X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)  # 100 samples, 5 features
+#' D_data <- sample(c(0, 1), 100, replace = TRUE)          # Random binary treatment assignment
+#' Y_data <- rnorm(100)                                    # Random outcome variable
+#' nb_batch <- 3                                           # Number of batches
+#'
+#' # Perform CRAM experiment
+#' result <- cram_experiment(X = X_data, D = D_data, Y = Y_data, batch = nb_batch)
+#'
+#' # Access results
+#' result$delta_estimate
+#' result$delta_confidence_interval
+#' result$policy_value_estimate
+#' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}
+#' @export
+
 # Combined experiment function
 cram_experiment <- function(X, D, Y, batch, model_type = "Causal Forest",
                             learner_type = "ridge", alpha=0.05, baseline_policy = NULL) {
