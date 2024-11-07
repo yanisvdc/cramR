@@ -11,14 +11,17 @@
 #' @param alpha Significance level for confidence intervals. Default is 0.05 (95% confidence).
 #' @param baseline_policy A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, defaults to a list of zeros with the same length as the number of samples in \code{X}.
 #' @return A list containing:
-#'   \item{final_policy_model}{The final fitted policy model, depending on \code{model_type} and \code{learner_type}.}
-#'   \item{proportion_treated}{The proportion of individuals treated under the final policy.}
-#'   \item{delta_estimate}{The estimated treatment effect (delta) across the batches.}
-#'   \item{delta_standard_error}{The standard error of the delta estimate.}
-#'   \item{delta_confidence_interval}{The confidence interval for the delta estimate.}
-#'   \item{policy_value_estimate}{The estimated policy value.}
-#'   \item{policy_value_standard_error}{The standard error of the policy value estimate.}
-#'   \item{policy_value_confidence_interval}{The confidence interval for the policy value estimate.}
+#'   \describe{
+#'     \item{final_policy_model}{The final fitted policy model, depending on \code{model_type} and \code{learner_type}.}
+#'     \item{proportion_treated}{The proportion of individuals treated under the final policy.}
+#'     \item{delta_estimate}{The estimated treatment effect (delta) across the batches.}
+#'     \item{delta_standard_error}{The standard error of the delta estimate.}
+#'     \item{delta_confidence_interval}{The confidence interval for the delta estimate.}
+#'     \item{policy_value_estimate}{The estimated policy value.}
+#'     \item{policy_value_standard_error}{The standard error of the policy value estimate.}
+#'     \item{policy_value_confidence_interval}{The confidence interval for the policy value estimate.}
+#'   }
+
 #' @examples
 #' # Example data
 #' X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)  # 100 samples, 5 features

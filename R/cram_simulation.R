@@ -167,11 +167,11 @@ cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, ba
   avg_policy_value_standard_error <- mean(sapply(result_sim, function(res) res$policy_value_standard_error))
 
   # Calculate the true_value of delta as the average delta_estimate across both result_sim and result_extra_sim
-  all_delta_estimates <- c(avg_delta_estimate, sapply(result_extra_sim, function(x) x[1]))
+  all_delta_estimates <- c(avg_delta_estimate, unlist(lapply(result_extra_sim, `[[`, 1)))
   true_delta <- mean(all_delta_estimates)
 
   # Calculate the true_value of policy_value as the average polcy_value_estimate across both result_sim and result_extra_sim
-  all_policy_value_estimates <- c(avg_policy_value_estimate, sapply(result_extra_sim, function(x) x[2]))
+  all_policy_value_estimates <- c(avg_policy_value_estimate, unlist(lapply(result_extra_sim, `[[`, 2)))
   true_policy_value <- mean(all_policy_value_estimates)
 
   # Calculate empirical bias

@@ -14,26 +14,28 @@
 #' Y <- sample(0:1, 100, replace = TRUE)
 #' D <- sample(0:1, 100, replace = TRUE)
 #' pi <- matrix(sample(0:1, 100 * 11, replace = TRUE), nrow = 100, ncol = 11)
+#' nb_batch <- 10
 #' batch_indices <- split(1:100, rep(1:nb_batch, each = 10))
 #' variance_estimate <- cram_variance_estimator(Y, D, pi, batch_indices)
+#' @export
 cram_variance_estimator <- function(Y, D, pi, batch_indices) {
   # Determine number of batches
   nb_batch <- length(batch_indices)
   # Batch size (assuming all batches are the same size)
   batch_size <- length(batch_indices[[length(batch_indices)]])
-  
+
   if (nrow(pi) != length(Y) || length(Y) != length(D)) {
     stop("Y, D, and pi must have matching lengths")
   }
-  
+
   # Initialize the total variance estimator
   variance_hat <- 0
-  
+
   # Loop through each batch (from j = 2 to T)
   for (j in 2:nb_batch) {
-    # Collect all g_hat_Tj values across batches k = j to T 
+    # Collect all g_hat_Tj values across batches k = j to T
     g_hat_Tj_values <- c()
-    
+
     for (k in j:nb_batch) {
       # Compute g_hat_Tj for each individual in batch k
       for (i in batch_indices[[k]]) {
@@ -47,21 +49,21 @@ cram_variance_estimator <- function(Y, D, pi, batch_indices) {
         g_hat_Tj_values <- c(g_hat_Tj_values, g_hat_Tj)
       }
     }
-    
+
     # Mean of g_hat_Tj over the batches from j to T
     g_bar_Tj <- mean(g_hat_Tj_values)
-    
+
     # Compute V_hat(g_hat_Tj) for batch j
     if (batch_size == 1 && j == nb_batch) {
       V_hat_g_Tj <- 0  # Set variance to zero if batch size is one and j = T
     } else {
       V_hat_g_Tj <- sum((g_hat_Tj_values - g_bar_Tj)^2) / (batch_size * (nb_batch - j + 1) - 1)
     }
-    
+
     # Add contribution of this batch to the total variance estimator
     variance_hat <- variance_hat + V_hat_g_Tj
   }
-  
+
   # Final variance estimator, scaled by T / B
   variance_hat <- (nb_batch / batch_size) * variance_hat
   return(variance_hat)

@@ -1,15 +1,15 @@
-path <- "C:/Users/yanis/OneDrive/Documents/cramR/R"
-
-# Load functions
-source(file.path(path, "cram_generate_data.R"))
-source(file.path(path, "cram_experiment.R"))
-source(file.path(path, "cram_simulation.R"))
-
-source(file.path(path, "cram_learning.R"))
-
-source(file.path(path, "cram_estimate.R"))
-source(file.path(path, "cram_variance_estimator.R"))
-source(file.path(path, "cram_policy_value_estimator.R"))
+# path <- "C:/Users/yanis/OneDrive/Documents/cramR/R"
+#
+# # Load functions
+# source(file.path(path, "cram_generate_data.R"))
+# source(file.path(path, "cram_experiment.R"))
+# source(file.path(path, "cram_simulation.R"))
+#
+# source(file.path(path, "cram_learning.R"))
+#
+# source(file.path(path, "cram_estimate.R"))
+# source(file.path(path, "cram_variance_estimator.R"))
+# source(file.path(path, "cram_policy_value_estimator.R"))
 
 
 # Example usage of CRAM EXPERIMENT
@@ -67,8 +67,8 @@ dgp_Y <- function(d, x) {
 
 ## Parameters
 batch <- 20
-nb_simulations <- 10
-nb_simulations_truth <- 100  # nb_simulations_truth must be greater than nb_simulations
+nb_simulations <- 2
+nb_simulations_truth <- 4  # nb_simulations_truth must be greater than nb_simulations
 model_type <- "Causal Forest" # "Causal Forest", "S-learner", "M-learner"
 learner_type <- NULL # NULL, "ridge", "FNN"
 baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))

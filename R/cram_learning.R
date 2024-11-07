@@ -33,9 +33,12 @@ library(keras)           # For feedforward neural networks in R
 #' final_model <- result$final_policy_model
 #' batch_indices <- result$batch_indices
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}
+#' @importFrom grf causal_forest
+#' @importFrom glmnet cv.glmnet
+#' @importFrom keras keras_model_sequential layer_dense compile fit
+#' @importFrom stats glm predict qnorm rbinom rnorm
+#' @importFrom magrittr %>%
 #' @export
-
-# Updated cram_learning function with model selection
 cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest", learner_type = "ridge", baseline_policy = NULL) {
 
   # Step 0: Set default baseline_policy if NULL
