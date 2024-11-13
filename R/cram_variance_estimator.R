@@ -31,23 +31,28 @@ cram_variance_estimator <- function(Y, D, pi, batch_indices) {
   # Initialize the total variance estimator
   variance_hat <- 0
 
+  # IPW component for all individuals
+  weight_diff <- Y * D / 0.5 - Y * (1 - D) / 0.5
+
   # Loop through each batch (from j = 2 to T)
   for (j in 2:nb_batch) {
     # Collect all g_hat_Tj values across batches k = j to T
-    g_hat_Tj_values <- c()
+    g_hat_Tj_values <- numeric(0)
 
     for (k in j:nb_batch) {
       # Compute g_hat_Tj for each individual in batch k
-      for (i in batch_indices[[k]]) {
-        # IPW estimator component
-        ipw_component <- Y[i] * D[i] / 0.5 - Y[i] * (1 - D[i]) / 0.5
-        # Summing the weighted policy differences for each t from 1 to j - 1
-        policy_diff_sum <- sum((pi[i, 2:j] - pi[i, 1:(j - 1)]) / (nb_batch - (1:(j - 1))))
-        # Compute g_hat_Tj for individual i in batch k
-        g_hat_Tj <- ipw_component * policy_diff_sum
-        # Collect g_hat_Tj values for batch j
-        g_hat_Tj_values <- c(g_hat_Tj_values, g_hat_Tj)
+      indices <- batch_indices[[k]]
+      if (j==2){
+        # Directly calculate the difference for j == 2
+        policy_diff_sum <- (pi[indices, 2] - pi[indices, 1]) / (nb_batch - 1)
+      } else {
+        # Compute the policy difference sum (vectorized) for batch k
+        # Column t is difference t - t-1, divided by T-t, we then sum per row
+        policy_diff_sum <- rowSums((pi[indices, 2:j] - pi[indices, 1:(j - 1)]) / (nb_batch - (1:(j - 1))))
       }
+      # Calculate g_hat_Tj for individuals in batch k
+      g_hat_Tj_batch <- weight_diff[indices] * policy_diff_sum
+      g_hat_Tj_values <- c(g_hat_Tj_values, g_hat_Tj_batch)
     }
 
     # Mean of g_hat_Tj over the batches from j to T
@@ -57,7 +62,7 @@ cram_variance_estimator <- function(Y, D, pi, batch_indices) {
     if (batch_size == 1 && j == nb_batch) {
       V_hat_g_Tj <- 0  # Set variance to zero if batch size is one and j = T
     } else {
-      V_hat_g_Tj <- sum((g_hat_Tj_values - g_bar_Tj)^2) / (batch_size * (nb_batch - j + 1) - 1)
+      V_hat_g_Tj <- sum((g_hat_Tj_values - g_bar_Tj)^2) / (length(g_hat_Tj_values) - 1)
     }
 
     # Add contribution of this batch to the total variance estimator

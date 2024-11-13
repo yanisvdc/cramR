@@ -77,7 +77,7 @@ cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, ba
 
   # Initialize lists to store results
   result_sim <- vector("list", nb_simulations)   # For storing detailed results of nb_simulations
-  result_extra_sim <- vector("list", nb_simulations_truth)   # For storing only delta_estimate from nb_simulations to nb_simulations_truth
+  result_extra_sim <- vector("list", nb_simulations_truth - nb_simulations)   # For storing only delta_estimate from nb_simulations to nb_simulations_truth
 
   z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
   null_baseline <- as.list(rep(0, nrow(X)))
@@ -86,10 +86,10 @@ cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, ba
     # Step 1: Row-wise bootstrap of X
     X_boot <- X[sample(1:nrow(X), nrow(X), replace = TRUE), ]
 
-    # Step 2: Generate D for each individual using dgp_D function
+    # # Step 2: Generate D for each individual using dgp_D function
     D <- vapply(1:nrow(X_boot), function(j) dgp_D(X_boot[j, ]), numeric(1))
 
-    # Step 3: Generate Y for each individual using dgp_Y function
+    # # Step 3: Generate Y for each individual using dgp_Y function
     Y <- vapply(1:nrow(X_boot), function(j) dgp_Y(D[j], X_boot[j, ]), numeric(1))
 
     # Step 4: Run the cram learning process to get policies and batch indices

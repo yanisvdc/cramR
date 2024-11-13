@@ -1,15 +1,31 @@
-# path <- "C:/Users/yanis/OneDrive/Documents/cramR/R"
-#
-# # Load functions
-# source(file.path(path, "cram_generate_data.R"))
-# source(file.path(path, "cram_experiment.R"))
-# source(file.path(path, "cram_simulation.R"))
-#
-# source(file.path(path, "cram_learning.R"))
-#
-# source(file.path(path, "cram_estimate.R"))
-# source(file.path(path, "cram_variance_estimator.R"))
-# source(file.path(path, "cram_policy_value_estimator.R"))
+# library(parallel)
+# Load necessary libraries
+# install.packages(c("doParallel", "foreach"))
+# install.packages("data.table")
+
+# Set JIT level to 0 to disable JIT compilation
+compiler::enableJIT(0)
+
+library(data.table)
+library(doParallel)
+library(foreach)
+library(grf)      # Load grf package for causal_forest
+library(glmnet)   # Load glmnet package
+library(keras)    # Load keras package
+
+
+path <- "C:/Users/yanis/OneDrive/Documents/cramR/R"
+
+# Load functions
+source(file.path(path, "cram_generate_data.R"))
+source(file.path(path, "cram_experiment.R"))
+source(file.path(path, "cram_simulation.R"))
+
+source(file.path(path, "cram_learning.R"))
+
+source(file.path(path, "cram_estimate.R"))
+source(file.path(path, "cram_variance_estimator.R"))
+source(file.path(path, "cram_policy_value_estimator.R"))
 
 
 # Example usage of CRAM EXPERIMENT
@@ -32,6 +48,7 @@ baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(
 ## Run cram_experiment
 experiment_results <- cram_experiment(X, D, Y, batch, model_type,
                                       learner_type, alpha, baseline_policy)
+
 print(experiment_results)
 
 # --------------------------------------------------------------------------------------------
@@ -75,8 +92,12 @@ baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(
 alpha <- 0.05
 
 ## Run cram_experiment
-simulation_results <- cram_simulation(X, dgp_D, dgp_Y, batch,
+# install.packages("profvis")
+library(profvis)
+print(Sys.time())
+simulation_results <- profvis({cram_simulation(X, dgp_D, dgp_Y, batch,
                           nb_simulations, nb_simulations_truth,
                           model_type, learner_type,
-                          alpha, baseline_policy)
+                          alpha, baseline_policy)})
+print(Sys.time())
 print(simulation_results)

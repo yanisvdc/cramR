@@ -30,6 +30,9 @@ cram_estimator <- function(Y, D, pi, batch_indices) {
   # Initialize the policy value difference estimator
   delta_hat <- 0
 
+  # Pre-compute the weights for all individuals
+  weight_diff <- Y * (D / 0.5 - (1 - D) / 0.5)
+
   # Loop through each batch (from j = 2 to T)
   for (j in 2:nb_batch) {
     # Calculate the summand for Gamma_hat_j(T) based on the inner sum over t
@@ -37,15 +40,10 @@ cram_estimator <- function(Y, D, pi, batch_indices) {
     for (t in 1:(j - 1)) {
       # Compute Gamma_hat_tj for this batch
       gamma_tj <- 0
-      for (i in batch_indices[[j]]) {
-        # IPW estimator component
-        weight_diff <- Y[i] * D[i] / 0.5 - Y[i] * (1 - D[i]) / 0.5
-        policy_diff <- pi[i, t + 1] - pi[i, t]
-        gamma_tj <- gamma_tj + weight_diff * policy_diff
-      }
-      # Average over batch size
-      gamma_tj <- gamma_tj / length(batch_indices[[j]])
-      # Weighting factor (1 / (T - t))
+      policy_diff <- pi[batch_indices[[j]], t + 1] - pi[batch_indices[[j]], t]
+      gamma_tj <- mean(weight_diff[batch_indices[[j]]] * policy_diff)
+
+      # Accumulate gamma_j_T with the weighting factor
       gamma_j_T <- gamma_j_T + (gamma_tj / (nb_batch - t))
     }
     # Add Gamma_hat_j(T) to the final estimator

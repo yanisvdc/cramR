@@ -28,6 +28,9 @@ cram_policy_value_estimator <- function(Y, D, pi, batch_indices) {
   # Initialize vectors to store psi_j values
   psi_values <- numeric(T)
 
+  # Pre-compute the weights for all individuals
+  weight_diff <- Y * (D / 0.5 - (1 - D) / 0.5)
+
   # Loop through each batch to calculate psi_j
   for (j in 1:T) {
     batch <- batch_indices[[j]]
@@ -47,14 +50,10 @@ cram_policy_value_estimator <- function(Y, D, pi, batch_indices) {
       gamma_j_T <- 0
       for (t in 1:(j - 1)) {
         gamma_tj <- 0
-        for (i in batch) {
-          # IPW estimator component for Gamma_hat_{tj} with e(X) = 1/2
-          weight_diff <- Y[i] * D[i] / 0.5 - Y[i] * (1 - D[i]) / 0.5
-          policy_diff <- pi[i, t + 1] - pi[i, t]
-          gamma_tj <- gamma_tj + weight_diff * policy_diff
-        }
-        # Average over the batch size and apply the weighting factor
-        gamma_tj <- gamma_tj / length(batch)
+        policy_diff <- pi[batch, t + 1] - pi[batch, t]
+        gamma_tj <- mean(weight_diff[batch] * policy_diff)
+
+        # Accumulate gamma_j_T with the weighting factor
         gamma_j_T <- gamma_j_T + (gamma_tj / (T - t))
       }
 
