@@ -76,22 +76,26 @@ cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, ba
   }
 
   # Initialize lists to store results
-  result_sim <- list()        # For storing detailed results of nb_simulations
-  result_extra_sim <- list()   # For storing only delta_estimate from nb_simulations to nb_simulations_truth
+  result_sim <- vector("list", nb_simulations)   # For storing detailed results of nb_simulations
+  result_extra_sim <- vector("list", nb_simulations_truth)   # For storing only delta_estimate from nb_simulations to nb_simulations_truth
+
+  z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
+  null_baseline <- as.list(rep(0, nrow(X)))
 
   for (i in 1:nb_simulations_truth) {
     # Step 1: Row-wise bootstrap of X
     X_boot <- X[sample(1:nrow(X), nrow(X), replace = TRUE), ]
 
     # Step 2: Generate D for each individual using dgp_D function
-    D <- sapply(1:nrow(X_boot), function(j) dgp_D(X_boot[j, ]))
+    D <- vapply(1:nrow(X_boot), function(j) dgp_D(X_boot[j, ]), numeric(1))
 
     # Step 3: Generate Y for each individual using dgp_Y function
-    Y <- sapply(1:nrow(X_boot), function(j) dgp_Y(D[j], X_boot[j, ]))
+    Y <- vapply(1:nrow(X_boot), function(j) dgp_Y(D[j], X_boot[j, ]), numeric(1))
 
     # Step 4: Run the cram learning process to get policies and batch indices
     learning_result <- cram_learning(X_boot, D, Y, batch, model_type = model_type,
                                      learner_type = learner_type, baseline_policy = baseline_policy)
+
     policies <- learning_result$policies
     batch_indices <- learning_result$batch_indices
     final_policy_model <- learning_result$final_policy_model
@@ -116,14 +120,12 @@ cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, ba
       delta_standard_error <- delta_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
 
       # Step 8: Compute the 95% confidence interval for delta_estimate
-      z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
       delta_ci_lower <- delta_estimate - z_value * delta_standard_error
       delta_ci_upper <- delta_estimate + z_value * delta_standard_error
       delta_confidence_interval <- c(delta_ci_lower, delta_ci_upper)
 
       # Step 9: Estimate the standard error of policy_value_estimate using cram_variance_estimator
       ## same as delta, but enforcing a null baseline policy
-      null_baseline <- as.list(rep(0, nrow(X)))
       policies_with_null_baseline <- policies
       policies_with_null_baseline[, 1] <- unlist(null_baseline)  # Set the first column to baseline policy
 
@@ -134,12 +136,9 @@ cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, ba
       policy_value_standard_error <- policy_value_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
 
       # Step 10: Compute the 95% confidence interval for policy_value_estimate
-      z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
       policy_value_ci_lower <- policy_value_estimate - z_value * policy_value_standard_error
       policy_value_ci_upper <- policy_value_estimate + z_value * policy_value_standard_error
       policy_value_confidence_interval <- c(policy_value_ci_lower, policy_value_ci_upper)
-
-
 
 
       result_sim[[i]] <- list(
@@ -152,6 +151,7 @@ cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, ba
         policy_value_standard_error = policy_value_standard_error,
         policy_value_confidence_interval = policy_value_confidence_interval
       )
+
 
     } else {
       # Only store delta_estimate in result_extra_sim for simulations beyond nb_simulations
