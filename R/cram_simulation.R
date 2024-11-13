@@ -83,17 +83,15 @@ cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, ba
   null_baseline <- as.list(rep(0, nrow(X)))
 
   for (i in 1:nb_simulations_truth) {
-    # Step 1: Row-wise bootstrap of X
-    X_boot <- X[sample(1:nrow(X), nrow(X), replace = TRUE), ]
+    # Step 1: Generate bootstrap indices
+    bootstrap_indices <- sample(nrow(X), nrow(X), replace = TRUE)
 
-    # # Step 2: Generate D for each individual using dgp_D function
-    D <- vapply(1:nrow(X_boot), function(j) dgp_D(X_boot[j, ]), numeric(1))
-
-    # # Step 3: Generate Y for each individual using dgp_Y function
-    Y <- vapply(1:nrow(X_boot), function(j) dgp_Y(D[j], X_boot[j, ]), numeric(1))
+    # Directly calculate D and Y for the bootstrap sample based on indices
+    D <- dgp_D(X[bootstrap_indices, , drop = FALSE])  # Pass only the indexed rows of X
+    Y <- dgp_Y(D, X[bootstrap_indices, , drop = FALSE])
 
     # Step 4: Run the cram learning process to get policies and batch indices
-    learning_result <- cram_learning(X_boot, D, Y, batch, model_type = model_type,
+    learning_result <- cram_learning(X[bootstrap_indices, , drop = FALSE], D, Y, batch, model_type = model_type,
                                      learner_type = learner_type, baseline_policy = baseline_policy)
 
     policies <- learning_result$policies
