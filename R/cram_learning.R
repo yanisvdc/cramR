@@ -115,7 +115,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest", learner_
     if (model_type == "Causal Forest") {
 
       # Train causal forest on accumulated data
-      causal_forest_fit <- causal_forest(cumulative_X, cumulative_Y, cumulative_D, num.trees = 2000)
+      causal_forest_fit <- causal_forest(cumulative_X, cumulative_Y, cumulative_D, num.trees = 100)
       cate_estimates <- predict(causal_forest_fit, X)$predictions  # Predict CATE on full dataset X
 
     } else if (model_type == "S-learner") {

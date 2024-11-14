@@ -119,11 +119,11 @@ alpha <- 0.05
 
 ## Run cram_experiment
 # install.packages("profvis")
-library(profvis)
+# library(profvis)
 print(Sys.time())
-simulation_results <- profvis({cram_simulation(X, dgp_D, dgp_Y, batch,
+simulation_results <- cram_simulation(X, dgp_D, dgp_Y, batch,
                           nb_simulations, nb_simulations_truth,
                           model_type, learner_type,
-                          alpha, baseline_policy)})
+                          alpha, baseline_policy)
 print(Sys.time())
 print(simulation_results)
