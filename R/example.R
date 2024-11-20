@@ -12,6 +12,7 @@ library(foreach)
 library(grf)      # Load grf package for causal_forest
 library(glmnet)   # Load glmnet package
 library(keras)    # Load keras package
+library(data.table)
 
 
 path <- "C:/Users/yanis/OneDrive/Documents/cramR/R"
@@ -70,15 +71,11 @@ dgp_D <- function(X) {
 }
 # Vectorized dgp_Y for all individuals
 dgp_Y <- function(D, X) {
-  # Define indices for the binary and discrete columns in X
-  binary_col <- 1  # Assuming the binary variable is in the first column
-  discrete_col <- 2  # Assuming the discrete variable is in the second column
-
   # Calculate theta for each individual based on the covariates
   theta <- ifelse(
-    X[, binary_col] == 1 & X[, discrete_col] <= 2,  # Group 1: High benefit
+    X[, binary] == 1 & X[, discrete] <= 2,  # Group 1: High benefit
     1,
-    ifelse(X[, binary_col] == 0 & X[, discrete_col] >= 4,  # Group 3: High adverse effect
+    ifelse(X[, binary] == 0 & X[, discrete] >= 4,  # Group 3: High adverse effect
            -1,
            0.1)  # Group 2: Neutral effect
   )
@@ -127,3 +124,6 @@ simulation_results <- cram_simulation(X, dgp_D, dgp_Y, batch,
                           alpha, baseline_policy)
 print(Sys.time())
 print(simulation_results)
+
+sim_1_results <- simulation_results[sim_id == 1, result][[1]]
+
