@@ -110,75 +110,109 @@ cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, ba
     D_slice <- D
     Y_slice <- Y
 
-    # Run the cram_learning function
-    learning_result <- cram_learning(
-      X_matrix,
-      D_slice,
-      Y_slice,
-      batch,
-      model_type = model_type,
-      learner_type = learner_type,
-      baseline_policy = baseline_policy
-    )
+    if (.BY$sim_id <= nb_simulations) {
 
-    policies <- learning_result$policies
-    batch_indices <- learning_result$batch_indices
-    final_policy_model <- learning_result$final_policy_model
-    nb_batch <- length(batch_indices)
+      # Run the cram_learning function
+      learning_result <- cram_learning(
+        X_matrix,
+        D_slice,
+        Y_slice,
+        batch,
+        model_type = model_type,
+        learner_type = learner_type,
+        baseline_policy = baseline_policy
+      )
 
-    # Step 5: Estimate delta
-    delta_estimate <- cram_estimator(Y_slice, D_slice, policies, batch_indices)
+      policies <- learning_result$policies
+      batch_indices <- learning_result$batch_indices
+      final_policy_model <- learning_result$final_policy_model
+      nb_batch <- length(batch_indices)
 
-    # Step 5': Estimate policy value
-    policy_value_estimate <- cram_policy_value_estimator(Y_slice, D_slice,
-                                                         policies,
-                                                         batch_indices)
+      # Step 5: Estimate delta
+      delta_estimate <- cram_estimator(Y_slice, D_slice, policies, batch_indices)
 
-    # Step 6: Calculate the proportion of treated individuals under the final policy
-    final_policy <- policies[, nb_batch + 1]
-    proportion_treated <- mean(final_policy)
+      # Step 5': Estimate policy value
+      policy_value_estimate <- cram_policy_value_estimator(Y_slice, D_slice,
+                                                           policies,
+                                                           batch_indices)
 
-    # Step 7: Estimate the standard error of delta_estimate using cram_variance_estimator
-    delta_asymptotic_variance <- cram_variance_estimator(Y_slice, D_slice, policies, batch_indices)
-    delta_asymptotic_sd <- sqrt(delta_asymptotic_variance)  # v_T, the asymptotic standard deviation
-    delta_standard_error <- delta_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
+      # Step 6: Calculate the proportion of treated individuals under the final policy
+      final_policy <- policies[, nb_batch + 1]
+      proportion_treated <- mean(final_policy)
 
-    # Step 8: Compute the 95% confidence interval for delta_estimate
-    delta_ci_lower <- delta_estimate - z_value * delta_standard_error
-    delta_ci_upper <- delta_estimate + z_value * delta_standard_error
-    delta_confidence_interval <- c(delta_ci_lower, delta_ci_upper)
+      # Step 7: Estimate the standard error of delta_estimate using cram_variance_estimator
+      delta_asymptotic_variance <- cram_variance_estimator(Y_slice, D_slice, policies, batch_indices)
+      delta_asymptotic_sd <- sqrt(delta_asymptotic_variance)  # v_T, the asymptotic standard deviation
+      delta_standard_error <- delta_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
 
-    # Step 9: Estimate the standard error of policy_value_estimate using cram_variance_estimator
-    ## same as delta, but enforcing a null baseline policy
-    policies_with_null_baseline <- policies
-    policies_with_null_baseline[, 1] <- unlist(null_baseline)  # Set the first column to baseline policy
+      # Step 8: Compute the 95% confidence interval for delta_estimate
+      delta_ci_lower <- delta_estimate - z_value * delta_standard_error
+      delta_ci_upper <- delta_estimate + z_value * delta_standard_error
+      delta_confidence_interval <- c(delta_ci_lower, delta_ci_upper)
 
-    policy_value_asymptotic_variance <- cram_variance_estimator(Y_slice, D_slice,
-                                                                policies_with_null_baseline,
-                                                                batch_indices)
-    policy_value_asymptotic_sd <- sqrt(policy_value_asymptotic_variance)  # w_T, the asymptotic standard deviation
-    policy_value_standard_error <- policy_value_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
+      # Step 9: Estimate the standard error of policy_value_estimate using cram_variance_estimator
+      ## same as delta, but enforcing a null baseline policy
+      policies_with_null_baseline <- policies
+      policies_with_null_baseline[, 1] <- unlist(null_baseline)  # Set the first column to baseline policy
 
-    # Step 10: Compute the 95% confidence interval for policy_value_estimate
-    policy_value_ci_lower <- policy_value_estimate - z_value * policy_value_standard_error
-    policy_value_ci_upper <- policy_value_estimate + z_value * policy_value_standard_error
-    policy_value_confidence_interval <- c(policy_value_ci_lower, policy_value_ci_upper)
+      policy_value_asymptotic_variance <- cram_variance_estimator(Y_slice, D_slice,
+                                                                  policies_with_null_baseline,
+                                                                  batch_indices)
+      policy_value_asymptotic_sd <- sqrt(policy_value_asymptotic_variance)  # w_T, the asymptotic standard deviation
+      policy_value_standard_error <- policy_value_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
 
-    # Assign results as new columns
-    .(
-      final_policy_model = list(final_policy_model),
-      proportion_treated = proportion_treated,
-      delta_estimate = delta_estimate,
-      delta_standard_error = delta_standard_error,
-      delta_ci_lower = delta_ci_lower,
-      delta_ci_upper = delta_ci_upper,
-      policy_value_estimate = policy_value_estimate,
-      policy_value_standard_error = policy_value_standard_error,
-      policy_value_ci_lower = policy_value_ci_lower,
-      policy_value_ci_upper = policy_value_ci_upper
-    )
+      # Step 10: Compute the 95% confidence interval for policy_value_estimate
+      policy_value_ci_lower <- policy_value_estimate - z_value * policy_value_standard_error
+      policy_value_ci_upper <- policy_value_estimate + z_value * policy_value_standard_error
+      policy_value_confidence_interval <- c(policy_value_ci_lower, policy_value_ci_upper)
 
+      # Assign results as new columns
+      .(
+        # final_policy_model = list(final_policy_model),
+        proportion_treated = proportion_treated,
+        delta_estimate = delta_estimate,
+        delta_standard_error = delta_standard_error,
+        delta_ci_lower = delta_ci_lower,
+        delta_ci_upper = delta_ci_upper,
+        policy_value_estimate = policy_value_estimate,
+        policy_value_standard_error = policy_value_standard_error,
+        policy_value_ci_lower = policy_value_ci_lower,
+        policy_value_ci_upper = policy_value_ci_upper
+      )
+    } else {
+      # Compute only delta_estimate and policy_value_estimate for sim_id > nb_simulations
+      learning_result <- cram_learning(
+        X_matrix,
+        D_slice,
+        Y_slice,
+        batch,
+        model_type = model_type,
+        learner_type = learner_type,
+        baseline_policy = baseline_policy
+      )
+
+      policies <- learning_result$policies
+      batch_indices <- learning_result$batch_indices
+
+      delta_estimate <- cram_estimator(Y_slice, D_slice, policies, batch_indices)
+      policy_value_estimate <- cram_policy_value_estimator(Y_slice, D_slice, policies, batch_indices)
+
+      .(
+        # final_policy_model = list(NA),              # Placeholder for list column
+        proportion_treated = NA_real_,             # Placeholder for numeric column
+        delta_estimate = delta_estimate,
+        delta_standard_error = NA_real_,           # Placeholder for numeric column
+        delta_ci_lower = NA_real_,                 # Placeholder for numeric column
+        delta_ci_upper = NA_real_,                 # Placeholder for numeric column
+        policy_value_estimate = policy_value_estimate,
+        policy_value_standard_error = NA_real_,    # Placeholder for numeric column
+        policy_value_ci_lower = NA_real_,          # Placeholder for numeric column
+        policy_value_ci_upper = NA_real_           # Placeholder for numeric column
+      )
+    }
   }, by = sim_id]
+
+  print(cram_results)
 
   # Filter cram_results for the first nb_simulations rows
   sim_results <- cram_results[sim_id <= nb_simulations]
