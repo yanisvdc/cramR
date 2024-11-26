@@ -102,8 +102,6 @@ cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, ba
   z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
   null_baseline <- as.list(rep(0, X_size))
 
-  print(big_X)
-
   cram_results <- big_X[, {
     # Dynamically select all columns except Y and D for covariates
     X_matrix <- as.matrix(.SD[, !c("Y", "D"), with = FALSE])  # Exclude Y and D dynamically
@@ -166,80 +164,68 @@ cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, ba
     policy_value_ci_upper <- policy_value_estimate + z_value * policy_value_standard_error
     policy_value_confidence_interval <- c(policy_value_ci_lower, policy_value_ci_upper)
 
-    # Return the learning result as a list for storage in the data.table
-    .(result = list(list(
-      final_policy_model = final_policy_model,
+    # Assign results as new columns
+    .(
+      final_policy_model = list(final_policy_model),
       proportion_treated = proportion_treated,
       delta_estimate = delta_estimate,
       delta_standard_error = delta_standard_error,
-      delta_confidence_interval = delta_confidence_interval,
+      delta_ci_lower = delta_ci_lower,
+      delta_ci_upper = delta_ci_upper,
       policy_value_estimate = policy_value_estimate,
       policy_value_standard_error = policy_value_standard_error,
-      policy_value_confidence_interval = policy_value_confidence_interval
-    )))
+      policy_value_ci_lower = policy_value_ci_lower,
+      policy_value_ci_upper = policy_value_ci_upper
+    )
 
   }, by = sim_id]
 
-  return(cram_results)
+  # Filter cram_results for the first nb_simulations rows
+  sim_results <- cram_results[sim_id <= nb_simulations]
+
+  # Calculate averages for the desired columns
+  avg_proportion_treated <- mean(sim_results$proportion_treated)
+  avg_delta_estimate <- mean(sim_results$delta_estimate)
+  avg_delta_standard_error <- mean(sim_results$delta_standard_error)
+  avg_policy_value_estimate <- mean(sim_results$policy_value_estimate)
+  avg_policy_value_standard_error <- mean(sim_results$policy_value_standard_error)
+
+  # Calculate true_delta as the average delta_estimate across the entire cram_results
+  true_delta <- mean(cram_results$delta_estimate)
+
+  # Calculate true_policy_value as the average policy_value_estimate across the entire cram_results
+  true_policy_value <- mean(cram_results$policy_value_estimate)
+
+  # Calculate empirical bias
+  delta_empirical_bias <- avg_delta_estimate - true_delta
+  policy_value_empirical_bias <- avg_policy_value_estimate - true_policy_value
+
+  # Calculate empirical coverage of the confidence interval using sim_results
+  delta_coverage_count <- sum(
+    sim_results$delta_ci_lower <= true_delta & sim_results$delta_ci_upper >= true_delta
+  )
+  delta_empirical_coverage <- delta_coverage_count / nb_simulations  # Proportion of CIs containing true_value
+
+  # Calculate empirical coverage of the policy value confidence interval using sim_results
+  policy_value_coverage_count <- sum(
+    sim_results$policy_value_ci_lower <= true_policy_value & sim_results$policy_value_ci_upper >= true_policy_value
+  )
+  policy_value_empirical_coverage <- policy_value_coverage_count / nb_simulations  # Proportion of CIs containing true_value
+
+
+  # Return the final results
+  result <- list(
+    avg_proportion_treated = avg_proportion_treated,
+    avg_delta_estimate = avg_delta_estimate,
+    avg_delta_standard_error = avg_delta_standard_error,
+    delta_empirical_bias = delta_empirical_bias,
+    delta_empirical_coverage = delta_empirical_coverage,
+    avg_policy_value_estimate = avg_policy_value_estimate,
+    avg_policy_value_standard_error = avg_policy_value_standard_error,
+    policy_value_empirical_bias = policy_value_empirical_bias,
+    policy_value_empirical_coverage = policy_value_empirical_coverage
+  )
+
+  return(result)
 
 }
-
-
-
-#   if (i <= nb_simulations) {
-#
-#
-#
-#
-#
-#     } else {
-#       # Only store delta_estimate in result_extra_sim for simulations beyond nb_simulations
-#       result_extra_sim[[i - nb_simulations]] <- list(delta_estimate, policy_value_estimate)
-#     }
-#   }
-#
-#   # Calculate average proportion_treated, average delta_estimate and average standard_error in result_sim
-#   avg_proportion_treated <- mean(sapply(result_sim, function(res) res$proportion_treated))
-#   avg_delta_estimate <- mean(sapply(result_sim, function(res) res$delta_estimate))
-#   avg_delta_standard_error <- mean(sapply(result_sim, function(res) res$delta_standard_error))
-#   avg_policy_value_estimate <- mean(sapply(result_sim, function(res) res$policy_value_estimate))
-#   avg_policy_value_standard_error <- mean(sapply(result_sim, function(res) res$policy_value_standard_error))
-#
-#   # Calculate the true_value of delta as the average delta_estimate across both result_sim and result_extra_sim
-#   all_delta_estimates <- c(avg_delta_estimate, unlist(lapply(result_extra_sim, `[[`, 1)))
-#   true_delta <- mean(all_delta_estimates)
-#
-#   # Calculate the true_value of policy_value as the average polcy_value_estimate across both result_sim and result_extra_sim
-#   all_policy_value_estimates <- c(avg_policy_value_estimate, unlist(lapply(result_extra_sim, `[[`, 2)))
-#   true_policy_value <- mean(all_policy_value_estimates)
-#
-#   # Calculate empirical bias
-#   delta_empirical_bias <- avg_delta_estimate - true_delta
-#   policy_value_empirical_bias <- avg_policy_value_estimate - true_policy_value
-#
-#   # Calculate empirical coverage of the confidence interval
-#   delta_coverage_count <- sum(sapply(result_sim, function(res) {
-#     res$delta_confidence_interval[1] <= true_delta && res$delta_confidence_interval[2] >= true_delta
-#   }))
-#   delta_empirical_coverage <- delta_coverage_count / nb_simulations  # Proportion of CIs containing true_value
-#
-#   policy_value_coverage_count <- sum(sapply(result_sim, function(res) {
-#     res$policy_value_confidence_interval[1] <= true_policy_value && res$policy_value_confidence_interval[2] >= true_policy_value
-#   }))
-#   policy_value_empirical_coverage <- policy_value_coverage_count / nb_simulations  # Proportion of CIs containing true_value
-#
-#   # Return the final results
-#   result <- list(
-#     avg_proportion_treated = avg_proportion_treated,
-#     avg_delta_estimate = avg_delta_estimate,
-#     avg_delta_standard_error = avg_delta_standard_error,
-#     delta_empirical_bias = delta_empirical_bias,
-#     delta_empirical_coverage = delta_empirical_coverage,
-#     avg_policy_value_estimate = avg_policy_value_estimate,
-#     avg_policy_value_standard_error = avg_policy_value_standard_error,
-#     policy_value_empirical_bias = policy_value_empirical_bias,
-#     policy_value_empirical_coverage = policy_value_empirical_coverage
-#   )
-#
-#   return(result)
-# }

@@ -124,6 +124,3 @@ simulation_results <- cram_simulation(X, dgp_D, dgp_Y, batch,
                           alpha, baseline_policy)
 print(Sys.time())
 print(simulation_results)
-
-sim_1_results <- simulation_results[sim_id == 1, result][[1]]
-
