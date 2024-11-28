@@ -86,30 +86,6 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
   policies <- matrix(0, nrow = n, ncol = nb_batch + 1)  # Initialize with zeros
   policies[, 1] <- unlist(baseline_policy)  # Set the first column to baseline policy
 
-  if (model_type == "S-learner" && learner_type == "FNN") {
-    s_learner_NN <- keras_model_sequential() %>%
-      layer_dense(units = 64, activation = 'relu', input_shape = ncol(X) + 1) %>%
-      layer_dense(units = 32, activation = 'relu') %>%
-      layer_dense(units = 1)
-
-    s_learner_NN %>% compile(
-      optimizer = 'adam',
-      loss = 'mse'
-    )
-  }
-
-  if (model_type == "M-learner" && learner_type == "FNN") {
-    m_learner_NN <- keras_model_sequential() %>%
-      layer_dense(units = 64, activation = 'relu', input_shape = ncol(X)) %>%
-      layer_dense(units = 32, activation = 'relu') %>%
-      layer_dense(units = 1)
-
-    m_learner_NN %>% compile(
-      optimizer = 'adam',
-      loss = 'mse'
-    )
-  }
-
   # Step 3: Create a data.table for cumulative batches
   # Initialize an empty list to store cumulative data for each batch
   cumulative_data_list <- lapply(1:nb_batch, function(t) {
