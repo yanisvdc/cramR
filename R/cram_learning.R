@@ -41,7 +41,7 @@ library(foreach)
 #' @importFrom stats glm predict qnorm rbinom rnorm
 #' @importFrom magrittr %>%
 #' @export
-cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest",
+cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
                           learner_type = "ridge", baseline_policy = NULL,
                           parallelize_batch = FALSE, model_params = list()) {
 
@@ -142,7 +142,8 @@ cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest",
       Y_subset <- batch$Y[[1]]
 
       # Train model with validated parameters
-      trained_model <- do.call(model, c(list(X = X_subset, Y = Y_subset, W = D_subset), model_params))
+      trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
+      # trained_model <- do.call(model, c(list(X = X_subset, Y = Y_subset, W = D_subset), model_params))
       cate_estimates <- predict(trained_model, X_subset)$predictions
       learned_policy <- ifelse(cate_estimates > 0, 1, 0)
 
@@ -163,7 +164,8 @@ cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest",
     Y_subset <- Y[[1]]
 
     # Train model with validated parameters
-    trained_model <- do.call(model, c(list(X = X_subset, Y = Y_subset, W = D_subset), model_params))
+    trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
+    # trained_model <- do.call(model, c(list(X = X_subset, Y = Y_subset, W = D_subset), model_params))
     cate_estimates <- predict(trained_model, X_subset)$predictions
     learned_policy <- ifelse(cate_estimates > 0, 1, 0)
 

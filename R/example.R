@@ -28,6 +28,8 @@ source(file.path(path, "cram_estimate.R"))
 source(file.path(path, "cram_variance_estimator.R"))
 source(file.path(path, "cram_policy_value_estimator.R"))
 
+source(file.path(path, "set_model.R"))
+source(file.path(path, "validate_params.R"))
 
 # Example usage of CRAM EXPERIMENT
 set.seed(123)
