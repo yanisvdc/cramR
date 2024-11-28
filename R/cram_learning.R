@@ -2,6 +2,8 @@
 library(grf)            # For causal forest
 library(glmnet)         # For ridge regression (linear regression with penalty)
 library(keras)           # For feedforward neural networks in R
+library(doParallel)
+library(foreach)
 
 #' CRAM Learning with Model Selection
 #'
@@ -39,7 +41,7 @@ library(keras)           # For feedforward neural networks in R
 #' @importFrom stats glm predict qnorm rbinom rnorm
 #' @importFrom magrittr %>%
 #' @export
-cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest", learner_type = "ridge", baseline_policy = NULL) {
+cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest", learner_type = "ridge", baseline_policy = NULL, parallelize = FALSE) {
 
   # Step 0: Set default baseline_policy if NULL
   if (is.null(baseline_policy)) {
@@ -102,128 +104,186 @@ cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest", learner_
     )
   }
 
-  # Step 3: Iteratively learn policies on cumulative batches
-  for (t in 1:nb_batch) {
+  # Step 3: Create a data.table for cumulative batches
+  # Initialize an empty list to store cumulative data for each batch
+  cumulative_data_list <- lapply(1:nb_batch, function(t) {
+    # Combine indices for batches 1 through t
+    cumulative_indices <- unlist(batches[1:t])
 
-    # Accumulate indices for batches 1 through t
-    cumulative_indices <- unlist(batches[1:t])  # Combine batches 1 through t
-    cumulative_X <- X[cumulative_indices, ]
-    cumulative_D <- D[cumulative_indices]
-    cumulative_Y <- Y[cumulative_indices]
+    # Subset X, D, Y using cumulative indices
+    list(
+      t = t,  # Add t as the index
+      # cumulative_index = list(cumulative_indices),  # Store cumulative indices as a list in one row
+      X = list(X[cumulative_indices, ]),  # Store X for the cumulative batch as a list
+      D = list(D[cumulative_indices]),  # Store D for the cumulative batch as a list
+      Y = list(Y[cumulative_indices])   # Store Y for the cumulative batch as a list
+    )
+  })
 
-    # Model selection based on model_type and learner_type
-    if (model_type == "Causal Forest") {
+  # Convert the list to a data.table
+  cumulative_data_dt <- rbindlist(cumulative_data_list)
 
-      # Train causal forest on accumulated data
-      causal_forest_fit <- causal_forest(cumulative_X, cumulative_Y, cumulative_D, num.trees = 100)
-      cate_estimates <- predict(causal_forest_fit, X)$predictions  # Predict CATE on full dataset X
+  if (parallelize) {
+    # Parallel execution using foreach and doParallel
+    cl <- makeCluster(detectCores() - 1)  # Use available cores minus one
+    registerDoParallel(cl)
 
-    } else if (model_type == "S-learner") {
-
-      if (learner_type == "ridge") {
-
-        # Ridge Regression (S-learner)
-        X_treatment <- cbind(cumulative_X, cumulative_D)
-        s_learner_ridge <- cv.glmnet(as.matrix(X_treatment), cumulative_Y, alpha = 0)
-        cate_estimates <- predict(s_learner_ridge, as.matrix(cbind(X, rep(1, n)))) -
-          predict(s_learner_ridge, as.matrix(cbind(X, rep(0, n))))
-
-      } else if (learner_type == "FNN") {
-
-        # Incremental learning for Feedforward Neural Network (S-learner)
-        batch_indices <- batches[[t]]
-        batch_X <- X[batch_indices, ]
-        batch_D <- D[batch_indices]
-        batch_Y <- Y[batch_indices]
-
-        # Combine current batch's X and D into one matrix with treatment effect
-        X_treatment_batch <- cbind(batch_X, batch_D)
-
-        # Fit the model on the current batch only (incremental learning)
-        s_learner_NN %>% fit(
-          as.matrix(X_treatment_batch),
-          batch_Y,
-          epochs = 10,         # Use fewer epochs per batch to avoid overfitting
-          batch_size = 32,    # Batch size for each fit
-          verbose = 0
-        )
-
-        cate_estimates <- predict(s_learner_NN, as.matrix(cbind(X, rep(1, n)))) -
-          predict(s_learner_NN, as.matrix(cbind(X, rep(0, n))))
-      }
-
-    } else if (model_type == "M-learner") {
-
-      # Propensity score estimation
-      propensity_model <- glm(cumulative_D ~ ., data = as.data.frame(cumulative_X), family = "binomial")
-      prop_score <- propensity_model$fitted.values
-
-      if (learner_type == "ridge") {
-        # Transformed outcome for M-learner
-        Y_star <- cumulative_Y * cumulative_D / prop_score -
-          cumulative_Y * (1 - cumulative_D) / (1 - prop_score)
-
-        # Ridge Regression (M-learner)
-        m_learner_ridge <- cv.glmnet(as.matrix(cumulative_X), Y_star, alpha = 0)
-        cate_estimates <- predict(m_learner_ridge, as.matrix(X))
-
-      } else if (learner_type == "FNN") {
-        # Incremental learning for M-learner FNN
-        batch_indices <- batches[[t]]
-        batch_X <- X[batch_indices, ]
-        batch_D <- D[batch_indices]
-        batch_Y <- Y[batch_indices]
-
-        # Ensure prop_score is correctly indexed for Y_star computation
-        batch_prop_score <- predict(propensity_model, newdata = as.data.frame(batch_X), type = "response")
-
-        # Transformed outcome for M-learner on current batch
-        Y_star <- batch_Y * batch_D / batch_prop_score - batch_Y * (1 - batch_D) / (1 - batch_prop_score)
-
-        # Incremental training for M-learner FNN on batch-specific data
-        m_learner_NN %>% fit(
-          as.matrix(batch_X),
-          Y_star,
-          epochs = 10,         # Use fewer epochs per batch to avoid overfitting
-          batch_size = 32,     # Batch size for each fit
-          verbose = 0
-        )
-
-        cate_estimates <- predict(m_learner_NN, as.matrix(X))
-      }
-
-    } else {
-      stop("Unsupported model type. Choose 'Causal Forest', 'S-learner', or 'M-learner'.")
+    # Perform parallel training
+    results <- foreach(t = 1:nb_batch, .combine = rbind, .packages = c("grf", "data.table")) %dopar% {
+      batch <- cumulative_data_dt[t]
+      X_subset <- batch$X[[1]]
+      D_subset <- batch$D[[1]]
+      Y_subset <- batch$Y[[1]]
+      model <- fit_causal_forest(X_subset, D_subset, Y_subset)
+      list(t = t, model = model)
     }
 
-    # Define the learned policy based on CATE: Assign 1 if CATE is positive, 0 otherwise
-    learned_policy <- ifelse(cate_estimates > 0, 1, 0)
+    stopCluster(cl)
 
-    # Store the learned policy in the (t+1)th column of the policies matrix
-    policies[, t + 1] <- learned_policy
-  }
+    # Combine results into a data.table
+    results_dt <- rbindlist(results)
 
-  # Store the last fitted policy model as final_policy_learned
-  final_policy_model <- if (model_type == "Causal Forest") {
-    causal_forest_fit
-  } else if (model_type == "S-learner" && learner_type == "ridge") {
-    s_learner_ridge
-  } else if (model_type == "S-learner" && learner_type == "FNN") {
-    s_learner_NN
-  } else if (model_type == "M-learner" && learner_type == "ridge") {
-    m_learner_ridge
-  } else if (model_type == "M-learner" && learner_type == "FNN") {
-    m_learner_NN
   } else {
-    NULL
+
+  results_dt <- cumulative_data_dt[, {
+    # Extract cumulative X, D, Y for the current batch (t)
+    X_subset <- X[[1]]  # Extract the data.frame or matrix
+    D_subset <- D[[1]]  # Extract the vector
+    Y_subset <- Y[[1]]  # Extract the vector
+
+    # Fit causal forest model
+    fitted_model <- fit_causal_forest(X_subset, D_subset, Y_subset)
+
+    # Return results (you can store the model or any summary statistic)
+    .(model = list(fitted_model))  # Store the model in a list column
+  }, by = t]
+
   }
 
-  return(list(
-    final_policy_model = final_policy_model,
-    policies = policies,
-    batch_indices = batches
-  ))
 }
+
+#   # Step 3: Iteratively learn policies on cumulative batches
+#   for (t in 1:nb_batch) {
+#
+#     # Accumulate indices for batches 1 through t
+#     cumulative_indices <- unlist(batches[1:t])  # Combine batches 1 through t
+#     cumulative_X <- X[cumulative_indices, ]
+#     cumulative_D <- D[cumulative_indices]
+#     cumulative_Y <- Y[cumulative_indices]
+#
+#     # Model selection based on model_type and learner_type
+#     if (model_type == "Causal Forest") {
+#
+#       # Train causal forest on accumulated data
+#       causal_forest_fit <- causal_forest(cumulative_X, cumulative_Y, cumulative_D, num.trees = 100)
+#       cate_estimates <- predict(causal_forest_fit, X)$predictions  # Predict CATE on full dataset X
+#
+#     } else if (model_type == "S-learner") {
+#
+#       if (learner_type == "ridge") {
+#
+#         # Ridge Regression (S-learner)
+#         X_treatment <- cbind(cumulative_X, cumulative_D)
+#         s_learner_ridge <- cv.glmnet(as.matrix(X_treatment), cumulative_Y, alpha = 0)
+#         cate_estimates <- predict(s_learner_ridge, as.matrix(cbind(X, rep(1, n)))) -
+#           predict(s_learner_ridge, as.matrix(cbind(X, rep(0, n))))
+#
+#       } else if (learner_type == "FNN") {
+#
+#         # Incremental learning for Feedforward Neural Network (S-learner)
+#         batch_indices <- batches[[t]]
+#         batch_X <- X[batch_indices, ]
+#         batch_D <- D[batch_indices]
+#         batch_Y <- Y[batch_indices]
+#
+#         # Combine current batch's X and D into one matrix with treatment effect
+#         X_treatment_batch <- cbind(batch_X, batch_D)
+#
+#         # Fit the model on the current batch only (incremental learning)
+#         s_learner_NN %>% fit(
+#           as.matrix(X_treatment_batch),
+#           batch_Y,
+#           epochs = 10,         # Use fewer epochs per batch to avoid overfitting
+#           batch_size = 32,    # Batch size for each fit
+#           verbose = 0
+#         )
+#
+#         cate_estimates <- predict(s_learner_NN, as.matrix(cbind(X, rep(1, n)))) -
+#           predict(s_learner_NN, as.matrix(cbind(X, rep(0, n))))
+#       }
+#
+#     } else if (model_type == "M-learner") {
+#
+#       # Propensity score estimation
+#       propensity_model <- glm(cumulative_D ~ ., data = as.data.frame(cumulative_X), family = "binomial")
+#       prop_score <- propensity_model$fitted.values
+#
+#       if (learner_type == "ridge") {
+#         # Transformed outcome for M-learner
+#         Y_star <- cumulative_Y * cumulative_D / prop_score -
+#           cumulative_Y * (1 - cumulative_D) / (1 - prop_score)
+#
+#         # Ridge Regression (M-learner)
+#         m_learner_ridge <- cv.glmnet(as.matrix(cumulative_X), Y_star, alpha = 0)
+#         cate_estimates <- predict(m_learner_ridge, as.matrix(X))
+#
+#       } else if (learner_type == "FNN") {
+#         # Incremental learning for M-learner FNN
+#         batch_indices <- batches[[t]]
+#         batch_X <- X[batch_indices, ]
+#         batch_D <- D[batch_indices]
+#         batch_Y <- Y[batch_indices]
+#
+#         # Ensure prop_score is correctly indexed for Y_star computation
+#         batch_prop_score <- predict(propensity_model, newdata = as.data.frame(batch_X), type = "response")
+#
+#         # Transformed outcome for M-learner on current batch
+#         Y_star <- batch_Y * batch_D / batch_prop_score - batch_Y * (1 - batch_D) / (1 - batch_prop_score)
+#
+#         # Incremental training for M-learner FNN on batch-specific data
+#         m_learner_NN %>% fit(
+#           as.matrix(batch_X),
+#           Y_star,
+#           epochs = 10,         # Use fewer epochs per batch to avoid overfitting
+#           batch_size = 32,     # Batch size for each fit
+#           verbose = 0
+#         )
+#
+#         cate_estimates <- predict(m_learner_NN, as.matrix(X))
+#       }
+#
+#     } else {
+#       stop("Unsupported model type. Choose 'Causal Forest', 'S-learner', or 'M-learner'.")
+#     }
+#
+#     # Define the learned policy based on CATE: Assign 1 if CATE is positive, 0 otherwise
+#     learned_policy <- ifelse(cate_estimates > 0, 1, 0)
+#
+#     # Store the learned policy in the (t+1)th column of the policies matrix
+#     policies[, t + 1] <- learned_policy
+#   }
+#
+#   # Store the last fitted policy model as final_policy_learned
+#   final_policy_model <- if (model_type == "Causal Forest") {
+#     causal_forest_fit
+#   } else if (model_type == "S-learner" && learner_type == "ridge") {
+#     s_learner_ridge
+#   } else if (model_type == "S-learner" && learner_type == "FNN") {
+#     s_learner_NN
+#   } else if (model_type == "M-learner" && learner_type == "ridge") {
+#     m_learner_ridge
+#   } else if (model_type == "M-learner" && learner_type == "FNN") {
+#     m_learner_NN
+#   } else {
+#     NULL
+#   }
+#
+#   return(list(
+#     final_policy_model = final_policy_model,
+#     policies = policies,
+#     batch_indices = batches
+#   ))
+# }
 
 
 # Example usage:

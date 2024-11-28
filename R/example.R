@@ -124,3 +124,32 @@ simulation_results <- cram_simulation(X, dgp_D, dgp_Y, batch,
                           alpha, baseline_policy)
 print(Sys.time())
 print(simulation_results)
+
+
+
+## Test Cram Learning
+
+# Example usage of CRAM EXPERIMENT
+set.seed(123)
+
+## Generate data
+n <- 1000
+data <- generate_data(n)
+X <- data$X
+D <- data$D
+Y <- data$Y
+
+## Parameters
+batch <- 20
+model_type <- "M-learner" # Causal Forest, S-learner, M-learner
+learner_type <- "ridge" # NULL, ridge, FNN
+alpha <- 0.05
+baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
+
+
+learning_result <- cram_learning(X, D, Y, batch, model_type = model_type,
+                                 learner_type = learner_type, baseline_policy = baseline_policy)
+print(learning_result)
+# policies <- learning_result$policies
+# batch_indices <- learning_result$batch_indices
+# final_policy_model <- learning_result$final_policy_model

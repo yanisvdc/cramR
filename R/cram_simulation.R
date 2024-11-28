@@ -198,21 +198,19 @@ cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, ba
       policy_value_estimate <- cram_policy_value_estimator(Y_slice, D_slice, policies, batch_indices)
 
       .(
-        # final_policy_model = list(NA),              # Placeholder for list column
-        proportion_treated = NA_real_,             # Placeholder for numeric column
+        # final_policy_model = list(NA),
+        proportion_treated = NA_real_,
         delta_estimate = delta_estimate,
-        delta_standard_error = NA_real_,           # Placeholder for numeric column
-        delta_ci_lower = NA_real_,                 # Placeholder for numeric column
-        delta_ci_upper = NA_real_,                 # Placeholder for numeric column
+        delta_standard_error = NA_real_,
+        delta_ci_lower = NA_real_,
+        delta_ci_upper = NA_real_,
         policy_value_estimate = policy_value_estimate,
-        policy_value_standard_error = NA_real_,    # Placeholder for numeric column
-        policy_value_ci_lower = NA_real_,          # Placeholder for numeric column
-        policy_value_ci_upper = NA_real_           # Placeholder for numeric column
+        policy_value_standard_error = NA_real_,
+        policy_value_ci_lower = NA_real_,
+        policy_value_ci_upper = NA_real_
       )
     }
   }, by = sim_id]
-
-  print(cram_results)
 
   # Filter cram_results for the first nb_simulations rows
   sim_results <- cram_results[sim_id <= nb_simulations]
