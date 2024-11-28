@@ -41,7 +41,9 @@ library(foreach)
 #' @importFrom stats glm predict qnorm rbinom rnorm
 #' @importFrom magrittr %>%
 #' @export
-cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest", learner_type = "ridge", baseline_policy = NULL, parallelize = FALSE) {
+cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest",
+                          learner_type = "ridge", baseline_policy = NULL,
+                          parallelize_batch = FALSE, model_params = list()) {
 
   # Step 0: Set default baseline_policy if NULL
   if (is.null(baseline_policy)) {
@@ -75,6 +77,10 @@ cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest", learner_
   } else {
     stop("`batch` must be either an integer or a list/vector of batch indices.")
   }
+
+  # Step 1.5: Retrieve model and validate user-specified parameters
+  model <- set_model(model_type, learner_type)
+  model_params <- validate_params(model, model_params)
 
   # Step 2: Initialize a matrix to store policies
   policies <- matrix(0, nrow = n, ncol = nb_batch + 1)  # Initialize with zeros
@@ -114,16 +120,16 @@ cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest", learner_
     list(
       t = t,  # Add t as the index
       # cumulative_index = list(cumulative_indices),  # Store cumulative indices as a list in one row
-      X = list(X[cumulative_indices, ]),  # Store X for the cumulative batch as a list
-      D = list(D[cumulative_indices]),  # Store D for the cumulative batch as a list
-      Y = list(Y[cumulative_indices])   # Store Y for the cumulative batch as a list
+      X = list(X[cumulative_indices, ]),
+      D = list(D[cumulative_indices]),
+      Y = list(Y[cumulative_indices])
     )
   })
 
   # Convert the list to a data.table
   cumulative_data_dt <- rbindlist(cumulative_data_list)
 
-  if (parallelize) {
+  if (parallelize_batch) {
     # Parallel execution using foreach and doParallel
     cl <- makeCluster(detectCores() - 1)  # Use available cores minus one
     registerDoParallel(cl)
@@ -134,8 +140,13 @@ cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest", learner_
       X_subset <- batch$X[[1]]
       D_subset <- batch$D[[1]]
       Y_subset <- batch$Y[[1]]
-      model <- fit_causal_forest(X_subset, D_subset, Y_subset)
-      list(t = t, model = model)
+
+      # Train model with validated parameters
+      trained_model <- do.call(model, c(list(X = X_subset, Y = Y_subset, W = D_subset), model_params))
+      cate_estimates <- predict(trained_model, X_subset)$predictions
+      learned_policy <- ifelse(cate_estimates > 0, 1, 0)
+
+      list(t = t, model = trained_model, cate_estimates = cate_estimates, learned_policy = learned_policy)
     }
 
     stopCluster(cl)
@@ -147,15 +158,16 @@ cram_learning <- function(X, D, Y, batch, model_type = "Causal Forest", learner_
 
   results_dt <- cumulative_data_dt[, {
     # Extract cumulative X, D, Y for the current batch (t)
-    X_subset <- X[[1]]  # Extract the data.frame or matrix
-    D_subset <- D[[1]]  # Extract the vector
-    Y_subset <- Y[[1]]  # Extract the vector
+    X_subset <- X[[1]]
+    D_subset <- D[[1]]
+    Y_subset <- Y[[1]]
 
-    # Fit causal forest model
-    fitted_model <- fit_causal_forest(X_subset, D_subset, Y_subset)
+    # Train model with validated parameters
+    trained_model <- do.call(model, c(list(X = X_subset, Y = Y_subset, W = D_subset), model_params))
+    cate_estimates <- predict(trained_model, X_subset)$predictions
+    learned_policy <- ifelse(cate_estimates > 0, 1, 0)
 
-    # Return results (you can store the model or any summary statistic)
-    .(model = list(fitted_model))  # Store the model in a list column
+    .(model = list(trained_model), cate_estimates = list(cate_estimates), learned_policy = list(learned_policy))
   }, by = t]
 
   }
