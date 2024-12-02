@@ -143,15 +143,38 @@ Y <- data$Y
 
 ## Parameters
 batch <- 20
-model_type <- "M-learner" # Causal Forest, S-learner, M-learner
+model_type <- "m_learner" # Causal Forest, S-learner, M-learner
 learner_type <- "ridge" # NULL, ridge, FNN
 alpha <- 0.05
 baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
+parallelize_batch <- FALSE
+
+input_shape <- if (model_type == "s_learner") ncol(X) + 1 else ncol(X)
+model_params <- list(
+  input_layer = list(units = 64, activation = 'relu', input_shape = input_shape),  # Define default input layer
+  layers = list(
+    list(units = 32, activation = 'relu')
+  ),
+  output_layer = list(units = 1, activation = 'linear'),
+  compile_args = list(optimizer = 'adam', loss = 'mse')
+)
+
+# model_params <- list(num.trees = 100)
+
+# model_params <- list(alpha = 1)
 
 
 learning_result <- cram_learning(X, D, Y, batch, model_type = model_type,
-                                 learner_type = learner_type, baseline_policy = baseline_policy)
+                                 learner_type = learner_type, baseline_policy = baseline_policy,
+                                 parallelize_batch = parallelize_batch, model_params = model_params)
+
+
+
 print(learning_result)
 # policies <- learning_result$policies
 # batch_indices <- learning_result$batch_indices
 # final_policy_model <- learning_result$final_policy_model
+
+
+
+

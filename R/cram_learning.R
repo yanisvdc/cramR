@@ -79,8 +79,12 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
   }
 
   # Step 1.5: Retrieve model and validate user-specified parameters
-  model <- set_model(model_type, learner_type)
+  model <- set_model(model_type, learner_type, model_params)
+  return(model)
+  1/0
   model_params <- validate_params(model, model_params)
+
+
 
   # Step 2: Initialize a matrix to store policies
   policies <- matrix(0, nrow = n, ncol = nb_batch + 1)  # Initialize with zeros

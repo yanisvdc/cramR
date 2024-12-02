@@ -5,7 +5,6 @@
 #'
 #' @param model_function The model function for which parameters are being validated (e.g., \code{grf::causal_forest}).
 #' @param user_params A named list of parameters provided by the user.
-#' @param positional_args A character vector of arguments that must be provided explicitly and should not be validated (e.g., \code{c("X", "Y", "W")}). Default is \code{c("X", "Y", "W")}.
 #' @return A named list of validated parameters that are safe to pass to the model function.
 #' @examples
 #' # Example with causal_forest from grf
@@ -28,21 +27,36 @@
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[base]{formals}}
 #' @importFrom base formals setdiff
 #' @export
-validate_params <- function(model_function, user_params, positional_args = c("X", "Y", "W")) {
+validate_params <- function(model_function, user_params) {
   # Retrieve the full list of arguments for the model function
-  valid_args <- names(formals(model_function))
+  formal_args <- formals(model_function)
+  valid_args <- names(formal_args)
 
-  # Exclude positional arguments from validation
-  valid_named_args <- setdiff(valid_args, positional_args)
+  # Identify positional arguments (those without default values), excluding ...
+  positional_args <- names(formal_args)[
+    sapply(formal_args, function(arg) identical(arg, quote(expr = ))) & names(formal_args) != "..."
+  ]
 
-  # Find invalid user-provided parameters
-  invalid_params <- setdiff(names(user_params), valid_named_args)
+  # Check if the function allows additional arguments via ...
+  allows_dotdotdot <- "..." %in% valid_args
 
-  # Raise an error if invalid parameters are found
-  if (length(invalid_params) > 0) {
-    stop(paste("Invalid parameters for the model:", paste(invalid_params, collapse = ", ")))
+  if (!allows_dotdotdot) {
+    # Exclude positional arguments from validation
+    valid_named_args <- setdiff(valid_args, positional_args)
+
+    # Find invalid user-provided parameters
+    invalid_params <- setdiff(names(user_params), valid_named_args)
+
+    # Raise an error if invalid parameters are found
+    if (length(invalid_params) > 0) {
+      stop(paste("Invalid parameters for the model:", paste(invalid_params, collapse = ", ")))
+    }
+
+  } else {
+      # If ... is present, assume all user-provided parameters are allowed
+      message("The function accepts additional parameters via '...'. No validation for extra parameters.")
   }
 
   # Return the valid parameters
-  user_params
+  return(user_params)
 }
