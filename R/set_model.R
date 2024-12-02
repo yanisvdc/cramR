@@ -75,7 +75,7 @@ set_model <- function(model_type, learner_type, model_params = list()) {
     model %>% layer_dense(
       units = model_params$input_layer$units,
       activation = model_params$input_layer$activation,
-      input_shape = input_layer
+      input_shape = model_params$input_layer$input_shape
     )
 
     # Add hidden layers

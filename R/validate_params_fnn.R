@@ -3,22 +3,21 @@
 #' This function validates user-provided parameters for a Feedforward Neural Network (FNN) model.
 #' It ensures the correct structure for \code{input_layer}, \code{layers}, \code{output_layer}, and \code{compile_args}.
 #'
-#' @param user_params A named list of parameters provided by the user for configuring the FNN model.
+#' @param model_params A named list of parameters provided by the user for configuring the FNN model.
 #' @return A named list of validated parameters merged with defaults for any missing values.
 #' @export
-validate_params_fnn <- function(user_params) {
-  # Default FNN parameters
-  default_params <- list(
-    input_layer = list(units = 64, activation = "relu", input_shape = NULL),
-    layers = list(
-      list(units = 32, activation = "relu")
-    ),
-    output_layer = list(units = 1, activation = "linear"),
-    compile_args = list(optimizer = "adam", loss = "mse")
-  )
+validate_params_fnn <- function(model_params) {
+  # Ensure model_params is a list
+  if (!is.list(model_params)) {
+    stop("`model_params` must be a list.")
+  }
 
-  # Merge user parameters with defaults
-  model_params <- modifyList(default_params, user_params)
+  # Ensure model_params contains required top-level keys
+  required_keys <- c("input_layer", "layers", "output_layer", "compile_args")
+  missing_keys <- setdiff(required_keys, names(model_params))
+  if (length(missing_keys) > 0) {
+    stop(paste("`model_params` must include the following top-level keys:", paste(missing_keys, collapse = ", ")))
+  }
 
   # Validate input_layer
   if (!is.list(model_params$input_layer)) {

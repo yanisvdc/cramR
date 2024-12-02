@@ -30,6 +30,7 @@ source(file.path(path, "cram_policy_value_estimator.R"))
 
 source(file.path(path, "set_model.R"))
 source(file.path(path, "validate_params.R"))
+source(file.path(path, "validate_params_fnn.R"))
 
 # Example usage of CRAM EXPERIMENT
 set.seed(123)
@@ -143,8 +144,8 @@ Y <- data$Y
 
 ## Parameters
 batch <- 20
-model_type <- "m_learner" # Causal Forest, S-learner, M-learner
-learner_type <- "ridge" # NULL, ridge, FNN
+model_type <- "s_learner" # Causal Forest, S-learner, M-learner
+learner_type <- "fnn" # NULL, ridge, FNN
 alpha <- 0.05
 baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
 parallelize_batch <- FALSE

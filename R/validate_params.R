@@ -54,7 +54,7 @@ validate_params <- function(model_function, user_params) {
 
   } else {
       # If ... is present, assume all user-provided parameters are allowed
-      message("The function accepts additional parameters via '...'. No validation for extra parameters.")
+      message("The function accepts additional parameters via '...'. Assume that all user-provided parameters are allowed.")
   }
 
   # Return the valid parameters
