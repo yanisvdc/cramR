@@ -29,7 +29,7 @@ fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_par
     stop("Unsupported model type. Choose 'causal_forest', 's_learner', or 'm_learner'.")
   }
   if (!learner_type %in% c("ridge", "fnn") && model_type != "causal_forest") {
-    stop("Unsupported learner type. Choose 'ridge' or 'fnn'.")
+    stop("Unsupported learner type for this model type. Choose 'ridge' or 'fnn'.")
   }
 
   fitted_model <- NULL
@@ -40,7 +40,8 @@ fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_par
       stop("Treatment indicators (W) are required for Causal Forest.")
     }
     # Train Causal Forest
-    fitted_model <- model(X, Y, W, !!!model_params)
+    # fitted_model <- model(X, Y, W, !!!model_params)
+    fitted_model <- do.call(model, c(list(X = X, Y = Y, W = W), model_params))
 
   } else if (model_type == "s_learner") {
     if (learner_type == "ridge") {
@@ -48,7 +49,8 @@ fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_par
       if (!is.null(W)) {
         X <- cbind(X, W)  # Add treatment indicator for S-learner
       }
-      fitted_model <- model(as.matrix(X), Y, !!!model_params)
+      # fitted_model <- model(as.matrix(X), Y, !!!model_params)
+      fitted_model <- do.call(model, c(list(X = as.matrix(X), Y = Y), model_params))
 
     } else if (learner_type == "fnn") {
       # Feedforward Neural Network (S-learner)
@@ -88,7 +90,8 @@ fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_par
 
     if (learner_type == "ridge") {
       # Ridge Regression for M-learner
-      fitted_model <- model(as.matrix(X), Y_star, !!!model_params)
+      # fitted_model <- model(as.matrix(X), Y_star, !!!model_params)
+      fitted_model <- do.call(model, c(list(X = as.matrix(X), Y = Y_star), model_params))
 
     } else if (learner_type == "fnn") {
       # Feedforward Neural Network for M-learner
