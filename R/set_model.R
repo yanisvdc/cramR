@@ -103,5 +103,5 @@ set_model <- function(model_type, learner_type, model_params = list()) {
     stop("Unsupported model_type or learner_type.")
   }
 
-  return(model)
+  return(list(model = model, model_params = model_params))
 }
