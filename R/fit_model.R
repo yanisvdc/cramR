@@ -61,9 +61,9 @@ fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_par
       fitted_model <- model %>% fit(
         as.matrix(X),
         Y,
-        epochs = model_params$epochs,
-        batch_size = model_params$batch_size,
-        verbose = model_params$verbose
+        epochs = model_params$fit_params$epochs,
+        batch_size = model_params$fit_params$batch_size,
+        verbose = model_params$fit_params$verbose
       )
     }
   } else if (model_type == "m_learner") {
@@ -87,9 +87,9 @@ fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_par
       fitted_model <- model %>% fit(
         as.matrix(X),
         Y_star,
-        epochs = model_params$epochs,
-        batch_size = model_params$batch_size,
-        verbose = model_params$verbose
+        epochs = model_params$fit_params$epochs,
+        batch_size = model_params$fit_params$batch_size,
+        verbose = model_params$fit_params$verbose
       )
     }
   }

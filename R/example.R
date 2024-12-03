@@ -29,6 +29,7 @@ source(file.path(path, "cram_variance_estimator.R"))
 source(file.path(path, "cram_policy_value_estimator.R"))
 
 source(file.path(path, "set_model.R"))
+source(file.path(path, "fit_model.R"))
 source(file.path(path, "validate_params.R"))
 source(file.path(path, "validate_params_fnn.R"))
 
@@ -157,7 +158,8 @@ model_params <- list(
     list(units = 32, activation = 'relu')
   ),
   output_layer = list(units = 1, activation = 'linear'),
-  compile_args = list(optimizer = 'adam', loss = 'mse')
+  compile_args = list(optimizer = 'adam', loss = 'mse'),
+  fit_params = list(epochs=5, batch_size=32, verbose=0)
 )
 
 # model_params <- list(num.trees = 100)

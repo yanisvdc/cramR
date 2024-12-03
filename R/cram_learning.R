@@ -169,6 +169,8 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     .(model = list(trained_model), cate_estimates = list(cate_estimates), learned_policy = list(learned_policy))
   }, by = t]
 
+  return(results_dt)
+
   }
 
 }
