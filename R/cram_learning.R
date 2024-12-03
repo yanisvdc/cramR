@@ -61,20 +61,30 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     }
   }
 
+  n <- nrow(X)
+
   # Step 1: Interpret `batch` argument
   if (is.numeric(batch) && length(batch) == 1) {
     # `batch` is an integer, interpret it as `nb_batch`
     nb_batch <- batch
-    n <- nrow(X)
     indices <- sample(1:n)  # Randomly shuffle the indices without replacement
     group_labels <- rep(1:nb_batch, length.out = n)  # Repeat labels 1 to nb_batch, filling up to n elements
     batches <- split(indices, group_labels)  # Split indices into batches
+    # batches is a list of vectors, where we have for each batch number, the vector of indices
+    # from the population who belongs in this batch
 
   } else if (is.list(batch) || is.vector(batch)) {
-    # `batch` is a list or vector, set `nb_batch` as its length
-    batches <- batch
-    nb_batch <- length(batch)
-  } else {
+
+    if (length(batch) == n) {
+      # Convert batch vector/list into a list of indices per batch
+      batch_numbers <- unlist(batch)  # Ensure it's a vector
+      batches <- split(1:length(batch_numbers), batch_numbers)
+    } else {
+      stop("`batch` must be a vector/list of length equal to the population size, or a list of vectors of indices.")
+    }
+    nb_batch <- length(batches)
+
+    } else {
     stop("`batch` must be either an integer or a list/vector of batch indices.")
   }
 
@@ -86,8 +96,6 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     model <- set_model(model_type, learner_type, model_params)
     model_params <- validate_params(model, model_params)
   }
-
-  return(model)
 
   # Step 2: Initialize a matrix to store policies
   policies <- matrix(0, nrow = n, ncol = nb_batch + 1)  # Initialize with zeros
