@@ -13,7 +13,7 @@ validate_params_fnn <- function(model_params) {
   }
 
   # Ensure model_params contains required top-level keys
-  required_keys <- c("input_layer", "layers", "output_layer", "compile_args")
+  required_keys <- c("input_layer", "layers", "output_layer", "compile_args", "fit_params")
   missing_keys <- setdiff(required_keys, names(model_params))
   if (length(missing_keys) > 0) {
     stop(paste("`model_params` must include the following top-level keys:", paste(missing_keys, collapse = ", ")))
@@ -51,6 +51,14 @@ validate_params_fnn <- function(model_params) {
   }
   if (!all(c("optimizer", "loss") %in% names(model_params$compile_args))) {
     stop("`compile_args` must include at least `optimizer` and `loss`.")
+  }
+
+  # Validate fit_params
+  if (!is.list(model_params$fit_params)) {
+    stop("`fit_params` must be a list specifying `epochs`, `batch_size`, and optionally `verbose`.")
+  }
+  if (!all(c("epochs", "batch_size") %in% names(model_params$fit_params))) {
+    stop("`fit_params` must include `epochs` and `batch_size`.")
   }
 
   return(model_params)

@@ -84,17 +84,6 @@ fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_par
 
     } else if (learner_type == "fnn") {
       # Feedforward Neural Network for M-learner
-      # Set default parameters if not provided
-      if (!"epochs" %in% names(model_params)) {
-        model_params$epochs <- 10
-      }
-      if (!"batch_size" %in% names(model_params)) {
-        model_params$batch_size <- 32
-      }
-      if (!"verbose" %in% names(model_params)) {
-        model_params$verbose <- 0
-      }
-
       fitted_model <- model %>% fit(
         as.matrix(X),
         Y_star,

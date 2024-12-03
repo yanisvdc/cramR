@@ -62,7 +62,8 @@ set_model <- function(model_type, learner_type, model_params = list()) {
         list(units = 32, activation = 'relu')
       ),
       output_layer = list(units = 1, activation = 'linear'),
-      compile_args = list(optimizer = 'adam', loss = 'mse')
+      compile_args = list(optimizer = 'adam', loss = 'mse'),
+      fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
     )
 
     # Merge user-provided parameters with defaults
