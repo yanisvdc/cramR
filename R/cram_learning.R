@@ -88,7 +88,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     stop("`batch` must be either an integer or a list/vector of batch indices.")
   }
 
-  # Step 1.5: Retrieve model and validate user-specified parameters
+  # Step 2: Retrieve model and validate user-specified parameters
   if (learner_type == "fnn") {
     model_params <- validate_params_fnn(model_params)
 
@@ -103,10 +103,6 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     model_params <- validate_params(model, model_params)
   }
 
-  # Step 2: Initialize a matrix to store policies
-  policies <- matrix(0, nrow = n, ncol = nb_batch + 1)  # Initialize with zeros
-  policies[, 1] <- unlist(baseline_policy)  # Set the first column to baseline policy
-
   # Step 3: Create a data.table for cumulative batches
   # Initialize an empty list to store cumulative data for each batch
   cumulative_data_list <- lapply(1:nb_batch, function(t) {
@@ -117,9 +113,9 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     list(
       t = t,  # Add t as the index
       # cumulative_index = list(cumulative_indices),  # Store cumulative indices as a list in one row
-      X = list(X[cumulative_indices, ]),
-      D = list(D[cumulative_indices]),
-      Y = list(Y[cumulative_indices])
+      X_cumul = list(X[cumulative_indices, ]),
+      D_cumul = list(D[cumulative_indices]),
+      Y_cumul = list(Y[cumulative_indices])
     )
   })
 
@@ -134,9 +130,9 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     # Perform parallel training
     results <- foreach(t = 1:nb_batch, .combine = rbind, .packages = c("grf", "data.table")) %dopar% {
       batch <- cumulative_data_dt[t]
-      X_subset <- batch$X[[1]]
-      D_subset <- batch$D[[1]]
-      Y_subset <- batch$Y[[1]]
+      X_subset <- batch$X_cumul[[1]]
+      D_subset <- batch$D_cumul[[1]]
+      Y_subset <- batch$Y_cumul[[1]]
 
       # Train model with validated parameters
       trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
@@ -156,20 +152,39 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
 
   results_dt <- cumulative_data_dt[, {
     # Extract cumulative X, D, Y for the current batch (t)
-    X_subset <- X[[1]]
-    D_subset <- D[[1]]
-    Y_subset <- Y[[1]]
+    X_subset <- as.matrix(X_cumul[[1]])
+    D_subset <- as.numeric(D_cumul[[1]])
+    Y_subset <- as.numeric(Y_cumul[[1]])
 
     # Train model with validated parameters
     trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
     # trained_model <- do.call(model, c(list(X = X_subset, Y = Y_subset, W = D_subset), model_params))
-    cate_estimates <- predict(trained_model, X_subset)$predictions
+    cate_estimates <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
     learned_policy <- ifelse(cate_estimates > 0, 1, 0)
 
-    .(model = list(trained_model), cate_estimates = list(cate_estimates), learned_policy = list(learned_policy))
+    # Return trained model only for the last batch
+    if (t == max(cumulative_data_dt$t)) {
+      assign("final_policy_model", trained_model, envir = .GlobalEnv)
+    }
+
+    # (model = list(trained_model), cate_estimates = list(cate_estimates),
+    .(learned_policy = list(learned_policy))
   }, by = t]
 
-  return(results_dt)
+  # Extract learned_policy list
+  learned_policy_list <- results_dt$learned_policy
+
+  # Convert the list of learned policies into a matrix
+  learned_policy_matrix <- do.call(cbind, lapply(learned_policy_list, as.numeric))
+
+  # Combine baseline_policy as the first column
+  policy_matrix <- cbind(as.numeric(baseline_policy), learned_policy_matrix)
+
+  return(list(
+        final_policy_model = final_policy_model,
+        policies = policy_matrix,
+        batch_indices = batches
+      ))
 
   }
 

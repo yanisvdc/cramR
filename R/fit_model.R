@@ -47,7 +47,7 @@ fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_par
     if (learner_type == "ridge") {
       # Ridge Regression (S-learner)
       if (!is.null(W)) {
-        X <- cbind(X, W)  # Add treatment indicator for S-learner
+        X <- cbind(as.matrix(X), W)  # Add treatment indicator for S-learner
       }
       # fitted_model <- model(as.matrix(X), Y, !!!model_params)
       fitted_model <- do.call(model, c(list(X = as.matrix(X), Y = Y), model_params))
@@ -55,16 +55,18 @@ fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_par
     } else if (learner_type == "fnn") {
       # Feedforward Neural Network (S-learner)
       if (!is.null(W)) {
-        X <- cbind(X, W)  # Add treatment indicator for S-learner
+        X <- cbind(as.matrix(X), W)  # Add treatment indicator for S-learner
       }
 
-      fitted_model <- model %>% fit(
+      history <- model %>% fit(
         as.matrix(X),
         Y,
         epochs = model_params$fit_params$epochs,
         batch_size = model_params$fit_params$batch_size,
-        verbose = model_params$fit_params$verbose
+        verbose = model_params$fit_params$verbose,
+        callbacks = NULL
       )
+      fitted_model <- model
     }
   } else if (model_type == "m_learner") {
     # M-learner requires a propensity score and transformed outcomes
@@ -84,13 +86,14 @@ fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_par
 
     } else if (learner_type == "fnn") {
       # Feedforward Neural Network for M-learner
-      fitted_model <- model %>% fit(
+      history <- model %>% fit(
         as.matrix(X),
         Y_star,
         epochs = model_params$fit_params$epochs,
         batch_size = model_params$fit_params$batch_size,
         verbose = model_params$fit_params$verbose
       )
+      fitted_model <- model
     }
   }
 

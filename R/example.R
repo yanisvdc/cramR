@@ -30,6 +30,7 @@ source(file.path(path, "cram_policy_value_estimator.R"))
 
 source(file.path(path, "set_model.R"))
 source(file.path(path, "fit_model.R"))
+source(file.path(path, "model_predict.R"))
 source(file.path(path, "validate_params.R"))
 source(file.path(path, "validate_params_fnn.R"))
 

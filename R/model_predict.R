@@ -44,9 +44,11 @@ model_predict <- function(model, X, D = NULL, model_type, learner_type = NULL, m
       # Predict with Feedforward Neural Network
       treated_input <- as.matrix(cbind(X, rep(1, nrow(X))))
       control_input <- as.matrix(cbind(X, rep(0, nrow(X))))
-      predictions_treated <- keras::predict(model, treated_input)
-      predictions_control <- keras::predict(model, control_input)
-      predictions <- predictions_treated - predictions_control
+
+      predictions_treated <- predict(model, treated_input)
+      predictions_control <- predict(model, control_input)
+
+      predictions <- as.numeric(predictions_treated) - as.numeric(predictions_control)
 
     } else {
       stop("Unsupported learner_type for S-learner. Choose 'ridge' or 'fnn'.")
@@ -69,7 +71,7 @@ model_predict <- function(model, X, D = NULL, model_type, learner_type = NULL, m
 
     } else if (learner_type == "fnn") {
       # Transformed outcome prediction with Feedforward Neural Network
-      predictions <- keras::predict(model, as.matrix(X))
+      predictions <- predict(model, as.matrix(X))
 
     } else {
       stop("Unsupported learner_type for M-learner. Choose 'ridge' or 'fnn'.")
