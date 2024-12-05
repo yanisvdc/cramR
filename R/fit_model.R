@@ -50,7 +50,7 @@ fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_par
         X <- cbind(as.matrix(X), W)  # Add treatment indicator for S-learner
       }
       # fitted_model <- model(as.matrix(X), Y, !!!model_params)
-      fitted_model <- do.call(model, c(list(X = as.matrix(X), Y = Y), model_params))
+      fitted_model <- do.call(model, c(list(x = as.matrix(X), y = Y), model_params))
 
     } else if (learner_type == "fnn") {
       # Feedforward Neural Network (S-learner)
@@ -82,7 +82,7 @@ fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_par
     if (learner_type == "ridge") {
       # Ridge Regression for M-learner
       # fitted_model <- model(as.matrix(X), Y_star, !!!model_params)
-      fitted_model <- do.call(model, c(list(X = as.matrix(X), Y = Y_star), model_params))
+      fitted_model <- do.call(model, c(list(x = as.matrix(X), y = Y_star), model_params))
 
     } else if (learner_type == "fnn") {
       # Feedforward Neural Network for M-learner

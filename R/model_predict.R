@@ -31,13 +31,13 @@
 model_predict <- function(model, X, D = NULL, model_type, learner_type = NULL, model_params = list()) {
   if (model_type == "causal_forest") {
     # Predict using Causal Forest
-    predictions <- grf::predict(model, X)$predictions
+    predictions <- predict(model, X)$predictions
 
   } else if (model_type == "s_learner") {
     if (learner_type == "ridge") {
       # Predict with Ridge Regression
-      predictions_treated <- glmnet::predict(model, newx = as.matrix(cbind(X, rep(1, nrow(X)))))
-      predictions_control <- glmnet::predict(model, newx = as.matrix(cbind(X, rep(0, nrow(X)))))
+      predictions_treated <- predict(model, newx = as.matrix(cbind(X, rep(1, nrow(X)))), s = "lambda.min")
+      predictions_control <- predict(model, newx = as.matrix(cbind(X, rep(0, nrow(X)))), s = "lambda.min")
       predictions <- predictions_treated - predictions_control
 
     } else if (learner_type == "fnn") {
@@ -66,7 +66,7 @@ model_predict <- function(model, X, D = NULL, model_type, learner_type = NULL, m
     if (learner_type == "ridge") {
       # Transformed outcome prediction with Ridge Regression
       Y_star <- as.numeric(model_params$Y_star)
-      transformed_outcome <- glmnet::predict(model, newx = as.matrix(X))
+      transformed_outcome <- predict(model, newx = as.matrix(X), s = "lambda.min")
       predictions <- transformed_outcome
 
     } else if (learner_type == "fnn") {
