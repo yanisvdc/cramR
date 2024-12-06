@@ -46,8 +46,8 @@
 # Combined simulation function with empirical bias calculation
 cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, batch,
                             nb_simulations, nb_simulations_truth,
-                            model_type = "Causal Forest", learner_type = "ridge",
-                            alpha=0.05, baseline_policy = NULL) {
+                            model_type = "causal_forest", learner_type = "ridge",
+                            alpha=0.05, baseline_policy = NULL, model_params = list()) {
 
   # Step 0: Set default baseline_policy if NULL
   if (is.null(baseline_policy)) {
@@ -120,7 +120,8 @@ cram_simulation <- function(X, dgp_D = function(Xi) rbinom(1, 1, 0.5), dgp_Y, ba
         batch,
         model_type = model_type,
         learner_type = learner_type,
-        baseline_policy = baseline_policy
+        baseline_policy = baseline_policy,
+        model_params = model_params
       )
 
       policies <- learning_result$policies
