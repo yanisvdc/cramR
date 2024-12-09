@@ -45,48 +45,15 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
                           learner_type = "ridge", baseline_policy = NULL,
                           parallelize_batch = FALSE, model_params = list()) {
 
-  # Step 0: Set default baseline_policy if NULL
-  if (is.null(baseline_policy)) {
-    baseline_policy <- as.list(rep(0, nrow(X)))  # Creates a list of zeros with the same length as X
-  } else {
-    # Validate baseline_policy if provided
-    if (!is.list(baseline_policy)) {
-      stop("Error: baseline_policy must be a list.")
-    }
-    if (length(baseline_policy) != nrow(X)) {
-      stop("Error: baseline_policy length must match the number of observations in X.")
-    }
-    if (!all(sapply(baseline_policy, is.numeric))) {
-      stop("Error: baseline_policy must contain numeric values only.")
-    }
-  }
-
   n <- nrow(X)
 
+  # Step 0: Test baseline_policy
+  baseline_policy <- test_baseline_policy(baseline_policy, n)
+
   # Step 1: Interpret `batch` argument
-  if (is.numeric(batch) && length(batch) == 1) {
-    # `batch` is an integer, interpret it as `nb_batch`
-    nb_batch <- batch
-    indices <- sample(1:n)  # Randomly shuffle the indices without replacement
-    group_labels <- rep(1:nb_batch, length.out = n)  # Repeat labels 1 to nb_batch, filling up to n elements
-    batches <- split(indices, group_labels)  # Split indices into batches
-    # batches is a list of vectors, where we have for each batch number, the vector of indices
-    # from the population who belongs in this batch
-
-  } else if (is.list(batch) || is.vector(batch)) {
-
-    if (length(batch) == n) {
-      # Convert batch vector/list into a list of indices per batch
-      batch_numbers <- unlist(batch)  # Ensure it's a vector
-      batches <- split(1:length(batch_numbers), batch_numbers)
-    } else {
-      stop("`batch` must be a vector/list of length equal to the population size, or a list of vectors of indices.")
-    }
-    nb_batch <- length(batches)
-
-    } else {
-    stop("`batch` must be either an integer or a list/vector of batch indices.")
-  }
+  batch_results <- test_batch(batch, n)
+  batches <- batch_results$batches
+  nb_batch <- batch_results$nb_batch
 
   # Step 2: Retrieve model and validate user-specified parameters
   if (learner_type == "fnn") {

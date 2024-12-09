@@ -40,33 +40,16 @@
 #' @export
 
 # Combined experiment function
-cram_experiment <- function(X, D, Y, batch, model_type = "Causal Forest",
-                            learner_type = "ridge", alpha=0.05, baseline_policy = NULL) {
-
-  # Step 0: Set default baseline_policy if NULL
-  if (is.null(baseline_policy)) {
-    print("Baseline policy is NULL: policy value and policy value difference are the same.")
-    baseline_policy <- as.list(rep(0, nrow(X)))  # Creates a list of zeros with the same length as X
-  } else {
-    # Validate baseline_policy if provided
-    if (!is.list(baseline_policy)) {
-      stop("Error: baseline_policy must be a list.")
-    }
-    if (length(baseline_policy) != nrow(X)) {
-      stop("Error: baseline_policy length must match the number of observations in X.")
-    }
-    if (!all(sapply(baseline_policy, is.numeric))) {
-      stop("Error: baseline_policy must contain numeric values only.")
-    }
-    # Check if baseline_policy contains only zeros
-    if (all(sapply(baseline_policy, function(x) x == 0))) {
-      print("Baseline policy contains only zeros: policy value and policy value difference are the same.")
-    }
-  }
+cram_experiment <- function(X, D, Y, batch, model_type = "causal_forest",
+                            learner_type = "ridge", alpha=0.05, baseline_policy = NULL,
+                            parallelize_batch = FALSE, model_params = list()) {
 
   # Step 1: Run the cram learning process to get policies and batch indices
   learning_result <- cram_learning(X, D, Y, batch, model_type = model_type,
-                                   learner_type = learner_type, baseline_policy = baseline_policy)
+                                   learner_type = learner_type, baseline_policy = baseline_policy,
+                                   parallelize_batch = FALSE, model_params = list())
+
+
   policies <- learning_result$policies
   batch_indices <- learning_result$batch_indices
   final_policy_model <- learning_result$final_policy_model
