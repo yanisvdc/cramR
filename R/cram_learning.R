@@ -57,17 +57,11 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
 
   # Step 2: Retrieve model and validate user-specified parameters
   if (learner_type == "fnn") {
-    model_params <- validate_params_fnn(model_params)
-
-    set_model_result <- set_model(model_type, learner_type, model_params)
-    model <- set_model_result$model
-    model_params <- set_model_result$model_params
+    model_params <- validate_params_fnn(model_type, learner_type, model_params)
+    model <- set_model(model_type, learner_type, model_params)
   } else {
-    set_model_result <- set_model(model_type, learner_type, model_params)
-    model <- set_model_result$model
-    model_params <- set_model_result$model_params
-
-    model_params <- validate_params(model, model_params)
+    model <- set_model(model_type, learner_type, model_params)
+    model_params <- validate_params(model, model_type, learner_type, model_params)
   }
 
   # Step 3: Create a data.table for cumulative batches

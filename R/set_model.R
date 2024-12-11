@@ -44,31 +44,15 @@
 #' ))
 #'
 #' @export
-set_model <- function(model_type, learner_type, model_params = list()) {
+set_model <- function(model_type, learner_type, model_params) {
   if (model_type == "causal_forest") {
     # For Causal Forest
     model <- grf::causal_forest
+    return(model)
   } else if (learner_type == "ridge") {
     # For S-learner with Ridge Regression
     model <- glmnet::cv.glmnet
   } else if (learner_type == "fnn") {
-    # Determine the input shape based on model_type
-    input_shape <- if (model_type == "s_learner") ncol(X) + 1 else ncol(X)
-
-    # Default model configuration
-    default_model_params <- list(
-      input_layer = list(units = 64, activation = 'relu', input_shape = input_shape),  # Define default input layer
-      layers = list(
-        list(units = 32, activation = 'relu')
-      ),
-      output_layer = list(units = 1, activation = 'linear'),
-      compile_args = list(optimizer = 'adam', loss = 'mse'),
-      fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
-    )
-
-    # Merge user-provided parameters with defaults
-    model_params <- modifyList(default_model_params, model_params)
-
     # Create the model
     model <- keras_model_sequential()
 
@@ -104,5 +88,5 @@ set_model <- function(model_type, learner_type, model_params = list()) {
     stop("Unsupported model_type or learner_type.")
   }
 
-  return(list(model = model, model_params = model_params))
+  return(model)
 }
