@@ -27,7 +27,21 @@
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[base]{formals}}
 #' @importFrom base formals setdiff
 #' @export
-validate_params <- function(model_function, user_params) {
+validate_params <- function(model_function, model_type, learner_type, user_params) {
+  if (is.null(user_params)){
+    if (model_type == "causal_forest") {
+      default_model_params <- list(num.trees = 100)
+      return(default_model_params)
+      # return immediately to avoid to overwriting
+    } else if (learner_type == "ridge") {
+      default_model_params <- list(alpha = 1)
+      return(default_model_params)
+    } else {
+      stop("Error: model_type should be one of 'causal_forest', 's_learner', 'm_learner', and learner_type should be one of 'ridge', 'fnn'.")
+    }
+  }
+
+  # If the previous test did not return, the user specified model_params
   # Retrieve the full list of arguments for the model function
   formal_args <- formals(model_function)
   valid_args <- names(formal_args)

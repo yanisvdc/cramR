@@ -42,12 +42,12 @@
 # Combined experiment function
 cram_experiment <- function(X, D, Y, batch, model_type = "causal_forest",
                             learner_type = "ridge", alpha=0.05, baseline_policy = NULL,
-                            parallelize_batch = FALSE, model_params = list()) {
+                            parallelize_batch = FALSE, model_params = NULL) {
 
   # Step 1: Run the cram learning process to get policies and batch indices
   learning_result <- cram_learning(X, D, Y, batch, model_type = model_type,
                                    learner_type = learner_type, baseline_policy = baseline_policy,
-                                   parallelize_batch = FALSE, model_params = list())
+                                   parallelize_batch = FALSE, model_params = model_params)
 
 
   policies <- learning_result$policies

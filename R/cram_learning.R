@@ -43,7 +43,7 @@ library(foreach)
 #' @export
 cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
                           learner_type = "ridge", baseline_policy = NULL,
-                          parallelize_batch = FALSE, model_params = list()) {
+                          parallelize_batch = FALSE, model_params = NULL) {
 
   n <- nrow(X)
 

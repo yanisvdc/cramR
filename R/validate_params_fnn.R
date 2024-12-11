@@ -7,6 +7,19 @@
 #' @return A named list of validated parameters merged with defaults for any missing values.
 #' @export
 validate_params_fnn <- function(model_params) {
+  if (is.null(model_params)){
+    default_model_params <- list(
+      input_layer = list(units = 64, activation = 'relu', input_shape = input_shape),  # Define default input layer
+      layers = list(
+        list(units = 32, activation = 'relu')
+      ),
+      output_layer = list(units = 1, activation = 'linear'),
+      compile_args = list(optimizer = 'adam', loss = 'mse'),
+      fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
+    )
+    return(default_model_params)
+  }
+  # If the previous test did not return, the user specified model_params
   # Ensure model_params is a list
   if (!is.list(model_params)) {
     stop("`model_params` must be a list.")

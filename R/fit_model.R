@@ -20,7 +20,7 @@
 #' fitted_model <- fit_model(model, X, Y, W = D, "S-learner", "FNN", model_params = list(epochs = 20))
 #'
 #' @export
-fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_params = list()) {
+fit_model <- function(model, X, Y, W = NULL, model_type, learner_type, model_params = NULL) {
   # Validate input
   if (is.null(model)) {
     stop("The provided model is NULL. Please ensure `set_model` returns a valid model.")
