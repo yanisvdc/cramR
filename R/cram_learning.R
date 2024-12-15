@@ -119,7 +119,6 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
 
     # Train model with validated parameters
     trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
-    # trained_model <- do.call(model, c(list(X = X_subset, Y = Y_subset, W = D_subset), model_params))
     cate_estimates <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
     learned_policy <- ifelse(cate_estimates > 0, 1, 0)
 

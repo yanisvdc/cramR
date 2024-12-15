@@ -28,7 +28,7 @@
 #' @importFrom glmnet predict
 #' @importFrom keras predict
 #' @export
-model_predict <- function(model, X, D = NULL, model_type, learner_type = NULL, model_params = list()) {
+model_predict <- function(model, X, D, model_type, learner_type, model_params) {
   if (model_type == "causal_forest") {
     # Predict using Causal Forest
     predictions <- predict(model, X)$predictions
@@ -55,19 +55,10 @@ model_predict <- function(model, X, D = NULL, model_type, learner_type = NULL, m
     }
 
   } else if (model_type == "m_learner") {
-    if (is.null(D)) {
-      stop("Error: D (treatment indicators) must be provided for M-learner predictions.")
-    }
-
-    # Estimate propensity scores
-    propensity_model <- glm(D ~ ., data = as.data.frame(X), family = "binomial")
-    prop_scores <- predict(propensity_model, newdata = as.data.frame(X), type = "response")
 
     if (learner_type == "ridge") {
       # Transformed outcome prediction with Ridge Regression
-      Y_star <- as.numeric(model_params$Y_star)
-      transformed_outcome <- predict(model, newx = as.matrix(X), s = "lambda.min")
-      predictions <- transformed_outcome
+      predictions <- predict(model, newx = as.matrix(X), s = "lambda.min")
 
     } else if (learner_type == "fnn") {
       # Transformed outcome prediction with Feedforward Neural Network

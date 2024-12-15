@@ -31,32 +31,26 @@ fit_model <- function(model, X, Y, W, model_type, learner_type, model_params) {
   if (!learner_type %in% c("ridge", "fnn") && model_type != "causal_forest") {
     stop("Unsupported learner type for this model type. Choose 'ridge' or 'fnn'.")
   }
+  if (is.null(W)) {
+    stop("Treatment indicators (W) are required.")
+  }
 
   fitted_model <- NULL
 
   if (model_type == "causal_forest") {
-    # Causal Forest requires W (treatment indicator)
-    if (is.null(W)) {
-      stop("Treatment indicators (W) are required for Causal Forest.")
-    }
     # Train Causal Forest
-    # fitted_model <- model(X, Y, W, !!!model_params)
     fitted_model <- do.call(model, c(list(X = X, Y = Y, W = W), model_params))
 
   } else if (model_type == "s_learner") {
     if (learner_type == "ridge") {
       # Ridge Regression (S-learner)
-      if (!is.null(W)) {
-        X <- cbind(as.matrix(X), W)  # Add treatment indicator for S-learner
-      }
-      # fitted_model <- model(as.matrix(X), Y, !!!model_params)
+      X <- cbind(as.matrix(X), W)  # Add treatment indicator for S-learner
+
       fitted_model <- do.call(model, c(list(x = as.matrix(X), y = Y), model_params))
 
     } else if (learner_type == "fnn") {
       # Feedforward Neural Network (S-learner)
-      if (!is.null(W)) {
-        X <- cbind(as.matrix(X), W)  # Add treatment indicator for S-learner
-      }
+      X <- cbind(as.matrix(X), W)  # Add treatment indicator for S-learner
 
       history <- model %>% fit(
         as.matrix(X),
@@ -70,9 +64,6 @@ fit_model <- function(model, X, Y, W, model_type, learner_type, model_params) {
     }
   } else if (model_type == "m_learner") {
     # M-learner requires a propensity score and transformed outcomes
-    if (is.null(W)) {
-      stop("Treatment indicators (W) are required for M-learner.")
-    }
 
     # Propensity score estimation
     propensity_model <- glm(W ~ ., data = as.data.frame(X), family = "binomial")
@@ -81,7 +72,6 @@ fit_model <- function(model, X, Y, W, model_type, learner_type, model_params) {
 
     if (learner_type == "ridge") {
       # Ridge Regression for M-learner
-      # fitted_model <- model(as.matrix(X), Y_star, !!!model_params)
       fitted_model <- do.call(model, c(list(x = as.matrix(X), y = Y_star), model_params))
 
     } else if (learner_type == "fnn") {
