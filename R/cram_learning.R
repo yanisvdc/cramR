@@ -56,7 +56,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
   nb_batch <- batch_results$nb_batch
 
   # Step 2: Retrieve model and validate user-specified parameters
-  if (learner_type == "fnn") {
+  if (!is.null(learner_type) && learner_type == "fnn") {
     model_params <- validate_params_fnn(model_type, learner_type, model_params)
     model <- set_model(model_type, learner_type, model_params)
   } else {

@@ -47,7 +47,7 @@ Y <- data$Y
 
 ## Parameters
 batch <- 20
-model_type <- "M-learner" # Causal Forest, S-learner, M-learner
+model_type <- "m_learner" # Causal Forest, S-learner, M-learner
 learner_type <- "ridge" # NULL, ridge, FNN
 alpha <- 0.05
 baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
@@ -265,26 +265,12 @@ Y <- data$Y
 
 ## Parameters
 batch <- 20
-model_type <- "causal_forest" # causal_forest, s_learner, m_learner
-learner_type <- "NULL" # NULL, ridge, fnn
+model_type <- "m_learner" # causal_forest, s_learner, m_learner
+learner_type <- "ridge" # NULL, ridge, fnn
 alpha <- 0.05
 baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
 parallelize_batch <- FALSE
-
-# input_shape <- if (model_type == "s_learner") ncol(X) + 1 else ncol(X)
-# model_params <- list(
-#   input_layer = list(units = 64, activation = 'relu', input_shape = input_shape),  # Define default input layer
-#   layers = list(
-#     list(units = 32, activation = 'relu')
-#   ),
-#   output_layer = list(units = 1, activation = 'linear'),
-#   compile_args = list(optimizer = 'adam', loss = 'mse'),
-#   fit_params = list(epochs=5, batch_size=32, verbose=0)
-# )
-
-model_params <- list(num.trees = 100)
-
-# model_params <- list(alpha = 1)
+model_params <- NULL
 
 
 learning_result <- cram_learning(X, D, Y, batch, model_type = model_type,
