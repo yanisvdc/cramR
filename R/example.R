@@ -27,6 +27,7 @@ source(file.path(path, "cram_learning.R"))
 source(file.path(path, "cram_estimate.R"))
 source(file.path(path, "cram_variance_estimator.R"))
 source(file.path(path, "cram_policy_value_estimator.R"))
+source(file.path(path, "cram_variance_estimator_policy_value.R"))
 
 source(file.path(path, "set_model.R"))
 source(file.path(path, "fit_model.R"))
