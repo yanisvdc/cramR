@@ -77,15 +77,10 @@ cram_experiment <- function(X, D, Y, batch, model_type = "causal_forest",
                                                        policies,
                                                        batch_indices)
 
-  # Step 7: Estimate the standard error of policy_value_estimate using cram_variance_estimator
-  ## same as delta, but enforcing a null baseline policy
-  null_baseline <- as.list(rep(0, nrow(X)))
-  policies_with_null_baseline <- policies
-  policies_with_null_baseline[, 1] <- unlist(null_baseline)  # Set the first column to baseline policy
-
-  policy_value_asymptotic_variance <- cram_variance_estimator(Y, D,
-                                                              policies_with_null_baseline,
-                                                              batch_indices)
+  # Step 7: Estimate the standard error of policy_value_estimate using cram_variance_estimator_policy_value
+  policy_value_asymptotic_variance <- cram_variance_estimator_policy_value(Y, D,
+                                                                           policies,
+                                                                           batch_indices)
   policy_value_asymptotic_sd <- sqrt(policy_value_asymptotic_variance)  # w_T, the asymptotic standard deviation
   policy_value_standard_error <- policy_value_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
 

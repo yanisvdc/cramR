@@ -55,7 +55,7 @@ cram_variance_estimator_policy_value <- function(Y, D, pi, batch_indices) {
       # Calculate g_hat_Tj for individuals in batch k
       g_hat_Tj_batch <- weight_diff[indices] * policy_diff_sum
       g_hat_Tj_batch <- g_hat_Tj_batch - weight_diff[indices] * (pi[indices, 2] - pi[indices, 1]) / (nb_batch - 1)
-      g_hat_Tj_batch <- g_hat_Tj_batch + ((part_1_weight[indices] * pi[indices, 2] - part_2_weight[indices] * (1-pi[indices, 1])) / (nb_batch - 1))
+      g_hat_Tj_batch <- g_hat_Tj_batch + ((part_1_weight[indices] * pi[indices, 2] - part_2_weight[indices] * (1-pi[indices, 2])) / (nb_batch - 1))
       g_hat_Tj_values <- c(g_hat_Tj_values, g_hat_Tj_batch)
     }
 
