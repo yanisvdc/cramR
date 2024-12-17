@@ -47,14 +47,17 @@ Y <- data$Y
 
 ## Parameters
 batch <- 20
-model_type <- "m_learner" # Causal Forest, S-learner, M-learner
-learner_type <- "ridge" # NULL, ridge, FNN
+model_type <- "m_learner" # causal_forest, s_learner, m_learner
+learner_type <- "ridge" # NULL, ridge, fnn
 alpha <- 0.05
 baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
+parallelize_batch <- FALSE
+model_params <- NULL
 
 ## Run cram_experiment
-experiment_results <- cram_experiment(X, D, Y, batch, model_type,
-                                      learner_type, alpha, baseline_policy)
+experiment_results <- cram_experiment(X, D, Y, batch, model_type = model_type,
+         learner_type = learner_type, alpha=alpha, baseline_policy = baseline_policy,
+         parallelize_batch = parallelize_batch, model_params = model_params)
 
 print(experiment_results)
 
@@ -210,33 +213,16 @@ dgp_Y <- function(D, X) {
   return(Y)
 }
 
-# dgp_Y <- function(d, x) {
-#   # Define theta based on individual's covariates
-#   theta <- ifelse(
-#     x["binary"] == 1 & x["discrete"] <= 2,  # Group 1: High benefit
-#     1,
-#     ifelse(x["binary"] == 0 & x["discrete"] >= 4,  # Group 3: High adverse effect
-#            -1,
-#            0.1)  # Group 2: Neutral effect (small positive or negative)
-#   )
-#
-#   # Define outcome Y with treatment effect and noise
-#   y <- d * (theta + rnorm(1, mean = 0, sd = 1)) +
-#     (1 - d) * rnorm(1)  # Outcome influenced by treatment and noise for untreated
-#
-#   # Ensure Y has no names by converting it to an unnamed numeric value
-#   return(unname(y))
-# }
-
 ## Parameters
 batch <- 20
 nb_simulations <- 2
 nb_simulations_truth <- 4  # nb_simulations_truth must be greater than nb_simulations
-model_type <- "causal_forest" # "Causal Forest", "S-learner", "M-learner"
-learner_type <- "NULL" # NULL, "ridge", "FNN"
-baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
+model_type <- "m_learner" # causal_forest, s_learner, m_learner
+learner_type <- "ridge" # NULL, ridge, fnn
 alpha <- 0.05
-model_params <- list(num.trees = 100)
+baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
+parallelize_batch <- FALSE
+model_params <- NULL
 
 ## Run cram_experiment
 # install.packages("profvis")
