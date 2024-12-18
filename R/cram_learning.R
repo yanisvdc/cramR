@@ -84,12 +84,22 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
   cumulative_data_dt <- rbindlist(cumulative_data_list)
 
   if (parallelize_batch) {
+    # Assign cumulative_data_dt to the global environment
+    assign("cumulative_data_dt", cumulative_data_dt, envir = .GlobalEnv)
+    # Assign model to the global environment
+    assign("model", model, envir = .GlobalEnv)
+
     # Parallel execution using foreach and doParallel
     cl <- makeCluster(detectCores() - 1)  # Use available cores minus one
     registerDoParallel(cl)
 
+    # Export custom functions and objects to the worker nodes
+    clusterExport(cl, varlist = c("X", "D", "cumulative_data_dt", "model",
+                                  "model_type", "learner_type", "model_params",
+                                  "fit_model", "model_predict"))
+
     # Perform parallel training
-    results <- foreach(t = 1:nb_batch, .combine = rbind, .packages = c("grf", "data.table")) %dopar% {
+    results <- foreach(t = 1:nb_batch, .packages = c("grf", "data.table")) %dopar% {
       batch <- cumulative_data_dt[t]
       X_subset <- batch$X_cumul[[1]]
       D_subset <- batch$D_cumul[[1]]
@@ -97,17 +107,36 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
 
       # Train model with validated parameters
       trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
-      # trained_model <- do.call(model, c(list(X = X_subset, Y = Y_subset, W = D_subset), model_params))
-      cate_estimates <- predict(trained_model, X_subset)$predictions
+      cate_estimates <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
+      cate_estimates <- as.numeric(cate_estimates)
       learned_policy <- ifelse(cate_estimates > 0, 1, 0)
 
-      list(t = t, model = trained_model, cate_estimates = cate_estimates, learned_policy = learned_policy)
+      # Store the final model only at the last iteration
+      final_model <- if (t == nb_batch) trained_model else NULL
+
+      # Return the policy matrix - foreach preserves the sequential order when rendering the output
+      list(learned_policy = learned_policy, final_model = final_model)
     }
 
     stopCluster(cl)
 
     # Combine results into a data.table
-    results_dt <- rbindlist(results)
+    results_dt <- results
+
+    # Combine the learned policies into a matrix
+    policy_matrix <- do.call(cbind, lapply(results_dt, function(x) x$learned_policy))
+
+    # Add a baseline policy as the first column (optional)
+    policy_matrix <- cbind(as.numeric(baseline_policy), policy_matrix)
+
+    # Extract the final model from the last iteration
+    final_policy_model <- results_dt[[nb_batch]]$final_model
+
+    return(list(
+      final_policy_model = final_policy_model,
+      policies = policy_matrix,
+      batch_indices = batches
+    ))
 
   } else {
 

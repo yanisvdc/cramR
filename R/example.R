@@ -52,7 +52,7 @@ model_type <- "m_learner" # causal_forest, s_learner, m_learner
 learner_type <- "ridge" # NULL, ridge, fnn
 alpha <- 0.05
 baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
-parallelize_batch <- FALSE
+parallelize_batch <- TRUE
 model_params <- NULL
 
 ## Run cram_experiment
@@ -256,7 +256,7 @@ model_type <- "m_learner" # causal_forest, s_learner, m_learner
 learner_type <- "ridge" # NULL, ridge, fnn
 alpha <- 0.05
 baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
-parallelize_batch <- FALSE
+parallelize_batch <- TRUE
 model_params <- NULL
 
 
