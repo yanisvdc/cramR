@@ -93,17 +93,28 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     cl <- makeCluster(detectCores() - 1)  # Use available cores minus one
     registerDoParallel(cl)
 
-    # Export custom functions and objects to the worker nodes
-    clusterExport(cl, varlist = c("X", "D", "cumulative_data_dt", "model",
-                                  "model_type", "learner_type", "model_params",
-                                  "fit_model", "model_predict"))
+    if (!is.null(learner_type) && learner_type == "fnn") {
+      clusterExport(cl, varlist = c("X", "D", "cumulative_data_dt", "set_model",
+                                    "model_type", "learner_type", "model_params",
+                                    "fit_model", "model_predict"))
+    } else {
+      # Export custom functions and objects to the worker nodes
+      clusterExport(cl, varlist = c("X", "D", "cumulative_data_dt", "model",
+                                    "model_type", "learner_type", "model_params",
+                                    "fit_model", "model_predict"))
+    }
 
     # Perform parallel training
-    results <- foreach(t = 1:nb_batch, .packages = c("grf", "data.table")) %dopar% {
+    results <- foreach(t = 1:nb_batch, .packages = c("grf", "data.table",
+                                                     "glmnet", "keras")) %dopar% {
       batch <- cumulative_data_dt[t]
       X_subset <- batch$X_cumul[[1]]
       D_subset <- batch$D_cumul[[1]]
       Y_subset <- batch$Y_cumul[[1]]
+
+      if (!is.null(learner_type) && learner_type == "fnn") {
+        model <- set_model(model_type, learner_type, model_params)
+      }
 
       # Train model with validated parameters
       trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
@@ -111,8 +122,13 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
       cate_estimates <- as.numeric(cate_estimates)
       learned_policy <- ifelse(cate_estimates > 0, 1, 0)
 
-      # Store the final model only at the last iteration
-      final_model <- if (t == nb_batch) trained_model else NULL
+      if (!is.null(learner_type) && learner_type == "fnn") {
+        # Serialize the final model at the last iteration
+        final_model <- if (t == nb_batch) serialize_model(trained_model) else NULL
+      } else {
+        # Store the final model only at the last iteration
+        final_model <- if (t == nb_batch) trained_model else NULL
+      }
 
       # Return the policy matrix - foreach preserves the sequential order when rendering the output
       list(learned_policy = learned_policy, final_model = final_model)
@@ -129,8 +145,13 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     # Add a baseline policy as the first column (optional)
     policy_matrix <- cbind(as.numeric(baseline_policy), policy_matrix)
 
-    # Extract the final model from the last iteration
-    final_policy_model <- results_dt[[nb_batch]]$final_model
+    if (!is.null(learner_type) && learner_type == "fnn") {
+      serialized_model <- results_dt[[nb_batch]]$final_model
+      final_policy_model <- unserialize_model(serialized_model)
+    } else {
+      # Extract the final model from the last iteration
+      final_policy_model <- results_dt[[nb_batch]]$final_model
+    }
 
     return(list(
       final_policy_model = final_policy_model,

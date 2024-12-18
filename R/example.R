@@ -6,7 +6,6 @@
 # Set JIT level to 0 to disable JIT compilation
 compiler::enableJIT(0)
 
-library(data.table)
 library(doParallel)
 library(foreach)
 library(grf)      # Load grf package for causal_forest
@@ -36,6 +35,42 @@ source(file.path(path, "validate_params.R"))
 source(file.path(path, "validate_params_fnn.R"))
 source(file.path(path, "test_func.R"))
 
+
+## Test Cram Learning
+
+# Example usage of CRAM LEARNING
+set.seed(123)
+
+## Generate data
+n <- 1000
+data <- generate_data(n)
+X <- data$X
+D <- data$D
+Y <- data$Y
+
+## Parameters
+batch <- 20
+model_type <- "causal_forest" # causal_forest, s_learner, m_learner
+learner_type <- NULL # NULL, ridge, fnn
+alpha <- 0.05
+baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
+parallelize_batch <- TRUE
+model_params <- NULL
+
+
+learning_result <- cram_learning(X, D, Y, batch, model_type = model_type,
+                                 learner_type = learner_type, baseline_policy = baseline_policy,
+                                 parallelize_batch = parallelize_batch, model_params = model_params)
+
+
+
+print(learning_result)
+# policies <- learning_result$policies
+# batch_indices <- learning_result$batch_indices
+# final_policy_model <- learning_result$final_policy_model
+
+# --------------------------------------------------------------------------------------
+
 # Example usage of CRAM EXPERIMENT
 set.seed(123)
 
@@ -62,7 +97,7 @@ experiment_results <- cram_experiment(X, D, Y, batch, model_type = model_type,
 
 print(experiment_results)
 
-# --------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 # Load necessary libraries if not already loaded
 # library(causalforest) # Load your specific model library if needed
 
@@ -238,38 +273,7 @@ print(simulation_results)
 
 
 
-## Test Cram Learning
 
-# Example usage of CRAM EXPERIMENT
-set.seed(123)
-
-## Generate data
-n <- 1000
-data <- generate_data(n)
-X <- data$X
-D <- data$D
-Y <- data$Y
-
-## Parameters
-batch <- 20
-model_type <- "m_learner" # causal_forest, s_learner, m_learner
-learner_type <- "ridge" # NULL, ridge, fnn
-alpha <- 0.05
-baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
-parallelize_batch <- TRUE
-model_params <- NULL
-
-
-learning_result <- cram_learning(X, D, Y, batch, model_type = model_type,
-                                 learner_type = learner_type, baseline_policy = baseline_policy,
-                                 parallelize_batch = parallelize_batch, model_params = model_params)
-
-
-
-print(learning_result)
-# policies <- learning_result$policies
-# batch_indices <- learning_result$batch_indices
-# final_policy_model <- learning_result$final_policy_model
 
 
 
