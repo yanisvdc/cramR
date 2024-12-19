@@ -18,6 +18,9 @@ library(data.table)
 library(kableExtra)  # For clean console and HTML tables
 library(DT)          # For interactive tables
 
+library(profvis)
+
+
 
 path <- "C:/Users/yanis/OneDrive/Documents/cramR/R"
 
@@ -44,31 +47,61 @@ source(file.path(path, "averaged_cram.R"))
 
 ## Test Cram Learning
 
+# Custom S-Learner Fit
+custom_fit <- function(X, Y, D) {
+  # Combine X and D into a single matrix
+  X_combined <- cbind(X, D)
+
+  # Fit a simple linear regression model
+  model <- lm(Y ~ ., data = as.data.frame(X_combined))
+
+  return(model)
+}
+
+# Custom S-Learner Predict
+custom_predict <- function(model, X_new, D_new) {
+  # Create data frames for treated (D = 1) and untreated (D = 0)
+  X_treated <- as.data.frame(cbind(X_new, D = 1))
+  X_control <- as.data.frame(cbind(X_new, D = 0))
+
+  # Predict potential outcomes
+  Y_treated_pred <- predict(model, newdata = X_treated)
+  Y_control_pred <- predict(model, newdata = X_control)
+
+  # Calculate CATE as the difference between treated and control predictions
+  cate <- Y_treated_pred - Y_control_pred
+
+  return(as.numeric(cate)) # Return as a numeric vector
+}
+
+
+
 # Example usage of CRAM LEARNING
 set.seed(123)
 
 ## Generate data
-n <- 1000
+n <- 10000
 data <- generate_data(n)
 X <- data$X
 D <- data$D
 Y <- data$Y
 
 ## Parameters
-batch <- 20
-model_type <- "s_learner" # causal_forest, s_learner, m_learner
-learner_type <- "fnn" # NULL, ridge, fnn
+batch <- 1000
+model_type <- NULL # causal_forest, s_learner, m_learner
+learner_type <- NULL # NULL, ridge, fnn
 alpha <- 0.05
 baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
 parallelize_batch <- FALSE
 model_params <- NULL
 
-
+# Start profiling
+# profvis({
 learning_result <- cram_learning(X, D, Y, batch, model_type = model_type,
                                  learner_type = learner_type, baseline_policy = baseline_policy,
                                  parallelize_batch = parallelize_batch, model_params = model_params,
-                                 custom_fit = NULL, custom_predict = NULL)
-
+                                 custom_fit = custom_fit, custom_predict = custom_predict)
+# })
 
 print(learning_result)
 # policies <- learning_result$policies
@@ -195,6 +228,35 @@ custom_predict <- function(model, X_new, D_new) {
   as.numeric(cate) # Return as a numeric vector
 }
 
+
+
+# Custom S-Learner Fit
+custom_fit <- function(X, Y, D) {
+  # Combine X and D into a single matrix
+  X_combined <- cbind(X, D)
+
+  # Fit a simple linear regression model
+  model <- lm(Y ~ ., data = as.data.frame(X_combined))
+
+  return(model)
+}
+
+# Custom S-Learner Predict
+custom_predict <- function(model, X_new, D_new) {
+  # Create data frames for treated (D = 1) and untreated (D = 0)
+  X_treated <- as.data.frame(cbind(X_new, D = 1))
+  X_control <- as.data.frame(cbind(X_new, D = 0))
+
+  # Predict potential outcomes
+  Y_treated_pred <- predict(model, newdata = X_treated)
+  Y_control_pred <- predict(model, newdata = X_control)
+
+  # Calculate CATE as the difference between treated and control predictions
+  cate <- Y_treated_pred - Y_control_pred
+
+  return(as.numeric(cate)) # Return as a numeric vector
+}
+
 ## Generate data
 n <- 10000
 data <- generate_data(n)
@@ -203,7 +265,7 @@ D <- data$D
 Y <- data$Y
 
 ## Parameters
-batch <- 20
+batch <- 1000
 model_type <- NULL # causal_forest, s_learner, m_learner
 learner_type <- NULL # NULL, ridge, fnn
 alpha <- 0.05
@@ -212,6 +274,7 @@ parallelize_batch <- FALSE
 model_params <- NULL
 
 ## Run cram_experiment
+profvis({
 experiment_results <- cram_experiment(X, D, Y, batch, model_type = model_type,
          learner_type = learner_type, baseline_policy = baseline_policy,
          parallelize_batch = parallelize_batch, model_params = model_params,
@@ -219,7 +282,7 @@ experiment_results <- cram_experiment(X, D, Y, batch, model_type = model_type,
 
 
 print(experiment_results)
-
+})
 # --------------------------------------------------------------------------------------
 # Example usage of CRAM SIMULATION
 set.seed(123)
