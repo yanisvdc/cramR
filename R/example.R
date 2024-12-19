@@ -50,18 +50,18 @@ Y <- data$Y
 
 ## Parameters
 batch <- 20
-model_type <- "causal_forest" # causal_forest, s_learner, m_learner
-learner_type <- NULL # NULL, ridge, fnn
+model_type <- "s_learner" # causal_forest, s_learner, m_learner
+learner_type <- "fnn" # NULL, ridge, fnn
 alpha <- 0.05
 baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
-parallelize_batch <- TRUE
+parallelize_batch <- FALSE
 model_params <- NULL
 
 
 learning_result <- cram_learning(X, D, Y, batch, model_type = model_type,
                                  learner_type = learner_type, baseline_policy = baseline_policy,
-                                 parallelize_batch = parallelize_batch, model_params = model_params)
-
+                                 parallelize_batch = parallelize_batch, model_params = model_params,
+                                 custom_fit = NULL, custom_predict = NULL)
 
 
 print(learning_result)
@@ -71,100 +71,6 @@ print(learning_result)
 
 # --------------------------------------------------------------------------------------
 
-# Example usage of CRAM EXPERIMENT
-set.seed(123)
-
-## Generate data
-n <- 1000
-data <- generate_data(n)
-X <- data$X
-D <- data$D
-Y <- data$Y
-
-## Parameters
-batch <- 20
-model_type <- "m_learner" # causal_forest, s_learner, m_learner
-learner_type <- "ridge" # NULL, ridge, fnn
-alpha <- 0.05
-baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
-parallelize_batch <- TRUE
-model_params <- NULL
-
-## Run cram_experiment
-experiment_results <- cram_experiment(X, D, Y, batch, model_type = model_type,
-         learner_type = learner_type, alpha=alpha, baseline_policy = baseline_policy,
-         parallelize_batch = parallelize_batch, model_params = model_params)
-
-print(experiment_results)
-
-# --------------------------------------------------------------------------------------
-# Example usage of CRAM SIMULATION
-set.seed(123)
-
-## Obtain reference dataset X and define the data generation processes for D and Y
-n <- 10000
-sample_size <- 1000
-data <- generate_data(n)
-X <- data$X
-
-dgp_X <- function(n) {
-  data.table(
-    binary = rbinom(n, 1, 0.5),
-    discrete = sample(1:5, n, replace = TRUE),
-    continuous = rnorm(n)
-  )
-}
-
-dgp_D <- function(X) {
-  # Generate a vector of binary treatment assignments for all individuals at once
-  return(rbinom(nrow(X), 1, 0.5))
-}
-# Vectorized dgp_Y for all individuals
-dgp_Y <- function(D, X) {
-  # Calculate theta for each individual based on the covariates
-  theta <- ifelse(
-    X[, binary] == 1 & X[, discrete] <= 2,  # Group 1: High benefit
-    1,
-    ifelse(X[, binary] == 0 & X[, discrete] >= 4,  # Group 3: High adverse effect
-           -1,
-           0.1)  # Group 2: Neutral effect
-  )
-
-  # Generate Y values with treatment effect and random noise
-  Y <- D * (theta + rnorm(length(D), mean = 0, sd = 1)) +
-    (1 - D) * rnorm(length(D))  # Outcome for untreated
-
-  return(Y)
-}
-
-## Parameters
-batch <- 20
-nb_simulations <- 2
-nb_simulations_truth <- 4  # nb_simulations_truth must be greater than nb_simulations
-model_type <- "causal_forest" # causal_forest, s_learner, m_learner
-learner_type <- NULL # NULL, ridge, fnn
-alpha <- 0.05
-baseline_policy <- as.list(rep(0, sample_size)) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
-parallelize_batch <- FALSE
-model_params <- NULL
-custom_fit <- NULL
-custom_predict <- NULL
-
-## Run cram_experiment
-# install.packages("profvis")
-# library(profvis)
-print(Sys.time())
-simulation_results <- cram_simulation(X = X, dgp_X = NULL, dgp_D = dgp_D,
-                                      dgp_Y, batch, nb_simulations, nb_simulations_truth, sample_size,
-                                      model_type = "causal_forest", learner_type = "ridge",
-                                      alpha=0.05, baseline_policy = baseline_policy,
-                                      parallelize_batch = parallelize_batch, model_params = model_params,
-                                      custom_fit = custom_fit, custom_predict = custom_predict)
-
-print(Sys.time())
-print(simulation_results)
-
-# --------------------------------------------------------------------------------------
 # Custom X-Learner: Returns only the final model
 custom_fit <- function(X, Y, D) {
 
@@ -239,17 +145,93 @@ print(learning_result)
 
 # --------------------------------------------------------------------------------------
 
+# Example usage of CRAM EXPERIMENT
+set.seed(123)
+
+# Custom X-Learner: Returns only the final model
+custom_fit <- function(X, Y, D) {
+
+  # Split the data into treated and control groups
+  treated_indices <- which(D == 1)
+  control_indices <- which(D == 0)
+
+  X_treated <- X[treated_indices, ]
+  Y_treated <- Y[treated_indices]
+  X_control <- X[control_indices, ]
+  Y_control <- Y[control_indices]
+
+  # Step 1: Fit base models on treated and control groups separately
+  model_treated <- cv.glmnet(as.matrix(X_treated), Y_treated, alpha = 0)
+  model_control <- cv.glmnet(as.matrix(X_control), Y_control, alpha = 0)
+
+  # Step 2: Compute pseudo-outcomes
+  # Predict outcomes for the treated group using the control model
+  tau_control <- Y_treated - predict(model_control, as.matrix(X_treated), s = "lambda.min")
+
+  # Predict outcomes for the control group using the treated model
+  tau_treated <- predict(model_treated, as.matrix(X_control), s = "lambda.min") - Y_control
+
+  # Step 3: Combine pseudo-outcomes into a single training set
+  X_combined <- rbind(X_treated, X_control)
+  tau_combined <- c(tau_control, tau_treated)
+  weights <- c(rep(1, length(tau_control)), rep(1, length(tau_treated))) # Equal weighting
+
+  # Step 4: Fit a single model on the combined pseudo-outcomes
+  final_model <- cv.glmnet(as.matrix(X_combined), tau_combined, alpha = 0, weights = weights)
+
+  return(final_model)
+}
+
+# Custom prediction function
+custom_predict <- function(model, X_new, D_new) {
+  # Use the final model for predictions on new data
+  cate <- predict(model, as.matrix(X_new), s = "lambda.min")
+  as.numeric(cate) # Return as a numeric vector
+}
+
+## Generate data
+n <- 10000
+data <- generate_data(n)
+X <- data$X
+D <- data$D
+Y <- data$Y
+
+## Parameters
+batch <- 20
+model_type <- NULL # causal_forest, s_learner, m_learner
+learner_type <- NULL # NULL, ridge, fnn
+alpha <- 0.05
+baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
+parallelize_batch <- FALSE
+model_params <- NULL
+
+## Run cram_experiment
+experiment_results <- cram_experiment(X, D, Y, batch, model_type = model_type,
+         learner_type = learner_type, baseline_policy = baseline_policy,
+         parallelize_batch = parallelize_batch, model_params = model_params,
+         custom_fit = custom_fit, custom_predict = custom_predict, alpha=alpha)
+
+
+print(experiment_results)
+
+# --------------------------------------------------------------------------------------
 # Example usage of CRAM SIMULATION
 set.seed(123)
 
 ## Obtain reference dataset X and define the data generation processes for D and Y
-## dgp_D (resp. dgp_Y) takes individual-level data Xi (resp. Xi and Di) as inputs
-n <- 1000
+n <- 10000
+sample_size <- 1000
 data <- generate_data(n)
 X <- data$X
-# dgp_D <- function(Xi) {
-#   return(rbinom(1, 1, 0.5))
-# }
+
+dgp_X <- function(n) {
+  data.table(
+    binary = rbinom(n, 1, 0.5),
+    discrete = sample(1:5, n, replace = TRUE),
+    continuous = rnorm(n)
+  )
+}
+
 dgp_D <- function(X) {
   # Generate a vector of binary treatment assignments for all individuals at once
   return(rbinom(nrow(X), 1, 0.5))
@@ -272,84 +254,34 @@ dgp_Y <- function(D, X) {
   return(Y)
 }
 
-# Generate batches with fixed last batch
-generate_batches <- function(X, num_batches) {
-  n <- nrow(X)
-  batch_size <- n %/% num_batches
-  remainder <- n %% num_batches
-
-  # Create initial indices for batches
-  indices <- sample(n)
-  batches <- split(indices, rep(1:num_batches, each = batch_size, length.out = n))
-
-  return(batches)
-}
-
-# Average results over 100 runs
-average_cram_simulation <- function(X, dgp_D, dgp_Y, batch, nb_simulations,
-                                    nb_simulations_truth, model_type, learner_type,
-                                    alpha, baseline_policy, model_params, num_runs = 100) {
-  # Placeholder for accumulating results
-  results <- vector("list", num_runs)
-
-  # Constant last batch
-  fixed_last_batch <- generate_batches(X, batch)[[batch]]
-
-  for (run in seq_len(num_runs)) {
-    # Permute indices for first n-1 batches
-    permuted_batches <- generate_batches(X, batch - 1)
-    permuted_batches[[batch]] <- fixed_last_batch  # Keep the last batch fixed
-
-    # Combine permuted batches into a single list of indices
-    full_batch <- lapply(seq_along(permuted_batches), function(i) {
-      permuted_batches[[i]]
-    })
-
-    # Run cram_simulation with permuted batches
-    results[[run]] <- cram_simulation(X, dgp_D, dgp_Y, full_batch,
-                                      nb_simulations, nb_simulations_truth,
-                                      model_type, learner_type, alpha,
-                                      baseline_policy, model_params)
-  }
-
-  # Average the results
-  averaged_results <- Reduce(function(a, b) {
-    Map(`+`, a, b)
-  }, results)
-  averaged_results <- lapply(averaged_results, function(x) x / num_runs)
-
-  return(averaged_results)
-}
-
-# Run the function
-set.seed(123)  # Ensure reproducibility
-num_runs <- 100
+## Parameters
 batch <- 20
-
-# Generate reference data
-n <- 1000
-data <- generate_data(n)
-X <- data$X
-
-# Parameters
-nb_simulations <- 2
-nb_simulations_truth <- 4
-model_type <- "causal_forest"
-learner_type <- "NULL"
-baseline_policy <- as.list(rep(0, nrow(X)))
+nb_simulations <- 10
+nb_simulations_truth <- 2  # nb_simulations_truth must be greater than nb_simulations
+model_type <- "causal_forest" # causal_forest, s_learner, m_learner
+learner_type <- NULL # NULL, ridge, fnn
 alpha <- 0.05
-model_params <- list(num.trees = 100)
+baseline_policy <- as.list(rep(0, sample_size)) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
+parallelize_batch <- FALSE
+model_params <- NULL
+custom_fit <- NULL
+custom_predict <- NULL
 
-# Average cram_simulation over 100 runs
-averaged_results <- average_cram_simulation(X, dgp_D, dgp_Y, batch, nb_simulations,
-                                            nb_simulations_truth, model_type,
-                                            learner_type, alpha, baseline_policy,
-                                            model_params, num_runs)
+## Run cram_experiment
+# install.packages("profvis")
+# library(profvis)
+print(Sys.time())
+simulation_results <- cram_simulation(X = NULL, dgp_X = dgp_X, dgp_D = dgp_D,
+                                      dgp_Y, batch, nb_simulations, nb_simulations_truth, sample_size,
+                                      model_type = model_type, learner_type = learner_type,
+                                      alpha=0.05, baseline_policy = baseline_policy,
+                                      parallelize_batch = parallelize_batch, model_params = model_params,
+                                      custom_fit = custom_fit, custom_predict = custom_predict)
 
-# Print the averaged results
-print(averaged_results)
+print(Sys.time())
+print(simulation_results)
 
-# -----------------------------------------------
+# --------------------------------------------------------------------------------------
 
 
 

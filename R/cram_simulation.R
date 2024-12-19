@@ -45,7 +45,7 @@
 
 # Combined simulation function with empirical bias calculation
 cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D = function(X) rbinom(1, 1, 0.5), dgp_Y, batch,
-                            nb_simulations, nb_simulations_truth, sample_size,
+                            nb_simulations, nb_simulations_truth = NULL, sample_size,
                             model_type = "causal_forest", learner_type = "ridge",
                             alpha=0.05, baseline_policy = NULL,
                             parallelize_batch = FALSE, model_params = NULL,
@@ -76,11 +76,6 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D = function(X) rbinom(1
     }
   }
 
-  # Check that nb_simulations_truth is greater than nb_simulations
-  if (nb_simulations_truth <= nb_simulations) {
-    stop("nb_simulations_truth must be greater than nb_simulations")
-  }
-
   total_samples <- nb_simulations * sample_size
   sim_ids <- rep(1:nb_simulations, each = sample_size)  # Simulation IDs
 
@@ -105,12 +100,38 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D = function(X) rbinom(1
   big_X[, D := dgp_D(.SD), by = sim_id]
   big_X[, Y := dgp_Y(D, .SD), by = sim_id]
 
+  # NB SIMULATIONS TRUTH
+  # ----------------------------------------------
+  if (!is.null(nb_simulations_truth)) {
+    # Generate additional samples for true results
+    if (!is.null(dgp_X)) {
+      # Generate new samples
+      new_big_X <- dgp_X(nb_simulations_truth * sample_size)
+    } else {
+      # Use the provided dataset for additional sampling
+      new_sampled_indices <- sample(1:X_size, size = nb_simulations_truth * sample_size, replace = TRUE)
+      new_big_X <- X_dt[new_sampled_indices]
+    }
+
+    # Set sim_id for the extended dataset
+    max_sim_id <- max(big_X$sim_id)  # Find the maximum sim_id in the original big_X
+    new_sim_ids <- rep((max_sim_id + 1):(max_sim_id + nb_simulations_truth), each = sample_size)
+    new_big_X[, sim_id := new_sim_ids]  # Assign new sim_ids to the extended dataset
+
+    # Add D and Y columns to the extended dataset
+    new_big_X[, D := dgp_D(.SD), by = sim_id]
+    new_big_X[, Y := dgp_Y(D, .SD), by = sim_id]
+
+    # Combine original and new datasets for true results
+    combined_big_X <- rbind(big_X, new_big_X)
+    setkey(combined_big_X, sim_id)
+  }
+  # ----------------------------------------------
+
+
   # Set key for fast grouping and operations
   setkey(big_X, sim_id)
 
-  # Initialize lists to store results
-  result_sim <- vector("list", nb_simulations)   # For storing detailed results of nb_simulations
-  result_extra_sim <- vector("list", nb_simulations_truth - nb_simulations)   # For storing only delta_estimate from nb_simulations to nb_simulations_truth
 
   z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
 
@@ -151,7 +172,13 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D = function(X) rbinom(1
                                                          batch_indices)
 
     # Step 5 TRUE: Estimate true delta and true policy value
-    true_results <- big_X[, {
+    pop_X <- if (!is.null(nb_simulations_truth)) {
+      combined_big_X
+    } else {
+      big_X
+    }
+
+    true_results <- pop_X[, {
       # Extract D and Y for the current group
       D_slice <- D
       Y_slice <- Y
