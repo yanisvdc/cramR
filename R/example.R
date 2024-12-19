@@ -34,6 +34,7 @@ source(file.path(path, "model_predict.R"))
 source(file.path(path, "validate_params.R"))
 source(file.path(path, "validate_params_fnn.R"))
 source(file.path(path, "test_func.R"))
+source(file.path(path, "averaged_cram.R"))
 
 
 ## Test Cram Learning
@@ -283,8 +284,39 @@ print(simulation_results)
 
 # --------------------------------------------------------------------------------------
 
+# Example usage of Averaged CRAM
+set.seed(123)
 
+# Generate synthetic data
+n <- 1000
+data <- generate_data(n)
+X <- data$X
+D <- data$D
+Y <- data$Y
 
+# Parameters
+batch <- 20
+model_type <- "m_learner"
+learner_type <- "ridge"
+alpha <- 0.05
+baseline_policy <- as.list(rep(0, nrow(X)))
+parallelize_batch <- FALSE
+model_params <- NULL
+num_permutations <- 10
+
+# Run Averaged CRAM
+avg_cram_results <- averaged_cram(
+  X = X, D = D, Y = Y, batch = batch,
+  model_type = model_type, learner_type = learner_type,
+  alpha = alpha, baseline_policy = baseline_policy,
+  parallelize_batch = parallelize_batch, model_params = model_params,
+  custom_fit = NULL, custom_predict = NULL,
+  num_permutations = num_permutations
+)
+
+# Print Results
+print(avg_cram_results$avg_policy_value)
+print(avg_cram_results$var_policy_value)
 
 
 

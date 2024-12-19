@@ -21,15 +21,18 @@ averaged_cram <- function(X, D, Y, batch, model_type, learner_type = NULL,
                           custom_fit = NULL, custom_predict = NULL,
                           num_permutations = 10) {
   n <- nrow(X)
-  T <- if (is.numeric(batch)) batch else length(batch)
 
-  if (is.null(baseline_policy)) {
-    baseline_policy <- as.list(rep(0, n)) # Default to zero policy
-  }
+  # Step 0: Test baseline_policy
+  baseline_policy <- test_baseline_policy(baseline_policy, n)
+
+  # Step 1: Interpret `batch` argument
+  batch_results <- test_batch(batch, n)
+  batches <- batch_results$batches
+  nb_batch <- batch_results$nb_batch
+  batch_size <- length(batch_results$batches[1])
 
   # Generate L random permutations of indices for T-1 training batches
-  batch_indices <- test_batch(batch, n)$batches
-  train_batches <- batch_indices[1:(T - 1)] # Leave the last batch for evaluation
+  train_batches <- batches[1:(nb_batch - 1)] # Leave the last batch for evaluation
 
   # Combine batches into one large vector of indices
   all_indices <- unlist(train_batches)
@@ -40,16 +43,29 @@ averaged_cram <- function(X, D, Y, batch, model_type, learner_type = NULL,
   # Store results for each permutation
   results <- vector("list", length = num_permutations)
 
+  # Check for divisibility condition
+  if (length(all_indices) %% (nb_batch - 1) != 0) {
+    stop("Error: The number of individuals in the training batches is not divisible by T-1.")
+  }
+
   for (l in seq_len(num_permutations)) {
-    permuted_batches <- split(permutations[[l]], rep(1:(T - 1), each = length(permutations[[l]]) / (T - 1)))
-    permuted_batches[[T]] <- batch_indices[[T]] # Add the holdout batch
+    # Current permutation of indices
+    current_permutation <- permutations[[l]]
+
+    # Assign individuals to batches
+    batch_indices <- rep(1:(T - 1), each = batch_size)
+
+    # Sort individuals into batch assignment order
+    batch_assignment <- integer(n) # Initialize assignment vector for all individuals
+    batch_assignment[current_permutation] <- batch_indices
 
     # Run CRAM experiment with permuted batches
     results[[l]] <- cram_experiment(
-      X = X, D = D, Y = Y, batch = permuted_batches,
+      X = X, D = D, Y = Y, batch = batch_assignment,
       model_type = model_type, learner_type = learner_type,
-      alpha = alpha, baseline_policy = baseline_policy,
-      parallelize_batch = parallelize_batch, model_params = model_params
+      baseline_policy = baseline_policy,
+      parallelize_batch = parallelize_batch, model_params = model_params,
+      custom_fit = custom_fit, custom_predict = custom_predict, alpha=alpha
     )
   }
 
@@ -64,36 +80,3 @@ averaged_cram <- function(X, D, Y, batch, model_type, learner_type = NULL,
     all_results = results
   ))
 }
-
-# Example usage of Averaged CRAM
-set.seed(123)
-
-# Generate synthetic data
-n <- 1000
-data <- generate_data(n)
-X <- data$X
-D <- data$D
-Y <- data$Y
-
-# Parameters
-batch <- 20
-model_type <- "m_learner"
-learner_type <- "ridge"
-alpha <- 0.05
-baseline_policy <- as.list(rep(0, nrow(X)))
-parallelize_batch <- TRUE
-model_params <- NULL
-num_permutations <- 10
-
-# Run Averaged CRAM
-avg_cram_results <- averaged_cram(
-  X = X, D = D, Y = Y, batch = batch,
-  model_type = model_type, learner_type = learner_type,
-  alpha = alpha, baseline_policy = baseline_policy,
-  parallelize_batch = parallelize_batch, model_params = model_params,
-  num_permutations = num_permutations
-)
-
-# Print Results
-print(avg_cram_results$avg_policy_value)
-print(avg_cram_results$var_policy_value)

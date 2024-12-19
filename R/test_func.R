@@ -37,7 +37,7 @@ test_batch <- function(batch, n) {
       if (!all(sapply(batch, is.numeric))) {
         stop("`batch` must be a vector or list of numeric values.")
       }
-      # Convert batch assignement vector/list into a list where each
+      # Convert batch assignment vector/list into a list where each
       # component (batch index) is associated to the list of individuals indices in it
       batch_assinement <- unlist(batch)  # Ensure it's a vector
       batches <- split(1:n, batch_assinement)
