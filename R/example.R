@@ -13,6 +13,11 @@ library(glmnet)   # Load glmnet package
 library(keras)    # Load keras package
 library(data.table)
 
+# install.packages("rlang")
+
+library(kableExtra)  # For clean console and HTML tables
+library(DT)          # For interactive tables
+
 
 path <- "C:/Users/yanis/OneDrive/Documents/cramR/R"
 
@@ -315,8 +320,7 @@ avg_cram_results <- averaged_cram(
 )
 
 # Print Results
-print(avg_cram_results$avg_policy_value)
-print(avg_cram_results$var_policy_value)
+print(avg_cram_results)
 
 
 

@@ -69,14 +69,43 @@ averaged_cram <- function(X, D, Y, batch, model_type, learner_type = NULL,
     )
   }
 
-  # Aggregate results
-  policy_values <- sapply(results, function(res) res$policy_value_estimate)
+  # Extract metrics from each permutation result
+  delta_estimates <- sapply(results, function(res) res$raw_results[res$raw_results$Metric == "Delta Estimate", "Value"])
+  policy_values <- sapply(results, function(res) res$raw_results[res$raw_results$Metric == "Policy Value Estimate", "Value"])
+
+  avg_delta_estimate <- mean(delta_estimates)
+  var_delta_estimate <- var(delta_estimates)
   avg_policy_value <- mean(policy_values)
   var_policy_value <- var(policy_values)
 
+  # Create a summary table
+  summary_table <- data.frame(
+    Metric = c("Average Delta Estimate", "Delta Estimate Variance",
+               "Average Policy Value", "Policy Value Variance"),
+    Value = round(c(avg_delta_estimate, var_delta_estimate, avg_policy_value, var_policy_value), 5)
+  )
+
+  # Create an interactive table
+  interactive_table <- datatable(
+    summary_table,
+    options = list(pageLength = 5),
+    caption = "Averaged CRAM Results"
+  )
+
+  # Return results as a list
   return(list(
-    avg_policy_value = avg_policy_value,
-    var_policy_value = var_policy_value,
-    all_results = results
+    summary_table = summary_table,
+    interactive_table = interactive_table
   ))
+
+  # # Aggregate results
+  # policy_values <- sapply(results, function(res) res$policy_value_estimate)
+  # avg_policy_value <- mean(policy_values)
+  # var_policy_value <- var(policy_values)
+  #
+  # return(list(
+  #   avg_policy_value = avg_policy_value,
+  #   var_policy_value = var_policy_value,
+  #   all_results = results
+  # ))
 }

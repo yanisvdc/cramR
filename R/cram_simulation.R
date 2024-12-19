@@ -300,6 +300,49 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D = function(X) rbinom(1
     var_policy_value_empirical_bias = var_policy_value_empirical_bias
   )
 
-  return(result)
+  # Create a summary table with key metrics
+  summary_table <- data.frame(
+    Metric = c(
+      "Average Proportion Treated",
+      "Average Delta Estimate",
+      "Average Delta Standard Error",
+      "Delta Empirical Bias",
+      "Delta Empirical Coverage",
+      "Variance Delta Empirical Bias",
+      "Average Policy Value Estimate",
+      "Average Policy Value Standard Error",
+      "Policy Value Empirical Bias",
+      "Policy Value Empirical Coverage",
+      "Variance Policy Value Empirical Bias"
+    ),
+    Value = round(c(
+      result$avg_proportion_treated,
+      result$avg_delta_estimate,
+      result$avg_delta_standard_error,
+      result$delta_empirical_bias,
+      result$delta_empirical_coverage,
+      result$var_delta_empirical_bias,
+      result$avg_policy_value_estimate,
+      result$avg_policy_value_standard_error,
+      result$policy_value_empirical_bias,
+      result$policy_value_empirical_coverage,
+      result$var_policy_value_empirical_bias
+    ), 2)  # Truncate to 2 decimals
+  )
+
+  # Create an interactive table for exploration
+  interactive_table <- datatable(
+    summary_table,
+    options = list(pageLength = 5),  # Display 5 rows per page
+    caption = "CRAM Simulation Results"
+  )
+
+  # Return the results
+  return(list(
+    raw_results = summary_table,      # Raw data table for programmatic use
+    interactive_table = interactive_table # Interactive table for exploration
+  ))
+
+  # return(result)
 
 }

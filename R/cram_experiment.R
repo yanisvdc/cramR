@@ -95,16 +95,39 @@ cram_experiment <- function(X, D, Y, batch, model_type = "causal_forest",
 
 
 
+  # Create a summary table with truncated decimals
+  summary_table <- data.frame(
+    Metric = c("Delta Estimate", "Delta Standard Error", "Delta CI Lower", "Delta CI Upper",
+               "Policy Value Estimate", "Policy Value Standard Error", "Policy Value CI Lower", "Policy Value CI Upper",
+               "Proportion Treated"),
+    Value = round(c(delta_estimate, delta_standard_error, delta_ci_lower, delta_ci_upper,
+                    policy_value_estimate, policy_value_standard_error, policy_value_ci_lower, policy_value_ci_upper,
+                    proportion_treated), 2)  # Truncate to 2 decimals
+  )
+
+  # Create an interactive table
+  interactive_table <- datatable(
+    summary_table,
+    options = list(pageLength = 5),  # 5 rows, no extra controls
+    caption = "CRAM Experiment Results"
+  )
 
 
+  # Return results as a list with raw data, styled outputs, and the model
+  return(list(
+    raw_results = summary_table,      # Raw table data for programmatic use
+    interactive_table = interactive_table, # Interactive table for exploration
+    final_policy_model = final_policy_model  # Model (not displayed in the summary)
+  ))
 
-  return(list(final_policy_model = final_policy_model,
-              proportion_treated = proportion_treated,
-              delta_estimate = delta_estimate,
-              delta_standard_error = delta_standard_error,
-              delta_confidence_interval = delta_confidence_interval,
-              policy_value_estimate = policy_value_estimate,
-              policy_value_standard_error = policy_value_standard_error,
-              policy_value_confidence_interval = policy_value_confidence_interval))
+
+  # return(list(final_policy_model = final_policy_model,
+  #             proportion_treated = proportion_treated,
+  #             delta_estimate = delta_estimate,
+  #             delta_standard_error = delta_standard_error,
+  #             delta_confidence_interval = delta_confidence_interval,
+  #             policy_value_estimate = policy_value_estimate,
+  #             policy_value_standard_error = policy_value_standard_error,
+  #             policy_value_confidence_interval = policy_value_confidence_interval))
 
 }
