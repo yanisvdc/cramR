@@ -43,7 +43,8 @@ library(foreach)
 #' @export
 cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
                           learner_type = "ridge", baseline_policy = NULL,
-                          parallelize_batch = FALSE, model_params = NULL) {
+                          parallelize_batch = FALSE, model_params = NULL,
+                          custom_fit = NULL, custom_predict = NULL) {
 
   n <- nrow(X)
 
@@ -55,14 +56,21 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
   batches <- batch_results$batches
   nb_batch <- batch_results$nb_batch
 
-  # Step 2: Retrieve model and validate user-specified parameters
-  if (!is.null(learner_type) && learner_type == "fnn") {
-    model_params <- validate_params_fnn(model_type, learner_type, model_params)
-    model <- set_model(model_type, learner_type, model_params)
+  if (!(is.null(model_type))) {
+    # Step 2: Retrieve model and validate user-specified parameters
+    if (!is.null(learner_type) && learner_type == "fnn") {
+      model_params <- validate_params_fnn(model_type, learner_type, model_params)
+      model <- set_model(model_type, learner_type, model_params)
+    } else {
+      model <- set_model(model_type, learner_type, model_params)
+      model_params <- validate_params(model, model_type, learner_type, model_params)
+    }
   } else {
-    model <- set_model(model_type, learner_type, model_params)
-    model_params <- validate_params(model, model_type, learner_type, model_params)
+    if (is.null(custom_fit) || is.null(custom_predict)) {
+      stop("As model_type is NULL (custom mode), custom_fit and custom_predict must be specified")
+    }
   }
+
 
   # Step 3: Create a data.table for cumulative batches
   # Initialize an empty list to store cumulative data for each batch
@@ -86,8 +94,10 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
   if (parallelize_batch) {
     # Assign cumulative_data_dt to the global environment
     assign("cumulative_data_dt", cumulative_data_dt, envir = .GlobalEnv)
-    # Assign model to the global environment
-    assign("model", model, envir = .GlobalEnv)
+    if (!(is.null(model_type))) {
+      # Assign model to the global environment
+      assign("model", model, envir = .GlobalEnv)
+    }
 
     # Parallel execution using foreach and doParallel
     cl <- makeCluster(detectCores() - 1)  # Use available cores minus one
@@ -98,10 +108,16 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
                                     "model_type", "learner_type", "model_params",
                                     "fit_model", "model_predict"))
     } else {
-      # Export custom functions and objects to the worker nodes
-      clusterExport(cl, varlist = c("X", "D", "cumulative_data_dt", "model",
-                                    "model_type", "learner_type", "model_params",
-                                    "fit_model", "model_predict"))
+      if (!(is.null(model_type))) {
+        # Export custom functions and objects to the worker nodes
+        clusterExport(cl, varlist = c("X", "D", "cumulative_data_dt", "model",
+                                      "model_type", "learner_type", "model_params",
+                                      "fit_model", "model_predict"))
+      } else {
+        # Custom model
+        clusterExport(cl, varlist = c("X", "D", "cumulative_data_dt", "custom_fit",
+                                      "custom_predict", "fit_model", "model_predict"))
+      }
     }
 
     # Perform parallel training
@@ -112,13 +128,20 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
       D_subset <- batch$D_cumul[[1]]
       Y_subset <- batch$Y_cumul[[1]]
 
-      if (!is.null(learner_type) && learner_type == "fnn") {
-        model <- set_model(model_type, learner_type, model_params)
+      if (!(is.null(model_type))) {
+        if (!is.null(learner_type) && learner_type == "fnn") {
+          model <- set_model(model_type, learner_type, model_params)
+        }
       }
 
       # Train model with validated parameters
-      trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
-      cate_estimates <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
+      if (!(is.null(model_type))) {
+        trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
+        cate_estimates <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
+      } else {
+        trained_model <- custom_fit()
+        cate_estimates <- custom_predict()
+      }
       cate_estimates <- as.numeric(cate_estimates)
       learned_policy <- ifelse(cate_estimates > 0, 1, 0)
 
