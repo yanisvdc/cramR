@@ -44,11 +44,20 @@
 #' @export
 
 # Combined simulation function with empirical bias calculation
-cram_simulation <- function(X, dgp_D = function(X) rbinom(1, 1, 0.5), dgp_Y, batch,
+cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D = function(X) rbinom(1, 1, 0.5), dgp_Y, batch,
                             nb_simulations, nb_simulations_truth, sample_size,
                             model_type = "causal_forest", learner_type = "ridge",
                             alpha=0.05, baseline_policy = NULL,
-                            parallelize_batch = FALSE, model_params = list()) {
+                            parallelize_batch = FALSE, model_params = NULL,
+                            custom_fit = NULL, custom_predict = NULL) {
+
+  if (is.null(X) && is.null(dgp_X)) {
+    stop("Either a dataset 'X' or a data generation process 'dgp_X' must be provided.")
+  }
+  if (!is.null(X) && !is.null(dgp_X)) {
+    stop("Provide either a dataset 'X' or a data generation process 'dgp_X', not both.")
+  }
+
 
   # Step 0: Set default baseline_policy if NULL
   if (is.null(baseline_policy)) {
@@ -72,17 +81,24 @@ cram_simulation <- function(X, dgp_D = function(X) rbinom(1, 1, 0.5), dgp_Y, bat
     stop("nb_simulations_truth must be greater than nb_simulations")
   }
 
-  # Precompute bootstrap indices for all simulations
-  X_size <- nrow(X)
   total_samples <- nb_simulations * sample_size
-  sampled_indices <- sample(1:X_size, size = total_samples, replace = TRUE)
-
-  # Convert the smaller matrix X to a data.table
-  X_dt <- as.data.table(X)
-
-  # Use sampled_indices on the data.table to create big_X
   sim_ids <- rep(1:nb_simulations, each = sample_size)  # Simulation IDs
-  big_X <- X_dt[sampled_indices]  # Subset the data.table using the sampled indices
+
+  # Step 3: Generate or use referenced dataset
+  if (!is.null(dgp_X)) {
+    # Generate a large dataset for sampling
+    big_X <- dgp_X(total_samples)
+  } else {
+    # Use the provided dataset
+    # Precompute bootstrap indices for all simulations
+    X_size <- nrow(X)
+    sampled_indices <- sample(1:X_size, size = total_samples, replace = TRUE)
+    # Convert the smaller matrix X to a data.table
+    X_dt <- as.data.table(X)
+    # Use sampled_indices on the data.table to create big_X
+    big_X <- X_dt[sampled_indices]  # Subset the data.table using the sampled indices
+  }
+
   big_X[, sim_id := sim_ids]  # Add simulation IDs
 
   # Add D and Y columns by applying dgp_D and dgp_Y
@@ -116,7 +132,9 @@ cram_simulation <- function(X, dgp_D = function(X) rbinom(1, 1, 0.5), dgp_Y, bat
       learner_type = learner_type,
       baseline_policy = baseline_policy,
       parallelize_batch = parallelize_batch,
-      model_params = model_params
+      model_params = model_params,
+      custom_fit = custom_fit,
+      custom_predict = custom_predict
     )
 
     policies <- learning_result$policies

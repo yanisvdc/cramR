@@ -191,8 +191,14 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     Y_subset <- as.numeric(Y_cumul[[1]])
 
     # Train model with validated parameters
-    trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
-    cate_estimates <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
+    if (!(is.null(model_type))) {
+      trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
+      cate_estimates <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
+    } else {
+      trained_model <- custom_fit(X_subset, Y_subset, D_subset)
+      cate_estimates <- custom_predict(trained_model, X, D)
+    }
+
     learned_policy <- ifelse(cate_estimates > 0, 1, 0)
 
     # Return trained model only for the last batch
