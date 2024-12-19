@@ -98,6 +98,62 @@ experiment_results <- cram_experiment(X, D, Y, batch, model_type = model_type,
 print(experiment_results)
 
 # --------------------------------------------------------------------------------------
+# Example usage of CRAM SIMULATION
+set.seed(123)
+
+## Obtain reference dataset X and define the data generation processes for D and Y
+n <- 10000
+sample_size <- 1000
+data <- generate_data(n)
+X <- data$X
+
+dgp_D <- function(X) {
+  # Generate a vector of binary treatment assignments for all individuals at once
+  return(rbinom(nrow(X), 1, 0.5))
+}
+# Vectorized dgp_Y for all individuals
+dgp_Y <- function(D, X) {
+  # Calculate theta for each individual based on the covariates
+  theta <- ifelse(
+    X[, binary] == 1 & X[, discrete] <= 2,  # Group 1: High benefit
+    1,
+    ifelse(X[, binary] == 0 & X[, discrete] >= 4,  # Group 3: High adverse effect
+           -1,
+           0.1)  # Group 2: Neutral effect
+  )
+
+  # Generate Y values with treatment effect and random noise
+  Y <- D * (theta + rnorm(length(D), mean = 0, sd = 1)) +
+    (1 - D) * rnorm(length(D))  # Outcome for untreated
+
+  return(Y)
+}
+
+## Parameters
+batch <- 20
+nb_simulations <- 2
+nb_simulations_truth <- 4  # nb_simulations_truth must be greater than nb_simulations
+model_type <- "m_learner" # causal_forest, s_learner, m_learner
+learner_type <- "ridge" # NULL, ridge, fnn
+alpha <- 0.05
+baseline_policy <- as.list(rep(0, sample_size)) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
+parallelize_batch <- FALSE
+model_params <- NULL
+
+## Run cram_experiment
+# install.packages("profvis")
+# library(profvis)
+print(Sys.time())
+simulation_results <- cram_simulation(X, dgp_D, dgp_Y, batch,
+                                      nb_simulations, nb_simulations_truth, sample_size,
+                                      model_type, learner_type,
+                                      alpha, baseline_policy, parallelize_batch,
+                                      model_params)
+
+print(Sys.time())
+print(simulation_results)
+
+# --------------------------------------------------------------------------------------
 # Load necessary libraries if not already loaded
 # library(causalforest) # Load your specific model library if needed
 
@@ -211,65 +267,8 @@ averaged_results <- average_cram_simulation(X, dgp_D, dgp_Y, batch, nb_simulatio
 # Print the averaged results
 print(averaged_results)
 
-
-
-
-
 # -----------------------------------------------
-# Example usage of CRAM SIMULATION
-set.seed(123)
 
-## Obtain reference dataset X and define the data generation processes for D and Y
-## dgp_D (resp. dgp_Y) takes individual-level data Xi (resp. Xi and Di) as inputs
-n <- 1000
-data <- generate_data(n)
-X <- data$X
-# dgp_D <- function(Xi) {
-#   return(rbinom(1, 1, 0.5))
-# }
-dgp_D <- function(X) {
-  # Generate a vector of binary treatment assignments for all individuals at once
-  return(rbinom(nrow(X), 1, 0.5))
-}
-# Vectorized dgp_Y for all individuals
-dgp_Y <- function(D, X) {
-  # Calculate theta for each individual based on the covariates
-  theta <- ifelse(
-    X[, binary] == 1 & X[, discrete] <= 2,  # Group 1: High benefit
-    1,
-    ifelse(X[, binary] == 0 & X[, discrete] >= 4,  # Group 3: High adverse effect
-           -1,
-           0.1)  # Group 2: Neutral effect
-  )
-
-  # Generate Y values with treatment effect and random noise
-  Y <- D * (theta + rnorm(length(D), mean = 0, sd = 1)) +
-    (1 - D) * rnorm(length(D))  # Outcome for untreated
-
-  return(Y)
-}
-
-## Parameters
-batch <- 20
-nb_simulations <- 2
-nb_simulations_truth <- 4  # nb_simulations_truth must be greater than nb_simulations
-model_type <- "m_learner" # causal_forest, s_learner, m_learner
-learner_type <- "ridge" # NULL, ridge, fnn
-alpha <- 0.05
-baseline_policy <- as.list(rep(0, nrow(X))) # as.list(rep(0, nrow(X))), as.list(sample(c(0, 1), nrow(X), replace = TRUE))
-parallelize_batch <- FALSE
-model_params <- NULL
-
-## Run cram_experiment
-# install.packages("profvis")
-# library(profvis)
-print(Sys.time())
-simulation_results <- cram_simulation(X, dgp_D, dgp_Y, batch,
-                          nb_simulations, nb_simulations_truth,
-                          model_type, learner_type,
-                          alpha, baseline_policy, model_params=model_params)
-print(Sys.time())
-print(simulation_results)
 
 
 
