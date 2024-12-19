@@ -139,8 +139,8 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
         trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
         cate_estimates <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
       } else {
-        trained_model <- custom_fit()
-        cate_estimates <- custom_predict()
+        trained_model <- custom_fit(X_subset, Y_subset, D_subset)
+        cate_estimates <- custom_predict(trained_model, X, D)
       }
       cate_estimates <- as.numeric(cate_estimates)
       learned_policy <- ifelse(cate_estimates > 0, 1, 0)
