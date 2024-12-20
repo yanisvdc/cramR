@@ -34,7 +34,7 @@ cram_variance_estimator <- function(Y, D, pi, batch_indices) {
   # IPW component for all individuals
   weight_diff <- Y * D / 0.5 - Y * (1 - D) / 0.5
 
-  total_length <- length(unlist(batch_indices))
+  # total_length <- length(unlist(batch_indices))
 
   # Loop through each batch (from j = 2 to T)
   for (j in 2:nb_batch) {
@@ -55,7 +55,7 @@ cram_variance_estimator <- function(Y, D, pi, batch_indices) {
       diffs_denominator <- 1 / (nb_batch - (1:(j - 1)))
       vector_summed_differences <- policy_matrix_diffs %*% diffs_denominator
     }
-    g_hat_Tj_values <- weight_diff[indices] * policy_diff_sum
+    g_hat_Tj_values <- weight_diff[indices] * vector_summed_differences
 
     # pi[indices, 2:j] - pi[indices, 1:(j - 1)]
     #
