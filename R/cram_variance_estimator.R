@@ -34,36 +34,58 @@ cram_variance_estimator <- function(Y, D, pi, batch_indices) {
   # IPW component for all individuals
   weight_diff <- Y * D / 0.5 - Y * (1 - D) / 0.5
 
+  total_length <- length(unlist(batch_indices))
+
   # Loop through each batch (from j = 2 to T)
   for (j in 2:nb_batch) {
+    indices <- unlist(batch_indices[j:nb_batch])
+
     # Collect all g_hat_Tj values across batches k = j to T
-    g_hat_Tj_values <- numeric(0)
+    # Preallocate g_hat_Tj_values with the correct length
+    # total_length <- total_length - length(batch_indices[[j-1]])
+    # g_hat_Tj_values <- numeric(total_length)
 
-    for (k in j:nb_batch) {
-      # Compute g_hat_Tj for each individual in batch k
-      indices <- batch_indices[[k]]
-      if (j==2){
-        # Directly calculate the difference for j == 2
-        policy_diff_sum <- (pi[indices, 2] - pi[indices, 1]) / (nb_batch - 1)
-      } else {
-        # Compute the policy difference sum (vectorized) for batch k
-        # Column t is difference t - t-1, divided by T-t, we then sum per row
-        policy_diff_sum <- rowSums((pi[indices, 2:j] - pi[indices, 1:(j - 1)]) / (nb_batch - (1:(j - 1))))
-      }
-      # Calculate g_hat_Tj for individuals in batch k
-      g_hat_Tj_batch <- weight_diff[indices] * policy_diff_sum
-      g_hat_Tj_values <- c(g_hat_Tj_values, g_hat_Tj_batch)
-    }
-
-    # Mean of g_hat_Tj over the batches from j to T
-    g_bar_Tj <- mean(g_hat_Tj_values)
-
-    # Compute V_hat(g_hat_Tj) for batch j
-    if (batch_size == 1 && j == nb_batch) {
-      V_hat_g_Tj <- 0  # Set variance to zero if batch size is one and j = T
+    if (j == 2) {
+      # For j == 2, the difference is simpler
+      # just one element here
+      vector_summed_differences <- (pi[indices, 2] - pi[indices, 1]) / (nb_batch - 1)
     } else {
-      V_hat_g_Tj <- sum((g_hat_Tj_values - g_bar_Tj)^2) / (length(g_hat_Tj_values) - 1)
+      # Compute row-wise weighted differences efficiently
+      policy_matrix_diffs <- pi[indices, 2:j] - pi[indices, 1:(j - 1)]
+      diffs_denominator <- 1 / (nb_batch - (1:(j - 1)))
+      vector_summed_differences <- policy_matrix_diffs %*% diffs_denominator
     }
+    g_hat_Tj_values <- weight_diff[indices] * policy_diff_sum
+
+    # pi[indices, 2:j] - pi[indices, 1:(j - 1)]
+    #
+    # for (k in j:nb_batch) {
+    #   # Compute g_hat_Tj for each individual in batch k
+    #   indices <- batch_indices[[k]]
+    #   if (j==2){
+    #     # Directly calculate the difference for j == 2
+    #     policy_diff_sum <- (pi[indices, 2] - pi[indices, 1]) / (nb_batch - 1)
+    #   } else {
+    #     # Compute the policy difference sum (vectorized) for batch k
+    #     # Column t is difference t - t-1, divided by T-t, we then sum per row
+    #     policy_diff_sum <- rowSums((pi[indices, 2:j] - pi[indices, 1:(j - 1)]) / (nb_batch - (1:(j - 1))))
+    #   }
+    #   # Calculate g_hat_Tj for individuals in batch k
+    #   g_hat_Tj_batch <- weight_diff[indices] * policy_diff_sum
+    #   g_hat_Tj_values <- c(g_hat_Tj_values, g_hat_Tj_batch)
+    # }
+
+    # # Mean of g_hat_Tj over the batches from j to T
+    # g_bar_Tj <- mean(g_hat_Tj_values)
+    #
+    # # Compute V_hat(g_hat_Tj) for batch j
+    # if (batch_size == 1 && j == nb_batch) {
+    #   V_hat_g_Tj <- 0  # Set variance to zero if batch size is one and j = T
+    # } else {
+    #   V_hat_g_Tj <- sum((g_hat_Tj_values - g_bar_Tj)^2) / (length(g_hat_Tj_values) - 1)
+    # }
+
+    V_hat_g_Tj <- var(g_hat_Tj_values)
 
     # Add contribution of this batch to the total variance estimator
     variance_hat <- variance_hat + V_hat_g_Tj
