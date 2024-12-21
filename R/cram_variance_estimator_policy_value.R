@@ -51,11 +51,18 @@ cram_variance_estimator_policy_value <- function(Y, D, pi, batch_indices) {
       # For j == 2, the difference is simpler
       vector_summed_differences <- (part_1_weight[indices] * pi[indices, 2] - part_2_weight[indices] * (1-pi[indices, 2])) / (nb_batch - 1)
     } else {
-      # Compute row-wise weighted differences efficiently
-      policy_matrix_diffs <- pi[indices, 3:j] - pi[indices, 2:(j - 1)]
-      diffs_denominator <- 1 / (nb_batch - (2:(j - 1)))
-      vector_summed_differences <- policy_matrix_diffs %*% diffs_denominator
-      vector_summed_differences <- vector_summed_differences + ((part_1_weight[indices] * pi[indices, 2] - part_2_weight[indices] * (1-pi[indices, 2])) / (nb_batch - 1))
+      if (j == 3){
+        policy_matrix_diffs <- pi[indices, 3] - pi[indices, 2]
+        diffs_denominator <- 1 / (nb_batch - 2)
+        vector_summed_differences <- policy_matrix_diffs * diffs_denominator
+        vector_summed_differences <- vector_summed_differences + ((part_1_weight[indices] * pi[indices, 2] - part_2_weight[indices] * (1-pi[indices, 2])) / (nb_batch - 1))
+      } else {
+        # Compute row-wise weighted differences efficiently
+        policy_matrix_diffs <- pi[indices, 3:j] - pi[indices, 2:(j - 1)]
+        diffs_denominator <- 1 / (nb_batch - (2:(j - 1)))
+        vector_summed_differences <- policy_matrix_diffs %*% diffs_denominator
+        vector_summed_differences <- vector_summed_differences + ((part_1_weight[indices] * pi[indices, 2] - part_2_weight[indices] * (1-pi[indices, 2])) / (nb_batch - 1))
+      }
     }
     g_hat_Tj_values <- weight_diff[indices] * vector_summed_differences
 

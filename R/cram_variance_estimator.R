@@ -93,6 +93,7 @@ cram_variance_estimator <- function(Y, D, pi, batch_indices) {
 
   # Final variance estimator, scaled by T / B
   variance_hat <- (nb_batch / batch_size) * variance_hat
+
   return(variance_hat)
 }
 

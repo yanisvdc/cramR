@@ -274,7 +274,7 @@ parallelize_batch <- FALSE
 model_params <- NULL
 
 ## Run cram_experiment
-profvis({
+# profvis({
 experiment_results <- cram_experiment(X, D, Y, batch, model_type = model_type,
          learner_type = learner_type, baseline_policy = baseline_policy,
          parallelize_batch = parallelize_batch, model_params = model_params,
@@ -282,7 +282,7 @@ experiment_results <- cram_experiment(X, D, Y, batch, model_type = model_type,
 
 
 print(experiment_results)
-})
+# })
 # --------------------------------------------------------------------------------------
 # Example usage of CRAM SIMULATION
 set.seed(123)

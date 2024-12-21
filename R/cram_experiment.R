@@ -102,7 +102,7 @@ cram_experiment <- function(X, D, Y, batch, model_type = "causal_forest",
                "Proportion Treated"),
     Value = round(c(delta_estimate, delta_standard_error, delta_ci_lower, delta_ci_upper,
                     policy_value_estimate, policy_value_standard_error, policy_value_ci_lower, policy_value_ci_upper,
-                    proportion_treated), 2)  # Truncate to 2 decimals
+                    proportion_treated), 5)  # Truncate to 5 decimals
   )
 
   # Create an interactive table
