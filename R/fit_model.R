@@ -12,7 +12,7 @@
 #' @return The fitted model object.
 #' @examples
 #' # Example usage for Ridge Regression S-learner
-#' model <- set_model("S-learner", "ridge")
+#' model <- set_model("s_learner", "ridge")
 #' fitted_model <- fit_model(model, X, Y, W = D, "S-learner", "ridge", model_params = list(alpha = 0))
 #'
 #' # Example usage for FNN S-learner

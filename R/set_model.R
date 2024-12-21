@@ -10,18 +10,31 @@
 #'                     For FNNs, the following structure is used:
 #'                     \describe{
 #'                       \item{\code{input_layer}}{A list defining the input layer. Must include:
-#'                           \code{units}: Number of units in the input layer.
-#'                           \code{activation}: Activation function for the input layer.
+#'                         \describe{
+#'                           \item{\code{units}}{Number of units in the input layer.}
+#'                           \item{\code{activation}}{Activation function for the input layer.}
+#'                           \item{\code{input_shape}}{Input shape for the layer.}
+#'                         }
+#'                       }
 #'                       \item{\code{layers}}{A list of lists, where each sublist specifies a hidden layer with:
-#'                           \code{units}: Number of units in the layer.
-#'                           \code{activation}: Activation function for the layer.}
+#'                         \describe{
+#'                           \item{\code{units}}{Number of units in the layer.}
+#'                           \item{\code{activation}}{Activation function for the layer.}
+#'                         }
+#'                       }
 #'                       \item{\code{output_layer}}{A list defining the output layer. Must include:
-#'                           \code{units}: Number of units in the output layer.
-#'                           \code{activation}: Activation function for the output layer (e.g., \code{"linear"} or \code{"sigmoid"}).}
+#'                         \describe{
+#'                           \item{\code{units}}{Number of units in the output layer.}
+#'                           \item{\code{activation}}{Activation function for the output layer (e.g., \code{"linear"} or \code{"sigmoid"}).}
+#'                         }
+#'                       }
 #'                       \item{\code{compile_args}}{A list of arguments for compiling the model. Must include:
-#'                           \code{optimizer}: Optimizer for training (e.g., \code{"adam"} or \code{"sgd"}).
-#'                           \code{loss}: Loss function (e.g., \code{"mse"} or \code{"binary_crossentropy"}).
-#'                           \code{metrics}: Optional list of metrics for evaluation (e.g., \code{c("accuracy")}).}
+#'                         \describe{
+#'                           \item{\code{optimizer}}{Optimizer for training (e.g., \code{"adam"} or \code{"sgd"}).}
+#'                           \item{\code{loss}}{Loss function (e.g., \code{"mse"} or \code{"binary_crossentropy"}).}
+#'                           \item{\code{metrics}}{Optional list of metrics for evaluation (e.g., \code{c("accuracy")}).}
+#'                         }
+#'                       }
 #'                     }
 #'                     For other learners (e.g., \code{"ridge"} or \code{"causal_forest"}), \code{model_params} can include relevant hyperparameters.
 #' @return The instantiated model object or the corresponding model function.
@@ -44,6 +57,7 @@
 #' ))
 #'
 #' @export
+
 set_model <- function(model_type, learner_type, model_params) {
   if (model_type == "causal_forest") {
     # For Causal Forest

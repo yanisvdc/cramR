@@ -24,9 +24,9 @@
 #' fnn_model <- keras_model_sequential()
 #' predictions <- model_predict(model = fnn_model, X = X_test, model_type = "s_learner", learner_type = "fnn")
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{predict}}
-#' @importFrom grf predict
-#' @importFrom glmnet predict
-#' @importFrom keras predict
+#' @import grf
+#' @import glmnet
+#' @import keras
 #' @export
 model_predict <- function(model, X, D, model_type, learner_type, model_params) {
   if (model_type == "causal_forest") {

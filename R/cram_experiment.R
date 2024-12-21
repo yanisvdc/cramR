@@ -37,6 +37,7 @@
 #' result$delta_confidence_interval
 #' result$policy_value_estimate
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}
+#' @importFrom DT datatable
 #' @export
 
 # Combined experiment function

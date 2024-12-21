@@ -5,16 +5,22 @@
 \title{CRAM Simulation with Empirical Bias Calculation}
 \usage{
 cram_simulation(
-  X,
-  dgp_D = function(Xi) rbinom(1, 1, 0.5),
+  X = NULL,
+  dgp_X = NULL,
+  dgp_D = function(X) rbinom(1, 1, 0.5),
   dgp_Y,
   batch,
   nb_simulations,
-  nb_simulations_truth,
-  model_type = "Causal Forest",
+  nb_simulations_truth = NULL,
+  sample_size,
+  model_type = "causal_forest",
   learner_type = "ridge",
   alpha = 0.05,
-  baseline_policy = NULL
+  baseline_policy = NULL,
+  parallelize_batch = FALSE,
+  model_params = NULL,
+  custom_fit = NULL,
+  custom_predict = NULL
 )
 }
 \arguments{

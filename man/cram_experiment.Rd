@@ -9,10 +9,14 @@ cram_experiment(
   D,
   Y,
   batch,
-  model_type = "Causal Forest",
+  model_type = "causal_forest",
   learner_type = "ridge",
-  alpha = 0.05,
-  baseline_policy = NULL
+  baseline_policy = NULL,
+  parallelize_batch = FALSE,
+  model_params = NULL,
+  custom_fit = NULL,
+  custom_predict = NULL,
+  alpha = 0.05
 )
 }
 \arguments{
@@ -28,9 +32,9 @@ cram_experiment(
 
 \item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"FNN"} for Feedforward Neural Network. Default is \code{"ridge"}.}
 
-\item{alpha}{Significance level for confidence intervals. Default is 0.05 (95% confidence).}
-
 \item{baseline_policy}{A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, defaults to a list of zeros with the same length as the number of samples in \code{X}.}
+
+\item{alpha}{Significance level for confidence intervals. Default is 0.05 (95% confidence).}
 }
 \value{
 A list containing:

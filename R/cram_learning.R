@@ -40,6 +40,12 @@ library(foreach)
 #' @importFrom keras keras_model_sequential layer_dense compile fit
 #' @importFrom stats glm predict qnorm rbinom rnorm
 #' @importFrom magrittr %>%
+#' @import data.table
+#' @importFrom parallel makeCluster detectCores stopCluster
+#' @importFrom doParallel registerDoParallel
+#' @importFrom foreach %dopar% foreach
+#' @importFrom stats var
+#' @importFrom grDevices col2rgb
 #' @export
 cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
                           learner_type = "ridge", baseline_policy = NULL,

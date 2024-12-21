@@ -25,7 +25,6 @@
 #' validate_params(grf::causal_forest, user_params)
 #' # Error: Invalid parameters for the model: nonexistent_param
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[base]{formals}}
-#' @importFrom base formals setdiff
 #' @export
 validate_params <- function(model_function, model_type, learner_type, user_params) {
   if (is.null(user_params)){

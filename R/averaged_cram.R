@@ -14,7 +14,11 @@
 #' @param num_permutations Number of random permutations of batches.
 #' @return A list with averaged performance and variance estimates.
 #' @examples
+#' X <- matrix(rnorm(1000), nrow = 100, ncol = 10)
+#' D <- sample(0:1, 100, replace = TRUE)
+#' Y <- rnorm(100)
 #' avg_cram_results <- averaged_cram(X, D, Y, batch = 20, model_type = "m_learner", learner_type = "ridge")
+#' @export
 averaged_cram <- function(X, D, Y, batch, model_type, learner_type = NULL,
                           alpha = 0.05, baseline_policy = NULL,
                           parallelize_batch = FALSE, model_params = NULL,

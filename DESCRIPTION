@@ -15,7 +15,16 @@ Imports:
     glmnet,
     keras,
     stats,
-    magrittr
+    magrittr,
+    doParallel,
+    foreach,
+    data.table,
+    DT
 Depends: R (>= 3.5.0)
 Suggests: 
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    DT,
+    data.table,
+    kableExtra,
+    profvis
+

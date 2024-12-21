@@ -9,9 +9,13 @@ cram_learning(
   D,
   Y,
   batch,
-  model_type = "Causal Forest",
+  model_type = "causal_forest",
   learner_type = "ridge",
-  baseline_policy = NULL
+  baseline_policy = NULL,
+  parallelize_batch = FALSE,
+  model_params = NULL,
+  custom_fit = NULL,
+  custom_predict = NULL
 )
 }
 \arguments{
