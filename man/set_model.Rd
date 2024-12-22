@@ -54,19 +54,4 @@ it provides flexibility to configure the input layer, hidden layers, output laye
 \examples{
 # Example: Causal Forest with default parameters
 set_model("causal_forest", NULL, model_params = list(num.trees = 100))
-
-# Example: Ridge regression for S-learner
-set_model("s_learner", "ridge")
-
-# Example: FNN for S-learner with custom layers and compile settings
-set_model("s_learner", "fnn", model_params = list(
-  input_layer = list(units = 128, activation = "relu", input_shape = ncol(X) + 1),
-  layers = list(
-    list(units = 64, activation = "relu"),
-    list(units = 32, activation = "tanh")
-  ),
-  output_layer = list(units = 1, activation = "sigmoid"),
-  compile_args = list(optimizer = "sgd", loss = "binary_crossentropy", metrics = c("accuracy"))
-))
-
 }

@@ -12,19 +12,19 @@
 #' @param model_params A list of additional parameters used during training, required for context-sensitive inference.
 #' @return A vector of predictions or CATE estimates, depending on the \code{model_type} and \code{learner_type}.
 #' @examples
+#' # Load required library
+#' library(grf)
+#'
 #' # Example: Predicting with a Causal Forest model
-#' cf_model <- causal_forest(X, Y, D)
+#' set.seed(123)
+#' X <- matrix(rnorm(1000), nrow = 100, ncol = 10)  # Covariates
+#' Y <- rnorm(100)                                 # Outcomes
+#' D <- sample(0:1, 100, replace = TRUE)           # Treatment indicators
+#' cf_model <- causal_forest(X, Y, D)             # Train Causal Forest
+#' new_X <- matrix(rnorm(100), nrow = 10, ncol = 10) # New data for predictions
 #' predictions <- model_predict(model = cf_model, X = new_X, model_type = "causal_forest")
-#'
-#' # Example: Predicting with a Ridge Regression S-learner
-#' ridge_model <- cv.glmnet(X_train, Y_train)
-#' predictions <- model_predict(model = ridge_model, X = X_test, model_type = "s_learner", learner_type = "ridge")
-#'
-#' # Example: Predicting with an FNN S-learner
-#' fnn_model <- keras_model_sequential()
-#' predictions <- model_predict(model = fnn_model, X = X_test, model_type = "s_learner", learner_type = "fnn")
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{predict}}
-#' @import grf
+#' @importFrom grf causal_forest
 #' @import glmnet
 #' @import keras
 #' @export

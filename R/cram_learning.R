@@ -46,6 +46,7 @@ library(foreach)
 #' @importFrom foreach %dopar% foreach
 #' @importFrom stats var
 #' @importFrom grDevices col2rgb
+#' @importFrom stats D
 #' @export
 cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
                           learner_type = "ridge", baseline_policy = NULL,

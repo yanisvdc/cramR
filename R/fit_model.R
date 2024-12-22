@@ -12,13 +12,16 @@
 #' @return The fitted model object.
 #' @examples
 #' # Example usage for Ridge Regression S-learner
+#' set.seed(123)
+#' X <- matrix(rnorm(1000), nrow = 100, ncol = 10)  # Covariates (100 samples, 10 features)
+#' W <- sample(0:1, 100, replace = TRUE)           # Binary treatment indicators
+#' Y <- rnorm(100)                                 # Outcome values
+#' # Set up the model
 #' model <- set_model("s_learner", "ridge")
-#' fitted_model <- fit_model(model, X, Y, W = D, "S-learner", "ridge", model_params = list(alpha = 0))
-#'
-#' # Example usage for FNN S-learner
-#' model <- set_model("S-learner", "FNN")
-#' fitted_model <- fit_model(model, X, Y, W = D, "S-learner", "FNN", model_params = list(epochs = 20))
-#'
+#' # Define model parameters
+#' model_params <- list(alpha = 0)  # Regularization parameter for Ridge Regression
+#' # Fit the model
+#' fitted_model <- fit_model(model, X, Y, W = W, model_type = "s_learner", learner_type = "ridge", model_params = model_params)
 #' @export
 fit_model <- function(model, X, Y, W, model_type, learner_type, model_params) {
   # Validate input
