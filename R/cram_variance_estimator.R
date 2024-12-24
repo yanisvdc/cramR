@@ -28,9 +28,6 @@ cram_variance_estimator <- function(Y, D, pi, batch_indices) {
     stop("Y, D, and pi must have matching lengths")
   }
 
-  # Initialize the total variance estimator
-  variance_hat <- 0
-
   # IPW component for all individuals
   weight_diff <- Y * D / 0.5 - Y * (1 - D) / 0.5
 

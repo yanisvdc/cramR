@@ -28,43 +28,79 @@ cram_variance_estimator_policy_value <- function(Y, D, pi, batch_indices) {
     stop("Y, D, and pi must have matching lengths")
   }
 
-  # Initialize the total variance estimator
-  variance_hat <- 0
-
   # IPW component for all individuals
   weight_diff <- Y * D / 0.5 - Y * (1 - D) / 0.5
   part_1_weight <- Y * D / 0.5
   part_2_weight <- Y * (1 - D) / 0.5
 
+  policy_diff <- pi[, 2:nb_batch] - pi[, 1:(nb_batch - 1)]
+
+  # Remove first column
+  policy_diff <- policy_diff[, -1]
+
+  # Vector of terms for each column
+  policy_diff_weights <- 1 / (nb_batch - (2:(nb_batch - 1)))
+
+  # Multiply each column of policy_diff by corresponding policy_diff_weight
+  policy_diff <- sweep(policy_diff, 2, policy_diff_weights, FUN = "*")
+
+  policy_diff <- t(apply(policy_diff, 1, cumsum))
+
+  policy_diff <- sweep(policy_diff, 1, weight_diff, FUN = "*")
+
+  first_col <- (part_1_weight * pi[, 2] - part_2_weight * (1-pi[, 2])) / (nb_batch - 1)
+
+  policy_diff <- cbind(first_col, policy_diff)
+
+  # Create the mask for batch indices
+  mask <- matrix(1, nrow = nrow(policy_diff), ncol = ncol(policy_diff))
+
+  for (k in seq_len(nb_batch - 1)) {
+    # Set to 0 the rows corresponding to batches 1 to k in column k
+    mask[unlist(batch_indices[1:k]), k] <- 0
+  }
+
+  # Apply the mask to policy_diff
+  policy_diff <- policy_diff * mask
+
+
+  # Calculate variance for each column
+  column_variances <- apply(policy_diff, 2, var)
+
+  total_variance <- sum(column_variances)
+
+  # Final variance estimator, scaled by T / B
+  total_variance <- (nb_batch / batch_size) * total_variance
+
   # total_length <- length(unlist(batch_indices))
 
-  # Loop through each batch (from j = 2 to T)
-  for (j in 2:nb_batch) {
-    indices <- unlist(batch_indices[j:nb_batch])
-
-    # Collect all g_hat_Tj values across batches k = j to T
-    # Preallocate g_hat_Tj_values with the correct length
-    # total_length <- total_length - length(batch_indices[[j-1]])
-    # g_hat_Tj_values <- numeric(total_length)
-
-    if (j == 2) {
-      # For j == 2, the difference is simpler
-      vector_summed_differences <- (part_1_weight[indices] * pi[indices, 2] - part_2_weight[indices] * (1-pi[indices, 2])) / (nb_batch - 1)
-    } else {
-      if (j == 3){
-        policy_matrix_diffs <- pi[indices, 3] - pi[indices, 2]
-        diffs_denominator <- 1 / (nb_batch - 2)
-        vector_summed_differences <- policy_matrix_diffs * diffs_denominator
-        vector_summed_differences <- vector_summed_differences + ((part_1_weight[indices] * pi[indices, 2] - part_2_weight[indices] * (1-pi[indices, 2])) / (nb_batch - 1))
-      } else {
-        # Compute row-wise weighted differences efficiently
-        policy_matrix_diffs <- pi[indices, 3:j] - pi[indices, 2:(j - 1)]
-        diffs_denominator <- 1 / (nb_batch - (2:(j - 1)))
-        vector_summed_differences <- policy_matrix_diffs %*% diffs_denominator
-        vector_summed_differences <- vector_summed_differences + ((part_1_weight[indices] * pi[indices, 2] - part_2_weight[indices] * (1-pi[indices, 2])) / (nb_batch - 1))
-      }
-    }
-    g_hat_Tj_values <- weight_diff[indices] * vector_summed_differences
+  # # Loop through each batch (from j = 2 to T)
+  # for (j in 2:nb_batch) {
+  #   indices <- unlist(batch_indices[j:nb_batch])
+  #
+  #   # Collect all g_hat_Tj values across batches k = j to T
+  #   # Preallocate g_hat_Tj_values with the correct length
+  #   # total_length <- total_length - length(batch_indices[[j-1]])
+  #   # g_hat_Tj_values <- numeric(total_length)
+  #
+  #   if (j == 2) {
+  #     # For j == 2, the difference is simpler
+  #     vector_summed_differences <- (part_1_weight[indices] * pi[indices, 2] - part_2_weight[indices] * (1-pi[indices, 2])) / (nb_batch - 1)
+  #   } else {
+  #     if (j == 3){
+  #       policy_matrix_diffs <- pi[indices, 3] - pi[indices, 2]
+  #       diffs_denominator <- 1 / (nb_batch - 2)
+  #       vector_summed_differences <- policy_matrix_diffs * diffs_denominator
+  #       vector_summed_differences <- vector_summed_differences + ((part_1_weight[indices] * pi[indices, 2] - part_2_weight[indices] * (1-pi[indices, 2])) / (nb_batch - 1))
+  #     } else {
+  #       # Compute row-wise weighted differences efficiently
+  #       policy_matrix_diffs <- pi[indices, 3:j] - pi[indices, 2:(j - 1)]
+  #       diffs_denominator <- 1 / (nb_batch - (2:(j - 1)))
+  #       vector_summed_differences <- policy_matrix_diffs %*% diffs_denominator
+  #       vector_summed_differences <- vector_summed_differences + ((part_1_weight[indices] * pi[indices, 2] - part_2_weight[indices] * (1-pi[indices, 2])) / (nb_batch - 1))
+  #     }
+  #   }
+  #   g_hat_Tj_values <- weight_diff[indices] * vector_summed_differences
 
     # pi[indices, 2:j] - pi[indices, 1:(j - 1)]
     #
@@ -94,15 +130,15 @@ cram_variance_estimator_policy_value <- function(Y, D, pi, batch_indices) {
     #   V_hat_g_Tj <- sum((g_hat_Tj_values - g_bar_Tj)^2) / (length(g_hat_Tj_values) - 1)
     # }
 
-    V_hat_g_Tj <- var(g_hat_Tj_values)
+  #   V_hat_g_Tj <- var(g_hat_Tj_values)
+  #
+  #   # Add contribution of this batch to the total variance estimator
+  #   variance_hat <- variance_hat + V_hat_g_Tj
+  # }
 
-    # Add contribution of this batch to the total variance estimator
-    variance_hat <- variance_hat + V_hat_g_Tj
-  }
-
-  # Final variance estimator, scaled by T / B
-  variance_hat <- (nb_batch / batch_size) * variance_hat
-  return(variance_hat)
+  # # Final variance estimator, scaled by T / B
+  # variance_hat <- (nb_batch / batch_size) * variance_hat
+  return(total_variance)
 }
 
 
