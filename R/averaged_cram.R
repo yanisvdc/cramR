@@ -56,8 +56,12 @@ averaged_cram <- function(X, D, Y, batch, model_type, learner_type = NULL,
     # Current permutation of indices
     current_permutation <- permutations[[l]]
 
+    # Append indices from the evaluation batch (batch T)
+    evaluation_indices <- batches[[nb_batch]]  # Indices for batch T
+    current_permutation <- c(current_permutation, evaluation_indices)
+
     # Assign individuals to batches
-    batch_indices <- rep(1:(T - 1), each = batch_size)
+    batch_indices <- rep(1:nb_batch, each = batch_size)
 
     # Sort individuals into batch assignment order
     batch_assignment <- integer(n) # Initialize assignment vector for all individuals
