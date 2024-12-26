@@ -1,3 +1,6 @@
+# Declare global variables to suppress devtools::check warnings
+utils::globalVariables(c("X", "D", "Y", "sim_id", "."))
+
 #' CRAM Simulation with Empirical Bias Calculation
 #'
 #' This function simulates the estimation of treatment effects in a cumulative randomized assignment model (CRAM) setup. It uses bootstrapping to resample data, applies treatment and outcome generation functions, and calculates empirical bias and coverage rates for delta and policy value estimates.

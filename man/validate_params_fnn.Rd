@@ -4,7 +4,7 @@
 \alias{validate_params_fnn}
 \title{Validate Parameters for Feedforward Neural Networks (FNNs)}
 \usage{
-validate_params_fnn(model_type, learner_type, model_params)
+validate_params_fnn(model_type, learner_type, model_params, X)
 }
 \arguments{
 \item{model_params}{A named list of parameters provided by the user for configuring the FNN model.}

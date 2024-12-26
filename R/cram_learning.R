@@ -5,6 +5,9 @@ library(keras)           # For feedforward neural networks in R
 library(doParallel)
 library(foreach)
 
+# Declare global variables to suppress devtools::check warnings
+utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
+
 #' CRAM Learning with Model Selection
 #'
 #' This function performs policy learning using cumulative batches with a choice of model types and learner types. Supported models include Causal Forest, S-learner, and M-learner with options for Ridge Regression and Feedforward Neural Network (FNN) learners.
@@ -66,7 +69,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
   if (!(is.null(model_type))) {
     # Step 2: Retrieve model and validate user-specified parameters
     if (!is.null(learner_type) && learner_type == "fnn") {
-      model_params <- validate_params_fnn(model_type, learner_type, model_params)
+      model_params <- validate_params_fnn(model_type, learner_type, model_params, X)
       model <- set_model(model_type, learner_type, model_params)
     } else {
       model <- set_model(model_type, learner_type, model_params)

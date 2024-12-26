@@ -6,7 +6,7 @@
 #' @param model_params A named list of parameters provided by the user for configuring the FNN model.
 #' @return A named list of validated parameters merged with defaults for any missing values.
 #' @export
-validate_params_fnn <- function(model_type, learner_type, model_params) {
+validate_params_fnn <- function(model_type, learner_type, model_params, X) {
   if (is.null(model_params)){
     # Determine the input shape based on model_type
     input_shape <- if (model_type == "s_learner") ncol(X) + 1 else ncol(X)
