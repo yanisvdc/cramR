@@ -41,7 +41,7 @@ library(foreach)
 #' @importFrom stats glm predict qnorm rbinom rnorm
 #' @importFrom magrittr %>%
 #' @import data.table
-#' @importFrom parallel makeCluster detectCores stopCluster
+#' @importFrom parallel makeCluster detectCores stopCluster clusterExport
 #' @importFrom doParallel registerDoParallel
 #' @importFrom foreach %dopar% foreach
 #' @importFrom stats var
@@ -79,50 +79,31 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
   }
 
 
-  # Step 3: Create a data.table for cumulative batches
-  # Initialize an empty list to store cumulative data for each batch
-  cumulative_data_list <- lapply(1:nb_batch, function(t) {
-    # Combine indices for batches 1 through t
-    cumulative_indices <- unlist(batches[1:t])
-
-    # Subset X, D, Y using cumulative indices
-    list(
-      t = t,  # Add t as the index
-      # cumulative_index = list(cumulative_indices),  # Store cumulative indices as a list in one row
-      X_cumul = list(X[cumulative_indices, ]),
-      D_cumul = list(D[cumulative_indices]),
-      Y_cumul = list(Y[cumulative_indices])
-    )
-  })
-
-  # Convert the list to a data.table
-  cumulative_data_dt <- rbindlist(cumulative_data_list)
-
   if (parallelize_batch) {
-    # Assign cumulative_data_dt to the global environment
-    assign("cumulative_data_dt", cumulative_data_dt, envir = .GlobalEnv)
-    if (!(is.null(model_type))) {
-      # Assign model to the global environment
-      assign("model", model, envir = .GlobalEnv)
-    }
+    # # Assign cumulative_data_dt to the global environment
+    # assign("cumulative_data_dt", cumulative_data_dt, envir = .GlobalEnv)
+    # if (!(is.null(model_type))) {
+    #   # Assign model to the global environment
+    #   assign("model", model, envir = .GlobalEnv)
+    # }
 
     # Parallel execution using foreach and doParallel
     cl <- makeCluster(detectCores() - 1)  # Use available cores minus one
     registerDoParallel(cl)
 
     if (!is.null(learner_type) && learner_type == "fnn") {
-      clusterExport(cl, varlist = c("X", "D", "cumulative_data_dt", "set_model",
+      clusterExport(cl, varlist = c("X", "D", "set_model",
                                     "model_type", "learner_type", "model_params",
                                     "fit_model", "model_predict"))
     } else {
       if (!(is.null(model_type))) {
         # Export custom functions and objects to the worker nodes
-        clusterExport(cl, varlist = c("X", "D", "cumulative_data_dt", "model",
+        clusterExport(cl, varlist = c("X", "D",
                                       "model_type", "learner_type", "model_params",
                                       "fit_model", "model_predict"))
       } else {
         # Custom model
-        clusterExport(cl, varlist = c("X", "D", "cumulative_data_dt", "custom_fit",
+        clusterExport(cl, varlist = c("X", "D", "custom_fit",
                                       "custom_predict", "fit_model", "model_predict"))
       }
     }
@@ -130,11 +111,14 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     # Perform parallel training
     results <- foreach(t = 1:nb_batch, .packages = c("grf", "data.table",
                                                      "glmnet", "keras")) %dopar% {
-      batch <- cumulative_data_dt[t]
-      X_subset <- batch$X_cumul[[1]]
-      D_subset <- batch$D_cumul[[1]]
-      Y_subset <- batch$Y_cumul[[1]]
 
+      cumulative_indices <- unlist(batches[1:t])
+      X_subset <- as.matrix(X[cumulative_indices, ])
+      D_subset <- as.numeric(D[cumulative_indices])
+      Y_subset <- as.numeric(Y[cumulative_indices])
+
+      # I need to set the keras model in each worker because keras cannot be transmitted
+      # to the workers
       if (!(is.null(model_type))) {
         if (!is.null(learner_type) && learner_type == "fnn") {
           model <- set_model(model_type, learner_type, model_params)
@@ -165,6 +149,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     }
 
     stopCluster(cl)
+    closeAllConnections()
 
     # Combine results into a data.table
     results_dt <- results
@@ -191,31 +176,51 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
 
   } else {
 
-  results_dt <- cumulative_data_dt[, {
-    # Extract cumulative X, D, Y for the current batch (t)
-    X_subset <- as.matrix(X_cumul[[1]])
-    D_subset <- as.numeric(D_cumul[[1]])
-    Y_subset <- as.numeric(Y_cumul[[1]])
+    # Step 3: Create a data.table for cumulative batches
+    # Initialize an empty list to store cumulative data for each batch
+    cumulative_data_list <- lapply(1:nb_batch, function(t) {
+      # Combine indices for batches 1 through t
+      cumulative_indices <- unlist(batches[1:t])
 
-    # Train model with validated parameters
-    if (!(is.null(model_type))) {
-      trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
-      cate_estimates <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
-    } else {
-      trained_model <- custom_fit(X_subset, Y_subset, D_subset)
-      cate_estimates <- custom_predict(trained_model, X, D)
-    }
+      # Subset X, D, Y using cumulative indices
+      list(
+        t = t,  # Add t as the index
+        # cumulative_index = list(cumulative_indices),  # Store cumulative indices as a list in one row
+        X_cumul = list(X[cumulative_indices, ]),
+        D_cumul = list(D[cumulative_indices]),
+        Y_cumul = list(Y[cumulative_indices])
+      )
+    })
 
-    learned_policy <- ifelse(cate_estimates > 0, 1, 0)
+    # Convert the list to a data.table
+    cumulative_data_dt <- rbindlist(cumulative_data_list)
 
-    # Return trained model only for the last batch
-    if (t == max(cumulative_data_dt$t)) {
-      assign("final_policy_model", trained_model, envir = .GlobalEnv)
-    }
+    results_dt <- cumulative_data_dt[, {
+      # Extract cumulative X, D, Y for the current batch (t)
+      X_subset <- as.matrix(X_cumul[[1]])
+      D_subset <- as.numeric(D_cumul[[1]])
+      Y_subset <- as.numeric(Y_cumul[[1]])
 
-    # (model = list(trained_model), cate_estimates = list(cate_estimates),
-    .(learned_policy = list(learned_policy))
-  }, by = t]
+      # Train model with validated parameters
+      if (!(is.null(model_type))) {
+        trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
+        cate_estimates <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
+      } else {
+        trained_model <- custom_fit(X_subset, Y_subset, D_subset)
+        cate_estimates <- custom_predict(trained_model, X, D)
+      }
+
+      learned_policy <- ifelse(cate_estimates > 0, 1, 0)
+
+      # # Return trained model only for the last batch
+      # if (t == max(cumulative_data_dt$t)) {
+      #   assign("final_policy_model", trained_model, envir = .GlobalEnv)
+      # }
+      final_model <- if (t == nb_batch) trained_model else NULL
+
+      # (model = list(trained_model), cate_estimates = list(cate_estimates),
+      .(learned_policy = list(learned_policy), final_model=list(final_model))
+    }, by = t]
 
   # Extract learned_policy list
   learned_policy_list <- results_dt$learned_policy
@@ -225,6 +230,8 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
 
   # Combine baseline_policy as the first column
   policy_matrix <- cbind(as.numeric(baseline_policy), learned_policy_matrix)
+
+  final_policy_model <- results_dt$final_model[[nb_batch]]
 
   return(list(
         final_policy_model = final_policy_model,
