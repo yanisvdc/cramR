@@ -48,7 +48,7 @@ cram_variance_estimator_policy_value <- function(Y, D, pi, batch_indices) {
 
   policy_diff <- sweep(policy_diff, 1, weight_diff, FUN = "*")
 
-  first_col <- (part_1_weight * pi[, 2] - part_2_weight * (1-pi[, 2])) / (nb_batch - 1)
+  first_col <- (part_1_weight * pi[, 2] + part_2_weight * (1-pi[, 2])) / (nb_batch - 1)
 
   policy_diff <- cbind(first_col, policy_diff)
 
