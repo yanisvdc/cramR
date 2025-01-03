@@ -1,3 +1,10 @@
-.onAttach <- function(libname, pkgname) {
-  packageStartupMessage("cramR requires the data.table package. Ensure it is installed and loaded if needed.")
+.onLoad <- function(libname, pkgname) {
+  # Check if data.table is installed
+  if (!requireNamespace("data.table", quietly = TRUE)) {
+    # Attempt to install data.table
+    install.packages("data.table")
+  }
+
+  # Load data.table silently
+  requireNamespace("data.table", quietly = TRUE)
 }
