@@ -46,7 +46,7 @@ cram_variance_estimator <- function(Y, D, pi, batch_indices) {
 
   for (k in seq_len(nb_batch - 1)) {
     # Set to 0 the rows corresponding to batches 1 to k in column k
-    mask[unlist(batch_indices[1:k]), k] <- 0
+    mask[unlist(batch_indices[1:k]), k] <- NA
   }
 
   # Apply the mask to policy_diff
@@ -55,7 +55,7 @@ cram_variance_estimator <- function(Y, D, pi, batch_indices) {
   policy_diff <- sweep(policy_diff, 1, weight_diff, FUN = "*")
 
   # Calculate variance for each column
-  column_variances <- apply(policy_diff, 2, var)
+  column_variances <- apply(policy_diff, 2, function(x) var(x, na.rm = TRUE))
 
   total_variance <- sum(column_variances)
 
