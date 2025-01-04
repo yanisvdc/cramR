@@ -34,38 +34,45 @@ cram_experiment(
 
 \item{baseline_policy}{A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, defaults to a list of zeros with the same length as the number of samples in \code{X}.}
 
-\item{alpha}{Significance level for confidence intervals. Default is 0.05 (95% confidence).}
+\item{alpha}{Significance level for confidence intervals. Default is 0.05 (95\% confidence).}
 }
 \value{
 A list containing:
-  \describe{
-    \item{final_policy_model}{The final fitted policy model, depending on \code{model_type} and \code{learner_type}.}
-    \item{proportion_treated}{The proportion of individuals treated under the final policy.}
-    \item{delta_estimate}{The estimated treatment effect (delta) across the batches.}
-    \item{delta_standard_error}{The standard error of the delta estimate.}
-    \item{delta_confidence_interval}{The confidence interval for the delta estimate.}
-    \item{policy_value_estimate}{The estimated policy value.}
-    \item{policy_value_standard_error}{The standard error of the policy value estimate.}
-    \item{policy_value_confidence_interval}{The confidence interval for the policy value estimate.}
-  }
+\itemize{
+  \item \code{raw_results}: A data frame summarizing key metrics with truncated decimals:
+    \itemize{
+      \item \code{Delta Estimate}: The estimated treatment effect (delta).
+      \item \code{Delta Standard Error}: The standard error of the delta estimate.
+      \item \code{Delta CI Lower}: The lower bound of the confidence interval for delta.
+      \item \code{Delta CI Upper}: The upper bound of the confidence interval for delta.
+      \item \code{Policy Value Estimate}: The estimated policy value.
+      \item \code{Policy Value Standard Error}: The standard error of the policy value estimate.
+      \item \code{Policy Value CI Lower}: The lower bound of the confidence interval for policy value.
+      \item \code{Policy Value CI Upper}: The upper bound of the confidence interval for policy value.
+      \item \code{Proportion Treated}: The proportion of individuals treated under the final policy.
+    }
+  \item \code{interactive_table}: An interactive table summarizing key metrics for detailed exploration.
+  \item \code{final_policy_model}: The final fitted policy model based on \code{model_type} and \code{learner_type}.
+}
 }
 \description{
-This function performs a cumulative randomized assignment model (CRAM) experiment to estimate treatment effects. It calculates confidence intervals, standard errors, and the proportion of treated individuals under the learned policy.
+This function performs a cumulative randomized assignment model (CRAM) experiment to estimate treatment effects.
+It calculates confidence intervals, standard errors, and the proportion of treated individuals under the learned policy.
 }
 \examples{
 # Example data
 X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)  # 100 samples, 5 features
-D_data <- sample(c(0, 1), 100, replace = TRUE)          # Random binary treatment assignment
+D_data <- D_data <- as.integer(sample(c(0, 1), 100, replace = TRUE))   # Random binary treatment assignment
 Y_data <- rnorm(100)                                    # Random outcome variable
-nb_batch <- 3                                           # Number of batches
+nb_batch <- 10                                          # Number of batches
 
 # Perform CRAM experiment
 result <- cram_experiment(X = X_data, D = D_data, Y = Y_data, batch = nb_batch)
 
 # Access results
-result$delta_estimate
-result$delta_confidence_interval
-result$policy_value_estimate
+result$raw_results
+result$interactive_table
+result$final_policy_model
 }
 \seealso{
 \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}

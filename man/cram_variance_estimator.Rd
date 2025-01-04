@@ -17,7 +17,7 @@ for each policy. The first column represents the baseline policy.}
 \item{batch_indices}{A list where each element is a vector of indices corresponding to the individuals in each batch.}
 }
 \value{
-The estimated variance \(\hat{v}^2_T\).
+The estimated variance \eqn{\hat{v}^2_T}.
 }
 \description{
 This function estimates the variance of the cram estimator to measure the asymptotic

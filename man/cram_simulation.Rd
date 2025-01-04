@@ -26,38 +26,75 @@ cram_simulation(
 \arguments{
 \item{X}{A matrix or data frame of covariates for each sample.}
 
-\item{dgp_D}{A function to generate binary treatment assignments for each sample. Defaults to \code{function(Xi) rbinom(1, 1, 0.5)} for random assignment.}
+\item{dgp_X}{Optional. A function to generate covariate data for simulations.}
 
-\item{dgp_Y}{A function to generate the outcome variable for each sample given the treatment and covariates.}
+\item{dgp_D}{A function to generate binary treatment assignments for each
+sample. Defaults to \code{function(Xi) rbinom(1, 1, 0.5)} for
+random assignment.}
 
-\item{batch}{Either an integer specifying the number of batches (which will be created by random sampling) or a list/vector providing specific batch indices.}
+\item{dgp_Y}{A function to generate the outcome variable for each sample
+given the treatment and covariates.}
 
-\item{nb_simulations}{The number of main simulations to run. Full results are stored for each of these simulations.}
+\item{batch}{Either an integer specifying the number of batches (which will
+be created by random sampling) or a list/vector providing
+specific batch indices.}
 
-\item{nb_simulations_truth}{The total number of simulations to run, which should be greater than \code{nb_simulations}. Only the delta estimates are stored for simulations beyond \code{nb_simulations} up to \code{nb_simulations_truth}.}
+\item{nb_simulations}{The number of main simulations to run. Full results
+are stored for each of these simulations.}
 
-\item{model_type}{The model type for policy learning. Options include \code{"Causal Forest"}, \code{"S-learner"}, and \code{"M-learner"}. Default is \code{"Causal Forest"}.}
+\item{nb_simulations_truth}{Optional. The total number of simulations to run, which
+should be greater than \code{nb_simulations}.
+Only the delta estimates are stored for
+simulations beyond \code{nb_simulations} up to
+\code{nb_simulations_truth}.}
 
-\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"FNN"} for Feedforward Neural Network. Default is \code{"ridge"}.}
+\item{sample_size}{The number of samples in each simulation.}
 
-\item{alpha}{Significance level for confidence intervals. Default is 0.05 (95% confidence).}
+\item{model_type}{The model type for policy learning. Options include
+\code{"Causal Forest"}, \code{"S-learner"}, and
+\code{"M-learner"}. Default is \code{"Causal Forest"}.}
 
-\item{baseline_policy}{A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, defaults to a list of zeros with the same length as the number of samples in \code{X}.}
+\item{learner_type}{The learner type for the chosen model. Options include
+\code{"ridge"} for Ridge Regression and \code{"FNN"} for
+Feedforward Neural Network. Default is \code{"ridge"}.}
+
+\item{alpha}{Significance level for confidence intervals. Default is 0.05
+(95\% confidence).}
+
+\item{baseline_policy}{A list providing the baseline policy (binary 0 or 1)
+for each sample. If \code{NULL}, defaults to a list
+of zeros with the same length as the number of samples
+in \code{X}.}
+
+\item{parallelize_batch}{Logical. Whether to parallelize batch processing.
+Default is \code{FALSE}.}
+
+\item{model_params}{Optional. A list of model parameters to be passed to
+the learning function.}
+
+\item{custom_fit}{Optional. A custom function for fitting models.}
+
+\item{custom_predict}{Optional. A custom function for making predictions.}
 }
 \value{
 A list containing:
-  \item{avg_proportion_treated}{The average proportion of treated individuals across simulations.}
-  \item{avg_delta_estimate}{The average delta estimate across simulations.}
-  \item{avg_delta_standard_error}{The average standard error of delta estimates.}
-  \item{delta_empirical_bias}{The empirical bias of delta estimates.}
-  \item{delta_empirical_coverage}{The empirical coverage of delta confidence intervals.}
-  \item{avg_policy_value_estimate}{The average policy value estimate across simulations.}
-  \item{avg_policy_value_standard_error}{The average standard error of policy value estimates.}
-  \item{policy_value_empirical_bias}{The empirical bias of policy value estimates.}
-  \item{policy_value_empirical_coverage}{The empirical coverage of policy value confidence intervals.}
+\describe{
+  \item{\code{avg_proportion_treated}}{The average proportion of treated individuals across simulations.}
+  \item{\code{avg_delta_estimate}}{The average delta estimate across simulations.}
+  \item{\code{avg_delta_standard_error}}{The average standard error of delta estimates.}
+  \item{\code{delta_empirical_bias}}{The empirical bias of delta estimates.}
+  \item{\code{delta_empirical_coverage}}{The empirical coverage of delta confidence intervals.}
+  \item{\code{avg_policy_value_estimate}}{The average policy value estimate across simulations.}
+  \item{\code{avg_policy_value_standard_error}}{The average standard error of policy value estimates.}
+  \item{\code{policy_value_empirical_bias}}{The empirical bias of policy value estimates.}
+  \item{\code{policy_value_empirical_coverage}}{The empirical coverage of policy value confidence intervals.}
+}
 }
 \description{
-This function simulates the estimation of treatment effects in a cumulative randomized assignment model (CRAM) setup. It uses bootstrapping to resample data, applies treatment and outcome generation functions, and calculates empirical bias and coverage rates for delta and policy value estimates.
+This function simulates the estimation of treatment effects in a cumulative
+randomized assignment model (CRAM) setup. It uses bootstrapping to resample
+data, applies treatment and outcome generation functions, and calculates
+empirical bias and coverage rates for delta and policy value estimates.
 }
 \examples{
 # Define data generation process (DGP) functions
@@ -68,15 +105,17 @@ dgp_Y <- function(D, Xi) D * rnorm(1, mean = 1) + (1 - D) * rnorm(1, mean = 0)
 X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)  # 100 samples, 5 features
 nb_simulations <- 10
 nb_simulations_truth <- 20
-batch <- 3
+batch <- 10
 
 # Perform CRAM simulation
 result <- cram_simulation(X = X_data, dgp_D = dgp_D, dgp_Y = dgp_Y, batch = batch,
-                          nb_simulations = nb_simulations, nb_simulations_truth = nb_simulations_truth)
+                          nb_simulations = nb_simulations, nb_simulations_truth = nb_simulations_truth,
+                          sample_size=50)
 
 # Access results
 result$avg_delta_estimate
 result$delta_empirical_bias
+
 }
 \seealso{
 \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}

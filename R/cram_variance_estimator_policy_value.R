@@ -8,7 +8,7 @@
 #' @param pi A matrix of n rows and (nb_batch + 1) columns, containing the policy assignment for each individual
 #'           for each policy. The first column represents the baseline policy.
 #' @param batch_indices A list where each element is a vector of indices corresponding to the individuals in each batch.
-#' @return The estimated variance \(\hat{v}^2_T\).
+#' @return The estimated variance \eqn{\hat{v}^2_T}.
 #' @examples
 #' # Example usage:
 #' Y <- sample(0:1, 100, replace = TRUE)
