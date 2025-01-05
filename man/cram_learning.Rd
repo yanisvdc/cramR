@@ -32,6 +32,14 @@ cram_learning(
 \item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"FNN"} for Feedforward Neural Network. Default is \code{"ridge"}.}
 
 \item{baseline_policy}{A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, the baseline policy defaults to a list of zeros with the same length as the number of samples in \code{X}.}
+
+\item{parallelize_batch}{Logical. Whether to parallelize batch processing. Defaults to \code{FALSE}.}
+
+\item{model_params}{A list of additional parameters to pass to the model. Defaults to \code{NULL}.}
+
+\item{custom_fit}{A custom function for fitting models. Defaults to \code{NULL}.}
+
+\item{custom_predict}{A custom function for making predictions. Defaults to \code{NULL}.}
 }
 \value{
 A list containing:

@@ -13,15 +13,19 @@
 #' @examples
 #' # Example usage for Ridge Regression S-learner
 #' set.seed(123)
-#' X <- matrix(rnorm(1000), nrow = 100, ncol = 10)  # Covariates (100 samples, 10 features)
-#' W <- sample(0:1, 100, replace = TRUE)           # Binary treatment indicators
-#' Y <- rnorm(100)                                 # Outcome values
+#' X <- matrix(rnorm(1000), nrow = 100, ncol = 10)
+#' W <- sample(0:1, 100, replace = TRUE)
+#' Y <- rnorm(100)
 #' # Set up the model
 #' model <- set_model("s_learner", "ridge")
 #' # Define model parameters
-#' model_params <- list(alpha = 0)  # Regularization parameter for Ridge Regression
+#' model_params <- list(alpha = 0)
 #' # Fit the model
-#' fitted_model <- fit_model(model, X, Y, W = W, model_type = "s_learner", learner_type = "ridge", model_params = model_params)
+#' fitted_model <- fit_model(
+#'                         model, X, Y, W = W,
+#'                         model_type = "s_learner",
+#'                         learner_type = "ridge",
+#'                         model_params = model_params)
 #' @export
 fit_model <- function(model, X, Y, W, model_type, learner_type, model_params) {
   # Validate input

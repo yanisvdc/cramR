@@ -11,6 +11,10 @@
 #' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"FNN"} for Feedforward Neural Network. Default is \code{"ridge"}.
 #' @param alpha Significance level for confidence intervals. Default is 0.05 (95\% confidence).
 #' @param baseline_policy A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, defaults to a list of zeros with the same length as the number of samples in \code{X}.
+#' @param parallelize_batch Logical. Whether to parallelize batch processing. Defaults to \code{FALSE}.
+#' @param model_params A list of additional parameters to pass to the model. Defaults to \code{NULL}.
+#' @param custom_fit A custom function for fitting models. Defaults to \code{NULL}.
+#' @param custom_predict A custom function for making predictions. Defaults to \code{NULL}.
 #' @return A list containing:
 #' \itemize{
 #'   \item \code{raw_results}: A data frame summarizing key metrics with truncated decimals:
@@ -31,13 +35,16 @@
 #'
 #' @examples
 #' # Example data
-#' X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)  # 100 samples, 5 features
-#' D_data <- D_data <- as.integer(sample(c(0, 1), 100, replace = TRUE))   # Random binary treatment assignment
-#' Y_data <- rnorm(100)                                    # Random outcome variable
-#' nb_batch <- 10                                          # Number of batches
+#' X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)
+#' D_data <- D_data <- as.integer(sample(c(0, 1), 100, replace = TRUE))
+#' Y_data <- rnorm(100)
+#' nb_batch <- 10
 #'
 #' # Perform CRAM experiment
-#' result <- cram_experiment(X = X_data, D = D_data, Y = Y_data, batch = nb_batch)
+#' result <- cram_experiment(X = X_data,
+#'                           D = D_data,
+#'                           Y = Y_data,
+#'                           batch = nb_batch)
 #'
 #' # Access results
 #' result$raw_results

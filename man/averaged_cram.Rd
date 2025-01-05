@@ -41,6 +41,12 @@ averaged_cram(
 
 \item{model_params}{Additional parameters for the model.}
 
+\item{custom_fit}{A custom function for fitting models. Defaults to \code{NULL}.
+If provided, it should accept the same arguments as \code{fit_model}.}
+
+\item{custom_predict}{A custom function for making predictions. Defaults to \code{NULL}.
+If provided, it should accept the same arguments as \code{model_predict}.}
+
 \item{num_permutations}{Number of random permutations of batches.}
 }
 \value{
@@ -53,5 +59,8 @@ This function implements Averaged CRAM by randomly permuting batches and averagi
 X <- matrix(rnorm(1000), nrow = 100, ncol = 10)
 D <- sample(0:1, 100, replace = TRUE)
 Y <- rnorm(100)
-avg_cram_results <- averaged_cram(X, D, Y, batch = 20, model_type = "m_learner", learner_type = "ridge")
+avg_cram_results <- averaged_cram(X, D, Y,
+                                  batch = 20,
+                                  model_type = "m_learner",
+                                  learner_type = "ridge")
 }

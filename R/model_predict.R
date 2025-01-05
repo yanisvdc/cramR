@@ -23,7 +23,7 @@
 #' cf_model <- causal_forest(X, Y, D)             # Train Causal Forest
 #' new_X <- matrix(rnorm(100), nrow = 10, ncol = 10) # New data for predictions
 #' predictions <- model_predict(model = cf_model, X = new_X, model_type = "causal_forest")
-#' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{predict}}
+#' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}
 #' @importFrom grf causal_forest
 #' @import glmnet
 #' @import keras

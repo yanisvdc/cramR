@@ -3,7 +3,12 @@
 #' This function validates user-provided parameters for a Feedforward Neural Network (FNN) model.
 #' It ensures the correct structure for \code{input_layer}, \code{layers}, \code{output_layer}, and \code{compile_args}.
 #'
+#' @param model_type The type of model to validate. Supported options are \code{"causal_forest"},
+#'                   \code{"s_learner"}, and \code{"m_learner"}.
+#' @param learner_type The type of learner for the model. Options depend on \code{model_type}.
+#'                     For example, \code{"ridge"} and \code{"fnn"} are supported learners.
 #' @param model_params A named list of parameters provided by the user for configuring the FNN model.
+#' @param X A matrix or data frame of covariates for which the parameters are validated.
 #' @return A named list of validated parameters merged with defaults for any missing values.
 #' @export
 validate_params_fnn <- function(model_type, learner_type, model_params, X) {

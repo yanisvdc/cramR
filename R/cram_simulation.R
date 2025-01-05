@@ -61,17 +61,18 @@ utils::globalVariables(c("X", "D", "Y", "sim_id", "."))
 #' @examples
 #' # Define data generation process (DGP) functions
 #' dgp_D <- function(Xi) rbinom(1, 1, 0.5)
-#' dgp_Y <- function(D, Xi) D * rnorm(1, mean = 1) + (1 - D) * rnorm(1, mean = 0)
+#' dgp_Y <- function(D, Xi) D * rnorm(1, mean = 1) + (1 - D)*rnorm(1, mean = 0)
 #'
 #' # Example data
-#' X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)  # 100 samples, 5 features
+#' X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)
 #' nb_simulations <- 10
 #' nb_simulations_truth <- 20
 #' batch <- 10
 #'
 #' # Perform CRAM simulation
-#' result <- cram_simulation(X = X_data, dgp_D = dgp_D, dgp_Y = dgp_Y, batch = batch,
-#'                           nb_simulations = nb_simulations, nb_simulations_truth = nb_simulations_truth,
+#' result <- cram_simulation(X = X_data, dgp_D = dgp_D, dgp_Y = dgp_Y,
+#'                           batch = batch, nb_simulations = nb_simulations,
+#'                           nb_simulations_truth = nb_simulations_truth,
 #'                           sample_size=50)
 #'
 #' # Access results

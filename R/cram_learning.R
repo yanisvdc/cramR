@@ -19,6 +19,10 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 #' @param model_type The model type for policy learning. Options include \code{"Causal Forest"}, \code{"S-learner"}, and \code{"M-learner"}. Default is \code{"Causal Forest"}.
 #' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"FNN"} for Feedforward Neural Network. Default is \code{"ridge"}.
 #' @param baseline_policy A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, the baseline policy defaults to a list of zeros with the same length as the number of samples in \code{X}.
+#' @param parallelize_batch Logical. Whether to parallelize batch processing. Defaults to \code{FALSE}.
+#' @param model_params A list of additional parameters to pass to the model. Defaults to \code{NULL}.
+#' @param custom_fit A custom function for fitting models. Defaults to \code{NULL}.
+#' @param custom_predict A custom function for making predictions. Defaults to \code{NULL}.
 #' @return A list containing:
 #'   \item{final_policy_model}{The final fitted policy model, depending on \code{model_type} and \code{learner_type}.}
 #'   \item{policies}{A matrix of learned policies, where each column represents a batch's learned policy and the first column is the baseline policy.}
