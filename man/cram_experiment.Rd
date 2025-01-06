@@ -26,21 +26,21 @@ cram_experiment(
 
 \item{Y}{A vector of outcome values for each sample.}
 
-\item{batch}{Either an integer specifying the number of batches (to be created by random sampling) or a list/vector providing specific batch indices.}
+\item{batch}{Either an integer specifying the number of batches (which will be created by random sampling) or a vector of length equal to the sample size providing the batch assignment (index) for each individual in the sample.}
 
-\item{model_type}{The model type for policy learning. Options include \code{"Causal Forest"}, \code{"S-learner"}, and \code{"M-learner"}. Default is \code{"Causal Forest"}.}
+\item{model_type}{The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.}
 
-\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"FNN"} for Feedforward Neural Network. Default is \code{"ridge"}.}
+\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.}
 
-\item{baseline_policy}{A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, defaults to a list of zeros with the same length as the number of samples in \code{X}.}
+\item{baseline_policy}{A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, defaults to a list of zeros with the same length as the number of rows in \code{X}.}
 
-\item{parallelize_batch}{Logical. Whether to parallelize batch processing. Defaults to \code{FALSE}.}
+\item{parallelize_batch}{Logical. Whether to parallelize batch processing (i.e. the cram method learns T policies, with T the number of batches. They are learned in parallel when parallelize_batch is TRUE vs. learned sequentially using the efficient data.table structure when parallelize_batch is FALSE, recommended for light weight training). Defaults to \code{FALSE}.}
 
-\item{model_params}{A list of additional parameters to pass to the model. Defaults to \code{NULL}.}
+\item{model_params}{A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.}
 
-\item{custom_fit}{A custom function for fitting models. Defaults to \code{NULL}.}
+\item{custom_fit}{A custom, user-defined, function that outputs a fitted model given training data (allows flexibility). Defaults to \code{NULL}.}
 
-\item{custom_predict}{A custom function for making predictions. Defaults to \code{NULL}.}
+\item{custom_predict}{A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.}
 
 \item{alpha}{Significance level for confidence intervals. Default is 0.05 (95\% confidence).}
 }
@@ -60,7 +60,7 @@ A list containing:
       \item \code{Proportion Treated}: The proportion of individuals treated under the final policy.
     }
   \item \code{interactive_table}: An interactive table summarizing key metrics for detailed exploration.
-  \item \code{final_policy_model}: The final fitted policy model based on \code{model_type} and \code{learner_type}.
+  \item \code{final_policy_model}: The final fitted policy model based on \code{model_type} and \code{learner_type} or \code{custom_fit}.
 }
 }
 \description{
@@ -72,7 +72,7 @@ It calculates confidence intervals, standard errors, and the proportion of treat
 X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)
 D_data <- D_data <- as.integer(sample(c(0, 1), 100, replace = TRUE))
 Y_data <- rnorm(100)
-nb_batch <- 10
+nb_batch <- 5
 
 # Perform CRAM experiment
 result <- cram_experiment(X = X_data,

@@ -15,24 +15,24 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 #' @param X A matrix or data frame of covariates for each sample.
 #' @param D A vector of binary treatment indicators (1 for treated, 0 for untreated).
 #' @param Y A vector of outcome values for each sample.
-#' @param batch Either an integer specifying the number of batches (which will be created by random sampling) or a list/vector providing specific batch indices.
-#' @param model_type The model type for policy learning. Options include \code{"Causal Forest"}, \code{"S-learner"}, and \code{"M-learner"}. Default is \code{"Causal Forest"}.
-#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"FNN"} for Feedforward Neural Network. Default is \code{"ridge"}.
-#' @param baseline_policy A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, the baseline policy defaults to a list of zeros with the same length as the number of samples in \code{X}.
-#' @param parallelize_batch Logical. Whether to parallelize batch processing. Defaults to \code{FALSE}.
-#' @param model_params A list of additional parameters to pass to the model. Defaults to \code{NULL}.
-#' @param custom_fit A custom function for fitting models. Defaults to \code{NULL}.
-#' @param custom_predict A custom function for making predictions. Defaults to \code{NULL}.
+#' @param batch Either an integer specifying the number of batches (which will be created by random sampling) or a vector of length equal to the sample size providing the batch assignment (index) for each individual in the sample.
+#' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
+#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.
+#' @param baseline_policy A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, the baseline policy defaults to a list of zeros with the same length as the number of rows in \code{X}.
+#' @param parallelize_batch Logical. Whether to parallelize batch processing (i.e. the cram method learns T policies, with T the number of batches. They are learned in parallel when parallelize_batch is TRUE vs. learned sequentially using the efficient data.table structure when parallelize_batch is FALSE, recommended for light weight training). Defaults to \code{FALSE}.
+#' @param model_params A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
+#' @param custom_fit A custom, user-defined, function that outputs a fitted model given training data (allows flexibility). Defaults to \code{NULL}.
+#' @param custom_predict A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.
 #' @return A list containing:
 #'   \item{final_policy_model}{The final fitted policy model, depending on \code{model_type} and \code{learner_type}.}
 #'   \item{policies}{A matrix of learned policies, where each column represents a batch's learned policy and the first column is the baseline policy.}
 #'   \item{batch_indices}{The indices for each batch, either as generated (if \code{batch} is an integer) or as provided by the user.}
 #' @examples
 #' # Example usage
-#' X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)  # 100 samples, 5 features
-#' D_data <- sample(c(0, 1), 100, replace = TRUE)          # Random binary treatment assignment
-#' Y_data <- rnorm(100)                                    # Random outcome variable
-#' nb_batch <- 3                                           # Number of batches
+#' X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)
+#' D_data <- sample(c(0, 1), 100, replace = TRUE)
+#' Y_data <- rnorm(100)
+#' nb_batch <- 5
 #'
 #' # Perform CRAM learning
 #' result <- cram_learning(X = X_data, D = D_data, Y = Y_data, batch = nb_batch)
