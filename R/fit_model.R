@@ -1,20 +1,21 @@
-#' Fit a Provided Model Based on Type and Learner
+#' Fit Model
 #'
-#' This function trains a given model with the provided data and parameters, taking into account the model type and learner type.
+#' This function trains a given unfitted model with the provided data and parameters,
+#' according to model type and learner type.
 #'
 #' @param model An unfitted model object, as returned by `set_model`.
 #' @param X A matrix or data frame of covariates for the samples.
 #' @param Y A vector of outcome values.
-#' @param W (Optional) A vector of binary treatment indicators (for models requiring treatment data, e.g., M-learner, Causal Forest).
-#' @param model_type A string specifying the type of model. Supported options: "Causal Forest", "S-learner", "M-learner".
-#' @param learner_type A string specifying the type of learner. Supported options: "ridge", "FNN".
-#' @param model_params A list of additional parameters to pass to the fitting process.
+#' @param D A vector of binary treatment indicators (1 for treated, 0 for untreated).
+#' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
+#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.
+#' @param model_params A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
 #' @return The fitted model object.
 #' @examples
 #' # Example usage for Ridge Regression S-learner
 #' set.seed(123)
 #' X <- matrix(rnorm(1000), nrow = 100, ncol = 10)
-#' W <- sample(0:1, 100, replace = TRUE)
+#' D <- sample(0:1, 100, replace = TRUE)
 #' Y <- rnorm(100)
 #' # Set up the model
 #' model <- set_model("s_learner", "ridge")
@@ -22,12 +23,12 @@
 #' model_params <- list(alpha = 0)
 #' # Fit the model
 #' fitted_model <- fit_model(
-#'                         model, X, Y, W = W,
+#'                         model, X, Y, D = D,
 #'                         model_type = "s_learner",
 #'                         learner_type = "ridge",
 #'                         model_params = model_params)
 #' @export
-fit_model <- function(model, X, Y, W, model_type, learner_type, model_params) {
+fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
   # Validate input
   if (is.null(model)) {
     stop("The provided model is NULL. Please ensure `set_model` returns a valid model.")
@@ -38,26 +39,26 @@ fit_model <- function(model, X, Y, W, model_type, learner_type, model_params) {
   if (!learner_type %in% c("ridge", "fnn") && model_type != "causal_forest") {
     stop("Unsupported learner type for this model type. Choose 'ridge' or 'fnn'.")
   }
-  if (is.null(W)) {
-    stop("Treatment indicators (W) are required.")
+  if (is.null(D)) {
+    stop("Treatment indicators (D) are required.")
   }
 
   fitted_model <- NULL
 
   if (model_type == "causal_forest") {
     # Train Causal Forest
-    fitted_model <- do.call(model, c(list(X = X, Y = Y, W = W), model_params))
+    fitted_model <- do.call(model, c(list(X = X, Y = Y, W = D), model_params))
 
   } else if (model_type == "s_learner") {
     if (learner_type == "ridge") {
       # Ridge Regression (S-learner)
-      X <- cbind(as.matrix(X), W)  # Add treatment indicator for S-learner
+      X <- cbind(as.matrix(X), D)  # Add treatment indicator for S-learner
 
       fitted_model <- do.call(model, c(list(x = as.matrix(X), y = Y), model_params))
 
     } else if (learner_type == "fnn") {
       # Feedforward Neural Network (S-learner)
-      X <- cbind(as.matrix(X), W)  # Add treatment indicator for S-learner
+      X <- cbind(as.matrix(X), D)  # Add treatment indicator for S-learner
 
       history <- model %>% fit(
         as.matrix(X),
@@ -73,9 +74,9 @@ fit_model <- function(model, X, Y, W, model_type, learner_type, model_params) {
     # M-learner requires a propensity score and transformed outcomes
 
     # Propensity score estimation
-    propensity_model <- glm(W ~ ., data = as.data.frame(X), family = "binomial")
+    propensity_model <- glm(D ~ ., data = as.data.frame(X), family = "binomial")
     prop_score <- predict(propensity_model, newdata = as.data.frame(X), type = "response")
-    Y_star <- Y * W / prop_score - Y * (1 - W) / (1 - prop_score)
+    Y_star <- Y * D / prop_score - Y * (1 - D) / (1 - prop_score)
 
     if (learner_type == "ridge") {
       # Ridge Regression for M-learner

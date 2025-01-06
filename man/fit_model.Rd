@@ -2,9 +2,9 @@
 % Please edit documentation in R/fit_model.R
 \name{fit_model}
 \alias{fit_model}
-\title{Fit a Provided Model Based on Type and Learner}
+\title{Fit Model}
 \usage{
-fit_model(model, X, Y, W, model_type, learner_type, model_params)
+fit_model(model, X, Y, D, model_type, learner_type, model_params)
 }
 \arguments{
 \item{model}{An unfitted model object, as returned by `set_model`.}
@@ -13,25 +13,26 @@ fit_model(model, X, Y, W, model_type, learner_type, model_params)
 
 \item{Y}{A vector of outcome values.}
 
-\item{W}{(Optional) A vector of binary treatment indicators (for models requiring treatment data, e.g., M-learner, Causal Forest).}
+\item{D}{A vector of binary treatment indicators (1 for treated, 0 for untreated).}
 
-\item{model_type}{A string specifying the type of model. Supported options: "Causal Forest", "S-learner", "M-learner".}
+\item{model_type}{The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.}
 
-\item{learner_type}{A string specifying the type of learner. Supported options: "ridge", "FNN".}
+\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.}
 
-\item{model_params}{A list of additional parameters to pass to the fitting process.}
+\item{model_params}{A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.}
 }
 \value{
 The fitted model object.
 }
 \description{
-This function trains a given model with the provided data and parameters, taking into account the model type and learner type.
+This function trains a given unfitted model with the provided data and parameters,
+according to model type and learner type.
 }
 \examples{
 # Example usage for Ridge Regression S-learner
 set.seed(123)
 X <- matrix(rnorm(1000), nrow = 100, ncol = 10)
-W <- sample(0:1, 100, replace = TRUE)
+D <- sample(0:1, 100, replace = TRUE)
 Y <- rnorm(100)
 # Set up the model
 model <- set_model("s_learner", "ridge")
@@ -39,7 +40,7 @@ model <- set_model("s_learner", "ridge")
 model_params <- list(alpha = 0)
 # Fit the model
 fitted_model <- fit_model(
-                        model, X, Y, W = W,
+                        model, X, Y, D = D,
                         model_type = "s_learner",
                         learner_type = "ridge",
                         model_params = model_params)

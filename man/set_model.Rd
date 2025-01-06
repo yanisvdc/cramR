@@ -2,18 +2,17 @@
 % Please edit documentation in R/set_model.R
 \name{set_model}
 \alias{set_model}
-\title{Set the Model Based on Type and Learner}
+\title{Set Model}
 \usage{
 set_model(model_type, learner_type, model_params)
 }
 \arguments{
-\item{model_type}{A string specifying the model type. Supported options are \code{"causal_forest"}, \code{"s_learner"}, \code{"m_learner"}.}
+\item{model_type}{The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.}
 
-\item{learner_type}{A string specifying the learner type. Supported options depend on \code{model_type}.
-For example, \code{"ridge"} and \code{"fnn"} are supported learners for \code{"s_learner"}.}
+\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.}
 
-\item{model_params}{A list of named parameters to configure the model. The structure of \code{model_params} varies depending on the \code{learner_type}.
-For FNNs, the following structure is used:
+\item{model_params}{A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
+For FNNs, the following elements are defined in the model params list:
 \describe{
   \item{\code{input_layer}}{A list defining the input layer. Must include:
     \describe{
@@ -48,8 +47,7 @@ For other learners (e.g., \code{"ridge"} or \code{"causal_forest"}), \code{model
 The instantiated model object or the corresponding model function.
 }
 \description{
-This function maps the model type and learner type to the corresponding model function. For Feedforward Neural Networks (FNNs),
-it provides flexibility to configure the input layer, hidden layers, output layer, and compilation arguments using the \code{model_params} argument.
+This function maps the model type and learner type to the corresponding model function.
 }
 \examples{
 # Example: Causal Forest with default parameters
