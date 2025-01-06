@@ -1,7 +1,7 @@
-#' CRAM Experiment with Confidence Interval and Standard Error Calculation
+#' CRAM Experiment
 #'
-#' This function performs a cumulative randomized assignment model (CRAM) experiment to estimate treatment effects.
-#' It calculates confidence intervals, standard errors, and the proportion of treated individuals under the learned policy.
+#' This function performs the cram method (simultaneous learning and evaluation)
+#' on experimental or observational data, for which the data generation process is unknown.
 #'
 #' @param X A matrix or data frame of covariates for each sample.
 #' @param D A vector of binary treatment indicators (1 for treated, 0 for untreated).

@@ -8,9 +8,9 @@ library(foreach)
 # Declare global variables to suppress devtools::check warnings
 utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 
-#' CRAM Learning with Model Selection
+#' CRAM Learning
 #'
-#' This function performs policy learning using cumulative batches with a choice of model types and learner types. Supported models include Causal Forest, S-learner, and M-learner with options for Ridge Regression and Feedforward Neural Network (FNN) learners.
+#' This function performs the learning part of the cram method.
 #'
 #' @param X A matrix or data frame of covariates for each sample.
 #' @param D A vector of binary treatment indicators (1 for treated, 0 for untreated).

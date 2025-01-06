@@ -1,12 +1,13 @@
-#' Cram Estimator for Policy Evaluation
+#' Cram Estimator for Policy Value Difference (Delta)
 #'
-#' This function estimates the difference in policy performance between a series of learned policies
-#' and a baseline policy using the cram approach.
+#' This function returns the cram estimator for the policy value difference (delta).
 #'
 #' @param Y A vector of outcomes for the n individuals.
 #' @param D A vector of binary treatments for the n individuals.
-#' @param pi A matrix of n rows and (nb_batch + 1) columns, containing the policy assignment for each individual
-#'           for each policy. The first column represents the baseline policy.
+#' @param pi A matrix of n rows and (nb_batch + 1) columns,
+#'           where n is the sample size and nb_batch is the number of batches,
+#'           containing the policy assignment for each individual for each policy.
+#'           The first column represents the baseline policy.
 #' @param batch_indices A list where each element is a vector of indices corresponding to the individuals in each batch.
 #' @return The estimated policy value difference \(\eqn{\hat{\Delta}}(\eqn{\hat{\pi}}_T; \eqn{\pi}_0)\).
 #' @examples
