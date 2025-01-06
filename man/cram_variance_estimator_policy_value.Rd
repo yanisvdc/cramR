@@ -2,7 +2,7 @@
 % Please edit documentation in R/cram_variance_estimator_policy_value.R
 \name{cram_variance_estimator_policy_value}
 \alias{cram_variance_estimator_policy_value}
-\title{Crammed Variance Estimator for Policy Evaluation}
+\title{Cram Variance Estimator for Policy Value (Psi)}
 \usage{
 cram_variance_estimator_policy_value(Y, D, pi, batch_indices)
 }
@@ -11,17 +11,19 @@ cram_variance_estimator_policy_value(Y, D, pi, batch_indices)
 
 \item{D}{A vector of binary treatments for the n individuals.}
 
-\item{pi}{A matrix of n rows and (nb_batch + 1) columns, containing the policy assignment for each individual
-for each policy. The first column represents the baseline policy.}
+\item{pi}{A matrix of n rows and (nb_batch + 1) columns,
+where n is the sample size and nb_batch is the number of batches,
+containing the policy assignment for each individual for each policy.
+The first column represents the baseline policy.}
 
 \item{batch_indices}{A list where each element is a vector of indices corresponding to the individuals in each batch.}
 }
 \value{
-The estimated variance \eqn{\hat{v}^2_T}.
+The estimated variance \eqn{\hat{w}^2_T}.
 }
 \description{
-This function estimates the variance of the cram estimator to measure the asymptotic
-variance of policy value differences.
+This function estimates the asymptotic variance of the cram estimator
+for the policy value (psi).
 }
 \examples{
 # Example usage:
@@ -30,5 +32,5 @@ D <- sample(0:1, 100, replace = TRUE)
 pi <- matrix(sample(0:1, 100 * 11, replace = TRUE), nrow = 100, ncol = 11)
 nb_batch <- 10
 batch_indices <- split(1:100, rep(1:nb_batch, each = 10))
-variance_estimate <- cram_variance_estimator(Y, D, pi, batch_indices)
+variance_estimate <- cram_variance_estimator_policy_value(Y, D, pi, batch_indices)
 }

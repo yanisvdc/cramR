@@ -255,10 +255,6 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D, dgp_Y, batch,
     true_delta <- mean(true_results$true_delta_estimate)
     true_policy_value <- mean(true_results$true_policy_value_estimate)
 
-    # prediction_error_delta <- delta_estimate - true_delta
-    # prediction_error_policy_value <- policy_value_estimate - true_policy_value
-
-
     # Step 6: Calculate the proportion of treated individuals under the final policy
     final_policy <- policies[, nb_batch + 1]
     proportion_treated <- mean(final_policy)
