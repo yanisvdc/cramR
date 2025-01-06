@@ -2,26 +2,27 @@
 % Please edit documentation in R/cram_policy_value_estimator.R
 \name{cram_policy_value_estimator}
 \alias{cram_policy_value_estimator}
-\title{Cram Policy Value Estimator with Gamma Calculation}
+\title{Cram Estimator for Policy Value (Psi)}
 \usage{
 cram_policy_value_estimator(Y, D, pi, batch_indices)
 }
 \arguments{
-\item{Y}{A vector of observed outcomes for each individual.}
+\item{Y}{A vector of outcomes for the n individuals.}
 
-\item{D}{A vector of binary treatment assignments (1 for treated, 0 for control).}
+\item{D}{A vector of binary treatments for the n individuals.}
 
-\item{pi}{A matrix where the first column represents the baseline policy (pi0),
-and subsequent columns represent policy assignments for each batch.}
+\item{pi}{A matrix of n rows and (nb_batch + 1) columns,
+where n is the sample size and nb_batch is the number of batches,
+containing the policy assignment for each individual for each policy.
+The first column represents the baseline policy.}
 
-\item{batch_indices}{A list where each element is a vector of indices corresponding to individuals in each batch.}
+\item{batch_indices}{A list where each element is a vector of indices corresponding to the individuals in each batch.}
 }
 \value{
-The estimated policy value difference.
+The estimated policy value.
 }
 \description{
-This function estimates the policy value of a learned policy using the cram approach,
-assuming e(X) = 1/2 and using the first column of pi as pi0.
+This function returns the cram estimator for the policy value (psi).
 }
 \examples{
 # Example usage

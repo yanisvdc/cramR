@@ -1,14 +1,15 @@
-#' Cram Policy Value Estimator with Gamma Calculation
+#' Cram Estimator for Policy Value (Psi)
 #'
-#' This function estimates the policy value of a learned policy using the cram approach,
-#' assuming e(X) = 1/2 and using the first column of pi as pi0.
+#' This function returns the cram estimator for the policy value (psi).
 #'
-#' @param Y A vector of observed outcomes for each individual.
-#' @param D A vector of binary treatment assignments (1 for treated, 0 for control).
-#' @param pi A matrix where the first column represents the baseline policy (pi0),
-#'           and subsequent columns represent policy assignments for each batch.
-#' @param batch_indices A list where each element is a vector of indices corresponding to individuals in each batch.
-#' @return The estimated policy value difference.
+#' @param Y A vector of outcomes for the n individuals.
+#' @param D A vector of binary treatments for the n individuals.
+#' @param pi A matrix of n rows and (nb_batch + 1) columns,
+#'           where n is the sample size and nb_batch is the number of batches,
+#'           containing the policy assignment for each individual for each policy.
+#'           The first column represents the baseline policy.
+#' @param batch_indices A list where each element is a vector of indices corresponding to the individuals in each batch.
+#' @return The estimated policy value.
 #' @examples
 #' # Example usage
 #' Y <- sample(0:1, 100, replace = TRUE)

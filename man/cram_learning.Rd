@@ -2,7 +2,7 @@
 % Please edit documentation in R/cram_learning.R
 \name{cram_learning}
 \alias{cram_learning}
-\title{CRAM Learning with Model Selection}
+\title{CRAM Learning}
 \usage{
 cram_learning(
   X,
@@ -48,7 +48,7 @@ A list containing:
   \item{batch_indices}{The indices for each batch, either as generated (if \code{batch} is an integer) or as provided by the user.}
 }
 \description{
-This function performs policy learning using cumulative batches with a choice of model types and learner types. Supported models include Causal Forest, S-learner, and M-learner with options for Ridge Regression and Feedforward Neural Network (FNN) learners.
+This function performs the learning part of the cram method.
 }
 \examples{
 # Example usage

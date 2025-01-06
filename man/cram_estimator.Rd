@@ -2,7 +2,7 @@
 % Please edit documentation in R/cram_estimate.R
 \name{cram_estimator}
 \alias{cram_estimator}
-\title{Cram Estimator for Policy Evaluation}
+\title{Cram Estimator for Policy Value Difference (Delta)}
 \usage{
 cram_estimator(Y, D, pi, batch_indices)
 }
@@ -11,8 +11,10 @@ cram_estimator(Y, D, pi, batch_indices)
 
 \item{D}{A vector of binary treatments for the n individuals.}
 
-\item{pi}{A matrix of n rows and (nb_batch + 1) columns, containing the policy assignment for each individual
-for each policy. The first column represents the baseline policy.}
+\item{pi}{A matrix of n rows and (nb_batch + 1) columns,
+where n is the sample size and nb_batch is the number of batches,
+containing the policy assignment for each individual for each policy.
+The first column represents the baseline policy.}
 
 \item{batch_indices}{A list where each element is a vector of indices corresponding to the individuals in each batch.}
 }
@@ -20,8 +22,7 @@ for each policy. The first column represents the baseline policy.}
 The estimated policy value difference \(\eqn{\hat{\Delta}}(\eqn{\hat{\pi}}_T; \eqn{\pi}_0)\).
 }
 \description{
-This function estimates the difference in policy performance between a series of learned policies
-and a baseline policy using the cram approach.
+This function returns the cram estimator for the policy value difference (delta).
 }
 \examples{
 # Example usage:

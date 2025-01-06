@@ -1,50 +1,53 @@
 # Declare global variables to suppress devtools::check warnings
 utils::globalVariables(c("X", "D", "Y", "sim_id", "."))
 
-#' CRAM Simulation with Empirical Bias Calculation
+#' CRAM Simulation
 #'
-#' This function simulates the estimation of treatment effects in a cumulative
-#' randomized assignment model (CRAM) setup. It uses bootstrapping to resample
-#' data, applies treatment and outcome generation functions, and calculates
-#' empirical bias and coverage rates for delta and policy value estimates.
+#' This function performs the cram method (simultaneous learning and evaluation)
+#' on simulation data, for which the data generation process (DGP) is known.
+#' The data generation process for X can be given directly as a function or
+#' induced by a provided dataset via row-wise bootstrapping.
+#' Results are averaged across Monte Carlo replicates for the given DGP.
 #'
-#' @param X A matrix or data frame of covariates for each sample.
+#' @param X Optional. A matrix or data frame of covariates for each sample inducing
+#'                    empirically the DGP for covariates.
 #' @param dgp_X Optional. A function to generate covariate data for simulations.
-#' @param dgp_D A function to generate binary treatment assignments for each
-#'              sample. Defaults to \code{function(Xi) rbinom(1, 1, 0.5)} for
-#'              random assignment.
-#' @param dgp_Y A function to generate the outcome variable for each sample
+#' @param dgp_D A vectorized function to generate binary treatment assignments for each
+#'              sample.
+#' @param dgp_Y A vectorized function to generate the outcome variable for each sample
 #'              given the treatment and covariates.
-#' @param batch Either an integer specifying the number of batches (which will
-#'              be created by random sampling) or a list/vector providing
-#'              specific batch indices.
-#' @param nb_simulations The number of main simulations to run. Full results
-#'                       are stored for each of these simulations.
-#' @param nb_simulations_truth Optional. The total number of simulations to run, which
-#'                              should be greater than \code{nb_simulations}.
-#'                              Only the delta estimates are stored for
-#'                              simulations beyond \code{nb_simulations} up to
-#'                              \code{nb_simulations_truth}.
+#' @param batch Either an integer specifying the number of batches
+#'              (which will be created by random sampling) or a vector of length
+#'              equal to the sample size providing the batch assignment (index)
+#'              for each individual in the sample.
+#' @param nb_simulations The number of simulations (Monte Carlo replicates) to run.
+#' @param nb_simulations_truth Optional. The number of additional simmulations
+#'                                       (Monte Carlo replicates) beyond nb_simulations
+#'                                       to use when calculating the true policy value difference (delta)
+#'                                       and the true policy value (psi)
 #' @param sample_size The number of samples in each simulation.
-#' @param model_type The model type for policy learning. Options include
-#'                   \code{"Causal Forest"}, \code{"S-learner"}, and
-#'                   \code{"M-learner"}. Default is \code{"Causal Forest"}.
-#' @param learner_type The learner type for the chosen model. Options include
-#'                     \code{"ridge"} for Ridge Regression and \code{"FNN"} for
-#'                     Feedforward Neural Network. Default is \code{"ridge"}.
-#' @param alpha Significance level for confidence intervals. Default is 0.05
-#'              (95\% confidence).
-#' @param baseline_policy A list providing the baseline policy (binary 0 or 1)
-#'                        for each sample. If \code{NULL}, defaults to a list
-#'                        of zeros with the same length as the number of samples
-#'                        in \code{X}.
-#' @param parallelize_batch Logical. Whether to parallelize batch processing.
-#'                          Default is \code{FALSE}.
-#' @param model_params Optional. A list of model parameters to be passed to
-#'                     the learning function.
-#' @param custom_fit Optional. A custom function for fitting models.
-#' @param custom_predict Optional. A custom function for making predictions.
-#'
+#' @param model_type The model type for policy learning. Options include \code{"causal_forest"},
+#'                   \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
+#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"}
+#'                     for Ridge Regression and \code{"fnn"} for Feedforward Neural Network.
+#'                     Default is \code{"ridge"}.
+#' @param alpha Significance level for confidence intervals. Default is 0.05 (95\% confidence).
+#' @param baseline_policy A list providing the baseline policy (binary 0 or 1) for each sample.
+#'                        If \code{NULL}, defaults to a list of zeros with the same length
+#'                        as the number of rows in \code{X}.
+#' @param parallelize_batch Logical. Whether to parallelize batch processing
+#'                                   (i.e. the cram method learns T policies,
+#'                                   with T the number of batches. They are learned in parallel
+#'                                   when parallelize_batch is TRUE vs. learned sequentially using
+#'                                   the efficient data.table structure when parallelize_batch is FALSE,
+#'                                   recommended for light weight training). Defaults to \code{FALSE}.
+#' @param model_params A list of additional parameters to pass to the model,
+#'                     which can be any parameter defined in the model reference package.
+#'                     Defaults to \code{NULL}.
+#' @param custom_fit A custom, user-defined, function that outputs a fitted model given training data
+#'                   (allows flexibility). Defaults to \code{NULL}.
+#' @param custom_predict A custom, user-defined, function for making predictions given a fitted model
+#'                       and test data (allow flexibility). Defaults to \code{NULL}.
 #' @return A list containing:
 #' \describe{
 #'   \item{\code{avg_proportion_treated}}{The average proportion of treated individuals across simulations.}
@@ -60,14 +63,29 @@ utils::globalVariables(c("X", "D", "Y", "sim_id", "."))
 #'
 #' @examples
 #' # Define data generation process (DGP) functions
-#' dgp_D <- function(Xi) rbinom(1, 1, 0.5)
-#' dgp_Y <- function(D, Xi) D * rnorm(1, mean = 1) + (1 - D)*rnorm(1, mean = 0)
+#' X_data <- data.table(
+#'   binary = rbinom(100, 1, 0.5),                 # Binary variable (0 or 1)
+#'   discrete = sample(1:5, 100, replace = TRUE),  # Discrete variable (1 to 5)
+#'   continuous = rnorm(100)                       # Continuous variable
+#' )
+#' dgp_D <- function(X) rbinom(nrow(X), 1, 0.5)
+#' dgp_Y <- function(D, X) { theta <- ifelse(
+#' X[, binary] == 1 & X[, discrete] <= 2,  # Group 1: High benefit
+#' 1,
+#' ifelse(X[, binary] == 0 & X[, discrete] >= 4,  # Group 3: High adverse effect
+#' -1,
+#' 0.1)  # Group 2: Neutral effect
+#' )
+#' Y <- D * (theta + rnorm(length(D), mean = 0, sd = 1)) +
+#'   (1 - D) * rnorm(length(D))  # Outcome for untreated
 #'
-#' # Example data
-#' X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)
+#' return(Y)
+#' }
+#'
+#'# Parameters:
 #' nb_simulations <- 10
-#' nb_simulations_truth <- 20
-#' batch <- 10
+#' nb_simulations_truth <- 2
+#' batch <- 5
 #'
 #' # Perform CRAM simulation
 #' result <- cram_simulation(X = X_data, dgp_D = dgp_D, dgp_Y = dgp_Y,
@@ -84,7 +102,7 @@ utils::globalVariables(c("X", "D", "Y", "sim_id", "."))
 
 
 # Combined simulation function with empirical bias calculation
-cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D = function(X) rbinom(1, 1, 0.5), dgp_Y, batch,
+cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D, dgp_Y, batch,
                             nb_simulations, nb_simulations_truth = NULL, sample_size,
                             model_type = "causal_forest", learner_type = "ridge",
                             alpha=0.05, baseline_policy = NULL,
@@ -366,7 +384,7 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D = function(X) rbinom(1
       result$policy_value_empirical_bias,
       result$policy_value_empirical_coverage,
       result$var_policy_value_empirical_bias
-    ), 2)  # Truncate to 2 decimals
+    ), 5)  # Truncate to 5 decimals
   )
 
   # Create an interactive table for exploration
@@ -381,7 +399,4 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D = function(X) rbinom(1
     raw_results = summary_table,      # Raw data table for programmatic use
     interactive_table = interactive_table # Interactive table for exploration
   ))
-
-  # return(result)
-
 }

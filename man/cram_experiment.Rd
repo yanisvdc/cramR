@@ -2,7 +2,7 @@
 % Please edit documentation in R/cram_experiment.R
 \name{cram_experiment}
 \alias{cram_experiment}
-\title{CRAM Experiment with Confidence Interval and Standard Error Calculation}
+\title{CRAM Experiment}
 \usage{
 cram_experiment(
   X,
@@ -64,8 +64,8 @@ A list containing:
 }
 }
 \description{
-This function performs a cumulative randomized assignment model (CRAM) experiment to estimate treatment effects.
-It calculates confidence intervals, standard errors, and the proportion of treated individuals under the learned policy.
+This function performs the cram method (simultaneous learning and evaluation)
+on experimental or observational data, for which the data generation process is unknown.
 }
 \examples{
 # Example data

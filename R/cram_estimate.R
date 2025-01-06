@@ -53,11 +53,3 @@ cram_estimator <- function(Y, D, pi, batch_indices) {
 
   return(delta_hat)
 }
-
-
-# Y <- sample(0:1, 100, replace = TRUE)
-# D <- sample(0:1, 100, replace = TRUE)
-# pi <- matrix(sample(0:1, 100 * 11, replace = TRUE), nrow = 100, ncol = 11)
-# batch_indices <- split(1:100, rep(1:nb_batch, each = 10))
-# estimate <- cram_estimator(Y, D, pi, batch_indices)
-# print(estimate)
