@@ -1,20 +1,19 @@
 #' Averaged CRAM with Permutations
 #'
-#' This function implements Averaged CRAM by randomly permuting batches and averaging performance results.
+#' This function implements Averaged CRAM by randomly permuting batches
+#' (except the last batch which is kept the same) and averaging performance results.
 #' @param X A matrix or data frame of covariates.
 #' @param D A binary vector of treatment indicators (0 or 1).
 #' @param Y A vector of outcomes.
-#' @param batch Number of batches for CRAM or batch indices.
-#' @param model_type Type of model for CRAM ("causal_forest", "s_learner", "m_learner").
-#' @param learner_type Type of learner ("ridge", "fnn", or NULL).
-#' @param alpha Confidence level for performance estimation.
-#' @param baseline_policy Baseline policy vector.
-#' @param parallelize_batch Boolean to parallelize batch processing.
-#' @param model_params Additional parameters for the model.
-#' @param custom_fit A custom function for fitting models. Defaults to \code{NULL}.
-#'                   If provided, it should accept the same arguments as \code{fit_model}.
-#' @param custom_predict A custom function for making predictions. Defaults to \code{NULL}.
-#'                       If provided, it should accept the same arguments as \code{model_predict}.
+#' @param batch Either an integer specifying the number of batches (which will be created by random sampling) or a vector of length equal to the sample size providing the batch assignment (index) for each individual in the sample.
+#' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
+#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.
+#' @param alpha Significance level for confidence intervals. Default is 0.05 (95\% confidence).
+#' @param baseline_policy A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, defaults to a list of zeros with the same length as the number of rows in \code{X}.
+#' @param parallelize_batch Logical. Whether to parallelize batch processing (i.e. the cram method learns T policies, with T the number of batches. They are learned in parallel when parallelize_batch is TRUE vs. learned sequentially using the efficient data.table structure when parallelize_batch is FALSE, recommended for light weight training). Defaults to \code{FALSE}.
+#' @param model_params A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
+#' @param custom_fit A custom, user-defined, function that outputs a fitted model given training data (allows flexibility). Defaults to \code{NULL}.
+#' @param custom_predict A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.
 #' @param num_permutations Number of random permutations of batches.
 #' @return A list with averaged performance and variance estimates.
 #' @examples
@@ -24,7 +23,8 @@
 #' avg_cram_results <- averaged_cram(X, D, Y,
 #'                                   batch = 20,
 #'                                   model_type = "m_learner",
-#'                                   learner_type = "ridge")
+#'                                   learner_type = "ridge",
+#'                                   num_permutations = 3)
 #' @export
 averaged_cram <- function(X, D, Y, batch, model_type, learner_type = NULL,
                           alpha = 0.05, baseline_policy = NULL,
@@ -112,15 +112,4 @@ averaged_cram <- function(X, D, Y, batch, model_type, learner_type = NULL,
     summary_table = summary_table,
     interactive_table = interactive_table
   ))
-
-  # # Aggregate results
-  # policy_values <- sapply(results, function(res) res$policy_value_estimate)
-  # avg_policy_value <- mean(policy_values)
-  # var_policy_value <- var(policy_values)
-  #
-  # return(list(
-  #   avg_policy_value = avg_policy_value,
-  #   var_policy_value = var_policy_value,
-  #   all_results = results
-  # ))
 }

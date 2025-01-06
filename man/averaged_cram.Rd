@@ -27,25 +27,23 @@ averaged_cram(
 
 \item{Y}{A vector of outcomes.}
 
-\item{batch}{Number of batches for CRAM or batch indices.}
+\item{batch}{Either an integer specifying the number of batches (which will be created by random sampling) or a vector of length equal to the sample size providing the batch assignment (index) for each individual in the sample.}
 
-\item{model_type}{Type of model for CRAM ("causal_forest", "s_learner", "m_learner").}
+\item{model_type}{The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.}
 
-\item{learner_type}{Type of learner ("ridge", "fnn", or NULL).}
+\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.}
 
-\item{alpha}{Confidence level for performance estimation.}
+\item{alpha}{Significance level for confidence intervals. Default is 0.05 (95\% confidence).}
 
-\item{baseline_policy}{Baseline policy vector.}
+\item{baseline_policy}{A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, defaults to a list of zeros with the same length as the number of rows in \code{X}.}
 
-\item{parallelize_batch}{Boolean to parallelize batch processing.}
+\item{parallelize_batch}{Logical. Whether to parallelize batch processing (i.e. the cram method learns T policies, with T the number of batches. They are learned in parallel when parallelize_batch is TRUE vs. learned sequentially using the efficient data.table structure when parallelize_batch is FALSE, recommended for light weight training). Defaults to \code{FALSE}.}
 
-\item{model_params}{Additional parameters for the model.}
+\item{model_params}{A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.}
 
-\item{custom_fit}{A custom function for fitting models. Defaults to \code{NULL}.
-If provided, it should accept the same arguments as \code{fit_model}.}
+\item{custom_fit}{A custom, user-defined, function that outputs a fitted model given training data (allows flexibility). Defaults to \code{NULL}.}
 
-\item{custom_predict}{A custom function for making predictions. Defaults to \code{NULL}.
-If provided, it should accept the same arguments as \code{model_predict}.}
+\item{custom_predict}{A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.}
 
 \item{num_permutations}{Number of random permutations of batches.}
 }
@@ -53,7 +51,8 @@ If provided, it should accept the same arguments as \code{model_predict}.}
 A list with averaged performance and variance estimates.
 }
 \description{
-This function implements Averaged CRAM by randomly permuting batches and averaging performance results.
+This function implements Averaged CRAM by randomly permuting batches
+(except the last batch which is kept the same) and averaging performance results.
 }
 \examples{
 X <- matrix(rnorm(1000), nrow = 100, ncol = 10)
@@ -62,5 +61,6 @@ Y <- rnorm(100)
 avg_cram_results <- averaged_cram(X, D, Y,
                                   batch = 20,
                                   model_type = "m_learner",
-                                  learner_type = "ridge")
+                                  learner_type = "ridge",
+                                  num_permutations = 3)
 }
