@@ -136,14 +136,4 @@ cram_experiment <- function(X, D, Y, batch, model_type = "causal_forest",
     final_policy_model = final_policy_model  # Model (not displayed in the summary)
   ))
 
-
-  # return(list(final_policy_model = final_policy_model,
-  #             proportion_treated = proportion_treated,
-  #             delta_estimate = delta_estimate,
-  #             delta_standard_error = delta_standard_error,
-  #             delta_confidence_interval = delta_confidence_interval,
-  #             policy_value_estimate = policy_value_estimate,
-  #             policy_value_standard_error = policy_value_standard_error,
-  #             policy_value_confidence_interval = policy_value_confidence_interval))
-
 }
