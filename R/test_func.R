@@ -101,4 +101,3 @@ test_batch <- function(batch, n) {
     stop("`batch` must be either an integer or a list/vector of batch assignement for all individuals")
   }
 }
-

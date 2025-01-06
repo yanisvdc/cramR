@@ -1,0 +1,59 @@
+---
+title: "Documentation for test_batch"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Documentation for test_batch}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+# Documentation for `test_batch`
+```
+Validate or Generate Batch Assignments
+
+Description:
+
+     This function validates a provided batch assignment or generates
+     random batch assignments for individuals.
+
+Usage:
+
+     test_batch(batch, n)
+     
+Arguments:
+
+   batch: Either an integer specifying the number of batches or a
+          vector/list of batch assignments for all individuals.
+
+       n: An integer specifying the number of individuals in the
+          population.
+
+Value:
+
+     A list containing:
+
+     ‘batches’ A list where each element contains the indices of
+          individuals assigned to a specific batch.
+
+     ‘nb_batch’ The total number of batches.
+
+Examples:
+
+     # Example: Generate random batch assignments
+     result <- test_batch(3, n = 9)
+     print(result)
+     
+     # Example: Validate a batch assignment vector
+     batch_vector <- c(1, 1, 2, 2, 3, 3, 1, 2, 3)
+     result <- test_batch(batch_vector, n = 9)
+     print(result)
+     
+     # Example: Invalid batch assignment
+     ## Not run:
+     
+     invalid_batch <- c(1, 1, 2)
+     result <- test_batch(invalid_batch, n = 9)
+     ## End(Not run)
+     
+```

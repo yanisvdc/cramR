@@ -1,0 +1,56 @@
+---
+title: "Documentation for generate_data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Documentation for generate_data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+# Documentation for `generate_data`
+```
+Generate Mock Dataset
+
+Description:
+
+     This function generates a simulated dataset with covariates,
+     treatment assignments, and outcomes for testing and
+     experimentation. The dataset includes heterogeneous treatment
+     effects across groups, mimicking realistic causal inference
+     scenarios.
+
+Usage:
+
+     generate_data(n)
+     
+Arguments:
+
+       n: Integer. The number of observations to generate.
+
+Value:
+
+     A list containing:
+
+     X A ‘data.table’ with three variables:
+
+     binary Binary covariate (0 or 1).
+
+     discrete Discrete covariate (values from 1 to 5).
+
+     continuous Continuous covariate (normally distributed).
+
+     D Binary treatment assignment (0 or 1).
+
+     Y Numeric outcome based on treatment effects and covariates.
+
+Examples:
+
+     # Generate a dataset with 1000 observations
+     data <- generate_data(1000)
+     str(data)
+     head(data$X)
+     head(data$D)
+     head(data$Y)
+     
+```

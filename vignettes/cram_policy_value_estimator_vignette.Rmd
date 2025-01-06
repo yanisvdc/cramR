@@ -1,0 +1,51 @@
+---
+title: "Documentation for cram_policy_value_estimator"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Documentation for cram_policy_value_estimator}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+# Documentation for `cram_policy_value_estimator`
+```
+Cram Estimator for Policy Value (Psi)
+
+Description:
+
+     This function returns the cram estimator for the policy value
+     (psi).
+
+Usage:
+
+     cram_policy_value_estimator(Y, D, pi, batch_indices)
+     
+Arguments:
+
+       Y: A vector of outcomes for the n individuals.
+
+       D: A vector of binary treatments for the n individuals.
+
+      pi: A matrix of n rows and (nb_batch + 1) columns, where n is the
+          sample size and nb_batch is the number of batches, containing
+          the policy assignment for each individual for each policy.
+          The first column represents the baseline policy.
+
+batch_indices: A list where each element is a vector of indices
+          corresponding to the individuals in each batch.
+
+Value:
+
+     The estimated policy value.
+
+Examples:
+
+     # Example usage
+     Y <- sample(0:1, 100, replace = TRUE)
+     D <- sample(0:1, 100, replace = TRUE)
+     pi <- matrix(sample(0:1, 100 * 11, replace = TRUE), nrow = 100, ncol = 11)
+     batch_indices <- split(1:100, rep(1:10, each = 10))
+     estimate <- cram_policy_value_estimator(Y, D, pi, batch_indices)
+     
+```

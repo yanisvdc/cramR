@@ -1,0 +1,69 @@
+---
+title: "Documentation for fit_model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Documentation for fit_model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+# Documentation for `fit_model`
+```
+Fit Model
+
+Description:
+
+     This function trains a given unfitted model with the provided data
+     and parameters, according to model type and learner type.
+
+Usage:
+
+     fit_model(model, X, Y, D, model_type, learner_type, model_params)
+     
+Arguments:
+
+   model: An unfitted model object, as returned by `set_model`.
+
+       X: A matrix or data frame of covariates for the samples.
+
+       Y: A vector of outcome values.
+
+       D: A vector of binary treatment indicators (1 for treated, 0 for
+          untreated).
+
+model_type: The model type for policy learning. Options include
+          ‘"causal_forest"’, ‘"s_learner"’, and ‘"m_learner"’. Default
+          is ‘"causal_forest"’.
+
+learner_type: The learner type for the chosen model. Options include
+          ‘"ridge"’ for Ridge Regression and ‘"fnn"’ for Feedforward
+          Neural Network. Default is ‘"ridge"’.
+
+model_params: A list of additional parameters to pass to the model,
+          which can be any parameter defined in the model reference
+          package. Defaults to ‘NULL’.
+
+Value:
+
+     The fitted model object.
+
+Examples:
+
+     # Example usage for Ridge Regression S-learner
+     set.seed(123)
+     X <- matrix(rnorm(1000), nrow = 100, ncol = 10)
+     D <- sample(0:1, 100, replace = TRUE)
+     Y <- rnorm(100)
+     # Set up the model
+     model <- set_model("s_learner", "ridge")
+     # Define model parameters
+     model_params <- list(alpha = 0)
+     # Fit the model
+     fitted_model <- fit_model(
+                             model, X, Y, D = D,
+                             model_type = "s_learner",
+                             learner_type = "ridge",
+                             model_params = model_params)
+     
+```
