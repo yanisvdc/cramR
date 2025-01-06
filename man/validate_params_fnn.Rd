@@ -7,11 +7,9 @@
 validate_params_fnn(model_type, learner_type, model_params, X)
 }
 \arguments{
-\item{model_type}{The type of model to validate. Supported options are \code{"causal_forest"},
-\code{"s_learner"}, and \code{"m_learner"}.}
+\item{model_type}{The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.}
 
-\item{learner_type}{The type of learner for the model. Options depend on \code{model_type}.
-For example, \code{"ridge"} and \code{"fnn"} are supported learners.}
+\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.}
 
 \item{model_params}{A named list of parameters provided by the user for configuring the FNN model.}
 
@@ -22,5 +20,6 @@ A named list of validated parameters merged with defaults for any missing values
 }
 \description{
 This function validates user-provided parameters for a Feedforward Neural Network (FNN) model.
-It ensures the correct structure for \code{input_layer}, \code{layers}, \code{output_layer}, and \code{compile_args}.
+It ensures the correct structure for \code{input_layer}, \code{layers}, \code{output_layer},
+\code{compile_args} and \code{fit_params}.
 }

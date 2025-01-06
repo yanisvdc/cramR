@@ -4,10 +4,8 @@
 #' It ensures that all user-specified parameters are recognized by the model and raises an error for invalid parameters.
 #'
 #' @param model_function The model function for which parameters are being validated (e.g., \code{grf::causal_forest}).
-#' @param model_type The type of model to validate. Supported options are \code{"causal_forest"},
-#'                   \code{"s_learner"}, and \code{"m_learner"}.
-#' @param learner_type The type of learner for the model. Options depend on \code{model_type}.
-#'                     For example, \code{"ridge"} and \code{"fnn"} are supported learners.
+#' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
+#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.
 #' @param user_params A named list of parameters provided by the user.
 #' @return A named list of validated parameters that are safe to pass to the model function.
 #' @examples

@@ -4,7 +4,7 @@
 \alias{model_predict}
 \title{Predict with the Specified Model}
 \usage{
-model_predict(model, X, D, model_type, learner_type, model_params)
+model_predict(model, X, D = NULL, model_type, learner_type, model_params)
 }
 \arguments{
 \item{model}{A trained model object returned by the `fit_model` function.}
@@ -13,12 +13,11 @@ model_predict(model, X, D, model_type, learner_type, model_params)
 
 \item{D}{A vector of binary treatment indicators (1 for treated, 0 for untreated). Optional, depending on the model type.}
 
-\item{model_type}{A string specifying the model type. Supported options are \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}.}
+\item{model_type}{The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.}
 
-\item{learner_type}{A string specifying the learner type. Supported options depend on the \code{model_type}.
-For example, \code{"ridge"} and \code{"fnn"} are supported learners for \code{"s_learner"}.}
+\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.}
 
-\item{model_params}{A list of additional parameters used during training, required for context-sensitive inference.}
+\item{model_params}{A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.}
 }
 \value{
 A vector of predictions or CATE estimates, depending on the \code{model_type} and \code{learner_type}.

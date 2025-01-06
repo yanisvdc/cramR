@@ -25,7 +25,7 @@
 #' head(data$Y)
 #' @export
 generate_data <- function(n) {
-  X <- data.table(
+  X <- data.table::data.table(
     binary = rbinom(n, 1, 0.5),                 # Binary variable (0 or 1)
     discrete = sample(1:5, n, replace = TRUE),  # Discrete variable (1 to 5)
     continuous = rnorm(n)                       # Continuous variable

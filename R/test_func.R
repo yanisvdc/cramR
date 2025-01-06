@@ -9,12 +9,10 @@
 #' @examples
 #' # Example: Default baseline policy
 #' baseline_policy <- test_baseline_policy(NULL, n = 10)
-#' print(baseline_policy)
 #'
 #' # Example: Valid baseline policy
 #' valid_policy <- as.list(rep(1, 10))
 #' baseline_policy <- test_baseline_policy(valid_policy, n = 10)
-#' print(baseline_policy)
 #'
 #' # Example: Invalid baseline policy
 #' \dontrun{

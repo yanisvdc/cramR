@@ -6,10 +6,9 @@
 #' @param model A trained model object returned by the `fit_model` function.
 #' @param X A matrix or data frame of covariates for which predictions are required.
 #' @param D A vector of binary treatment indicators (1 for treated, 0 for untreated). Optional, depending on the model type.
-#' @param model_type A string specifying the model type. Supported options are \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}.
-#' @param learner_type A string specifying the learner type. Supported options depend on the \code{model_type}.
-#'                     For example, \code{"ridge"} and \code{"fnn"} are supported learners for \code{"s_learner"}.
-#' @param model_params A list of additional parameters used during training, required for context-sensitive inference.
+#' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
+#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.
+#' @param model_params A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
 #' @return A vector of predictions or CATE estimates, depending on the \code{model_type} and \code{learner_type}.
 #' @examples
 #' # Load required library
@@ -28,7 +27,7 @@
 #' @import glmnet
 #' @import keras
 #' @export
-model_predict <- function(model, X, D, model_type, learner_type, model_params) {
+model_predict <- function(model, X, D=NULL, model_type, learner_type, model_params) {
   if (model_type == "causal_forest") {
     # Predict using Causal Forest
     predictions <- predict(model, X)$predictions

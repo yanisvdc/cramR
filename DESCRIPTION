@@ -23,8 +23,7 @@ Description: Performs the CRAM method, a general and efficient approach to simul
 License: MIT + file LICENSE
 URL: https://github.com/yanisvdc/cramR
 BugReports: https://github.com/yanisvdc/cramR/issues
-Depends: R (>= 3.5.0),
-         data.table (>= 1.16.4)
+Depends: R (>= 3.5.0)
 Imports:
     grf (>= 2.4.0),
     glmnet (>= 4.1.8),
@@ -33,7 +32,8 @@ Imports:
     magrittr (>= 2.0.3),
     doParallel (>= 1.0.17),
     foreach (>= 1.5.2),
-    DT (>= 0.33)
+    DT (>= 0.33),
+    data.table (>= 1.16.4)
 Suggests: 
     testthat (>= 3.0.0),
     kableExtra (>= 1.4.0),

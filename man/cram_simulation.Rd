@@ -102,7 +102,7 @@ Results are averaged across Monte Carlo replicates for the given DGP.
 }
 \examples{
 # Define data generation process (DGP) functions
-X_data <- data.table(
+X_data <- data.table::data.table(
   binary = rbinom(100, 1, 0.5),                 # Binary variable (0 or 1)
   discrete = sample(1:5, 100, replace = TRUE),  # Discrete variable (1 to 5)
   continuous = rnorm(100)                       # Continuous variable

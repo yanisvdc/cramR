@@ -9,11 +9,9 @@ validate_params(model_function, model_type, learner_type, user_params)
 \arguments{
 \item{model_function}{The model function for which parameters are being validated (e.g., \code{grf::causal_forest}).}
 
-\item{model_type}{The type of model to validate. Supported options are \code{"causal_forest"},
-\code{"s_learner"}, and \code{"m_learner"}.}
+\item{model_type}{The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.}
 
-\item{learner_type}{The type of learner for the model. Options depend on \code{model_type}.
-For example, \code{"ridge"} and \code{"fnn"} are supported learners.}
+\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.}
 
 \item{user_params}{A named list of parameters provided by the user.}
 }
