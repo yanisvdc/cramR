@@ -15,7 +15,8 @@ cram_learning(
   parallelize_batch = FALSE,
   model_params = NULL,
   custom_fit = NULL,
-  custom_predict = NULL
+  custom_predict = NULL,
+  n_cores = detectCores() - 1
 )
 }
 \arguments{
@@ -40,6 +41,8 @@ cram_learning(
 \item{custom_fit}{A custom, user-defined, function that outputs a fitted model given training data (allows flexibility). Defaults to \code{NULL}.}
 
 \item{custom_predict}{A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.}
+
+\item{n_cores}{Number of cores to use for parallelization when parallelize_batch is set to TRUE. Defaults to detectCores() - 1.}
 }
 \value{
 A list containing:

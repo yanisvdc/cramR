@@ -6,7 +6,7 @@ library(doParallel)
 library(foreach)
 
 # Declare global variables to suppress devtools::check warnings
-utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
+utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", ".", "registerDoSEQ"))
 
 #' CRAM Learning
 #'
@@ -23,6 +23,7 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 #' @param model_params A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
 #' @param custom_fit A custom, user-defined, function that outputs a fitted model given training data (allows flexibility). Defaults to \code{NULL}.
 #' @param custom_predict A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.
+#' @param n_cores Number of cores to use for parallelization when parallelize_batch is set to TRUE. Defaults to detectCores() - 1.
 #' @return A list containing:
 #'   \item{final_policy_model}{The final fitted policy model, depending on \code{model_type} and \code{learner_type}.}
 #'   \item{policies}{A matrix of learned policies, where each column represents a batch's learned policy and the first column is the baseline policy.}
@@ -58,9 +59,14 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
                           learner_type = "ridge", baseline_policy = NULL,
                           parallelize_batch = FALSE, model_params = NULL,
-                          custom_fit = NULL, custom_predict = NULL) {
+                          custom_fit = NULL, custom_predict = NULL, n_cores = detectCores() - 1) {
 
   n <- nrow(X)
+
+  # Check for mismatched lengths
+  if (length(D) != n || length(Y) != n) {
+    stop("Lengths of X, D, and Y must match")
+  }
 
   # Step 0: Test baseline_policy
   baseline_policy <- test_baseline_policy(baseline_policy, n)
@@ -89,25 +95,32 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
   if (parallelize_batch) {
 
     # Parallel execution using foreach and doParallel
-    cl <- makeCluster(detectCores() - 1)  # Use available cores minus one
+    cl <- makeCluster(n_cores)  # Use available cores minus one
     registerDoParallel(cl)
 
     if (!is.null(learner_type) && learner_type == "fnn") {
       clusterExport(cl, varlist = c("X", "D", "set_model",
                                     "model_type", "learner_type", "model_params",
-                                    "fit_model", "model_predict"))
+                                    "fit_model", "model_predict"), envir = environment())
     } else {
       if (!(is.null(model_type))) {
         # Export custom functions and objects to the worker nodes
         clusterExport(cl, varlist = c("X", "D",
                                       "model_type", "learner_type", "model_params",
-                                      "fit_model", "model_predict"))
+                                      "fit_model", "model_predict"), envir = environment())
       } else {
         # Custom model
         clusterExport(cl, varlist = c("X", "D", "custom_fit",
-                                      "custom_predict", "fit_model", "model_predict"))
+                                      "custom_predict", "fit_model", "model_predict"), envir = environment())
       }
     }
+
+    # clusterEvalQ(cl, {
+    #   library(grf)
+    #   library(glmnet)
+    #   library(keras)
+    #   library(data.table)
+    # })
 
     # Perform parallel training
     results <- foreach(t = 1:nb_batch, .packages = c("grf", "data.table",
@@ -150,7 +163,8 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     }
 
     stopCluster(cl)
-    closeAllConnections()
+    registerDoSEQ()
+    # closeAllConnections()
 
     # Combine results into a data.table
     results_dt <- results

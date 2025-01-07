@@ -28,6 +28,11 @@ cram_estimator <- function(Y, D, pi, batch_indices) {
     stop("Y, D, and pi must have matching lengths")
   }
 
+  # Ensure D is binary
+  if (!all(D %in% c(0, 1))) {
+    stop("D must be a binary vector containing only 0 and 1")
+  }
+
   # Initialize the policy value difference estimator
   delta_hat <- 0
 
