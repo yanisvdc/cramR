@@ -6,7 +6,7 @@ library(doParallel)
 library(foreach)
 
 # Declare global variables to suppress devtools::check warnings
-utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", ".", "registerDoSEQ"))
+utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 
 #' CRAM Learning
 #'
@@ -163,7 +163,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     }
 
     stopCluster(cl)
-    registerDoSEQ()
+    foreach::registerDoSEQ()
     # closeAllConnections()
 
     # Combine results into a data.table
