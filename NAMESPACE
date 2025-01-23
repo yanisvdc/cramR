@@ -2,6 +2,7 @@
 
 export(averaged_cram)
 export(cram_estimator)
+export(cram_expected_loss)
 export(cram_experiment)
 export(cram_learning)
 export(cram_policy_value_estimator)

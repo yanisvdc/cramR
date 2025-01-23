@@ -1,12 +1,12 @@
 #' CRAM Expected Loss Estimation
 #'
-#' This function computes the Cram expected loss estimator \( \hat{R}_{\text{cram}} \)
+#' This function computes the Cram expected loss estimator \eqn{\hat{R}_{\mathrm{cram}}}
 #' based on the given loss matrix and batch indices.
 #'
-#' @param loss A matrix of loss values with \(N\) rows (data points) and \(K\) columns (batches).
+#' @param loss A matrix of loss values with \eqn{N} rows (data points) and \eqn{K} columns (batches).
 #' @param batch_indices A list where each element is a vector of indices corresponding to a batch.
-#'                      For example: `split(1:N, rep(1:nb_batch, each = N / nb_batch))`.
-#' @return The estimated Cram expected loss \( \hat{R}_{\text{cram}} \).
+#'                      For example: \code{split(1:N, rep(1:nb_batch, each = N / nb_batch))}.
+#' @return The estimated Cram expected loss \eqn{\hat{R}_{\mathrm{cram}}}.
 #' @examples
 #' # Example usage
 #' set.seed(123)
@@ -18,6 +18,7 @@
 #'
 #' cram_expected_loss(loss, batch_indices)
 #' @export
+
 cram_expected_loss <- function(loss, batch_indices) {
   # Check inputs
   if (!is.matrix(loss)) {
