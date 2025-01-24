@@ -106,11 +106,12 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
       custom_predict = custom_predict
     )
 
-
-
     # Perform parallel training
-    results <- foreach(t = 1:nb_batch, .packages = c("grf", "data.table",
-                                                     "glmnet", "keras")) %dopar% {
+
+    # Define the list of required packages
+    required_packages <- c("grf", "data.table", "glmnet", "keras")
+
+    results <- foreach(t = 1:nb_batch, .packages = required_packages) %dopar% {
 
       cumulative_indices <- unlist(batches[1:t])
       X_subset <- as.matrix(X[cumulative_indices, ])
