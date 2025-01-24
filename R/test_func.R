@@ -101,3 +101,22 @@ test_batch <- function(batch, n) {
     stop("`batch` must be either an integer or a list/vector of batch assignement for all individuals")
   }
 }
+
+
+
+check_lengths <- function(n, ...) {
+  # Capture all inputs as a named list
+  inputs <- list(...)
+  input_names <- sapply(substitute(list(...))[-1], deparse)
+
+  # Iterate through inputs to check lengths
+  for (i in seq_along(inputs)) {
+    if (length(inputs[[i]]) != n) {
+      stop(paste0("Length mismatch: '", input_names[i],
+                  "' has length ", length(inputs[[i]]),
+                  " but expected length is ", n, "."))
+    }
+  }
+}
+
+

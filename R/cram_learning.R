@@ -64,9 +64,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
   n <- nrow(X)
 
   # Check for mismatched lengths
-  if (length(D) != n || length(Y) != n) {
-    stop("Lengths of X, D, and Y must match")
-  }
+  check_lengths(D, Y, n = n)
 
   # Step 0: Test baseline_policy
   baseline_policy <- test_baseline_policy(baseline_policy, n)
