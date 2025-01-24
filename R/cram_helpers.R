@@ -120,3 +120,51 @@ check_lengths <- function(n, ...) {
 }
 
 
+retrieve_and_validate_model <- function(model_type, learner_type, model_params, X, custom_fit, custom_predict) {
+  if (!is.null(model_type)) {
+    # Retrieve model and validate user-specified parameters
+    if (!is.null(learner_type) && learner_type == "fnn") {
+      model_params <- validate_params_fnn(model_type, learner_type, model_params, X)
+      model <- set_model(model_type, learner_type, model_params)
+    } else {
+      model <- set_model(model_type, learner_type, model_params)
+      model_params <- validate_params(model, model_type, learner_type, model_params)
+    }
+  } else {
+    # Custom mode: ensure custom_fit and custom_predict are specified
+    if (is.null(custom_fit) || is.null(custom_predict)) {
+      stop("As model_type is NULL (custom mode), custom_fit and custom_predict must be specified")
+    }
+    model <- NULL  # No predefined model in custom mode
+  }
+  return(list(model = model, model_params = model_params))
+}
+
+
+export_cluster_variables <- function(cl, learner_type, model_type, model_params, custom_fit = NULL, custom_predict = NULL) {
+  # Base variables to export
+  varlist <- c("X", "D", "fit_model", "model_predict")
+
+  if (!is.null(model_type)) {
+    # Case 1: Model type is not NULL
+    if (!is.null(learner_type) && learner_type == "fnn") {
+      # Ensures that learner_type is not NULL before checking its value.
+      # This prevents an error when attempting to compare NULL with "fnn".
+      # For FNN, we need to set the model in each worker node
+      # as the keras structure cannot be exported (it would become a serialized object)
+      varlist <- c(varlist, "set_model", "model_type", "learner_type", "model_params")
+    } else {
+      # Add variables for standard models (learner_type is not "fnn")
+      varlist <- c(varlist, "model_type", "learner_type", "model_params")
+    }
+  } else {
+    # Outer else: Custom model case
+    # Add variables for custom models
+    varlist <- c(varlist, "custom_fit", "custom_predict")
+  }
+
+  # Export the variables to the cluster
+  clusterExport(cl, varlist = varlist, envir = environment())
+}
+
+

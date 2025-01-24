@@ -66,59 +66,47 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
   # Check for mismatched lengths
   check_lengths(D, Y, n = n)
 
-  # Step 0: Test baseline_policy
+  # Process baseline_policy
   baseline_policy <- test_baseline_policy(baseline_policy, n)
 
-  # Step 1: Interpret `batch` argument
+  # Process `batch` argument
   batch_results <- test_batch(batch, n)
   batches <- batch_results$batches
   nb_batch <- batch_results$nb_batch
 
-  if (!(is.null(model_type))) {
-    # Step 2: Retrieve model and validate user-specified parameters
-    if (!is.null(learner_type) && learner_type == "fnn") {
-      model_params <- validate_params_fnn(model_type, learner_type, model_params, X)
-      model <- set_model(model_type, learner_type, model_params)
-    } else {
-      model <- set_model(model_type, learner_type, model_params)
-      model_params <- validate_params(model, model_type, learner_type, model_params)
-    }
-  } else {
-    if (is.null(custom_fit) || is.null(custom_predict)) {
-      stop("As model_type is NULL (custom mode), custom_fit and custom_predict must be specified")
-    }
-  }
+  # Process model and model_params
+  model_info <- retrieve_and_validate_model(
+    model_type = model_type,
+    learner_type = learner_type,
+    model_params = model_params,
+    X = X,
+    custom_fit = custom_fit,
+    custom_predict = custom_predict
+  )
+
+  # Extract model and model_params
+  model <- model_info$model
+  model_params <- model_info$model_params
 
 
   if (parallelize_batch) {
 
     # Parallel execution using foreach and doParallel
-    cl <- makeCluster(n_cores)  # Use available cores minus one
+    cl <- makeCluster(n_cores)  # Use number of cores specified by the user
     registerDoParallel(cl)
 
-    if (!is.null(learner_type) && learner_type == "fnn") {
-      clusterExport(cl, varlist = c("X", "D", "set_model",
-                                    "model_type", "learner_type", "model_params",
-                                    "fit_model", "model_predict"), envir = environment())
-    } else {
-      if (!(is.null(model_type))) {
-        # Export custom functions and objects to the worker nodes
-        clusterExport(cl, varlist = c("X", "D",
-                                      "model_type", "learner_type", "model_params",
-                                      "fit_model", "model_predict"), envir = environment())
-      } else {
-        # Custom model
-        clusterExport(cl, varlist = c("X", "D", "custom_fit",
-                                      "custom_predict", "fit_model", "model_predict"), envir = environment())
-      }
-    }
 
-    # clusterEvalQ(cl, {
-    #   library(grf)
-    #   library(glmnet)
-    #   library(keras)
-    #   library(data.table)
-    # })
+    # export variables to cluster
+    export_cluster_variables(
+      cl = cl,
+      learner_type = learner_type,
+      model_type = model_type,
+      model_params = model_params,
+      custom_fit = custom_fit,
+      custom_predict = custom_predict
+    )
+
+
 
     # Perform parallel training
     results <- foreach(t = 1:nb_batch, .packages = c("grf", "data.table",
