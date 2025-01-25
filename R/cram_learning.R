@@ -128,14 +128,14 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
 
       # Train model with validated parameters
       if (!(is.null(model_type))) {
+        # Package model
         trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
-        cate_estimates <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
+        learned_policy <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
       } else {
+        # Custom model
         trained_model <- custom_fit(X_subset, Y_subset, D_subset)
-        cate_estimates <- custom_predict(trained_model, X, D)
+        learned_policy <- custom_predict(trained_model, X, D)
       }
-      cate_estimates <- as.numeric(cate_estimates)
-      learned_policy <- ifelse(cate_estimates > 0, 1, 0)
 
       if (!is.null(learner_type) && learner_type == "fnn") {
         # Serialize the final model at the last iteration

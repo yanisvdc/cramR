@@ -71,5 +71,9 @@ model_predict <- function(model, X, D=NULL, model_type, learner_type, model_para
     stop("Unsupported model_type. Choose 'causal_forest', 's_learner', or 'm_learner'.")
   }
 
+  # Transform CATEs into a binary policy
+  predictions <- as.numeric(predictions)
+  predictions <- ifelse(predictions > 0, 1, 0)
+
   return(predictions)
 }
