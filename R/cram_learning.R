@@ -88,6 +88,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
   model <- model_info$model
   model_params <- model_info$model_params
 
+  # PARALLEL CRAM PROCEDURE -------------------------------------------------
 
   if (parallelize_batch) {
 
@@ -106,8 +107,6 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
       custom_predict = custom_predict
     )
 
-    # Perform parallel training
-
     # Define the list of required packages
     required_packages <- c("grf", "data.table", "glmnet", "keras")
 
@@ -118,15 +117,17 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
       D_subset <- as.numeric(D[cumulative_indices])
       Y_subset <- as.numeric(Y[cumulative_indices])
 
-      # I need to set the keras model in each worker because keras cannot be transmitted
-      # to the workers
+
+      ## SET KERAS MODEL IN EACH WORKER
+      # I need to set the keras model in each worker
+      # because keras structure cannot be exported to the workers
       if (!(is.null(model_type))) {
         if (!is.null(learner_type) && learner_type == "fnn") {
           model <- set_model(model_type, learner_type, model_params)
         }
       }
 
-      # Train model with validated parameters
+      ## FIT and PREDICT
       if (!(is.null(model_type))) {
         # Package model
         trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
@@ -137,11 +138,12 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
         learned_policy <- custom_predict(trained_model, X, D)
       }
 
+      ## FINAL MODEL
       if (!is.null(learner_type) && learner_type == "fnn") {
-        # Serialize the final model at the last iteration
+        # KERAS: serialize the final model at the last iteration
         final_model <- if (t == nb_batch) serialize_model(trained_model) else NULL
       } else {
-        # Store the final model only at the last iteration
+        # Any other model
         final_model <- if (t == nb_batch) trained_model else NULL
       }
 
@@ -151,23 +153,20 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
 
     stopCluster(cl)
     foreach::registerDoSEQ()
-    # closeAllConnections()
-
-    # Combine results into a data.table
-    results_dt <- results
 
     # Combine the learned policies into a matrix
-    policy_matrix <- do.call(cbind, lapply(results_dt, function(x) x$learned_policy))
+    policy_matrix <- do.call(cbind, lapply(results, function(x) x$learned_policy))
 
     # Add a baseline policy as the first column (optional)
     policy_matrix <- cbind(as.numeric(baseline_policy), policy_matrix)
 
     if (!is.null(learner_type) && learner_type == "fnn") {
-      serialized_model <- results_dt[[nb_batch]]$final_model
+      # KERAS: unserialize the final policy model
+      serialized_model <- results[[nb_batch]]$final_model
       final_policy_model <- unserialize_model(serialized_model)
     } else {
-      # Extract the final model from the last iteration
-      final_policy_model <- results_dt[[nb_batch]]$final_model
+      # Any other model
+      final_policy_model <- results[[nb_batch]]$final_model
     }
 
     return(list(
@@ -206,13 +205,12 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
       # Train model with validated parameters
       if (!(is.null(model_type))) {
         trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
-        cate_estimates <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
+        learned_policy <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
       } else {
         trained_model <- custom_fit(X_subset, Y_subset, D_subset)
-        cate_estimates <- custom_predict(trained_model, X, D)
+        learned_policy <- custom_predict(trained_model, X, D)
       }
 
-      learned_policy <- ifelse(cate_estimates > 0, 1, 0)
 
       final_model <- if (t == nb_batch) trained_model else NULL
 
