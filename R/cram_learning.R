@@ -97,7 +97,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     registerDoParallel(cl)
 
 
-    # export variables to cluster
+    # Export variables to cluster
     export_cluster_variables(
       cl = cl,
       learner_type = learner_type,
@@ -175,43 +175,39 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
       batch_indices = batches
     ))
 
+
+  # SEQUENTIAL CRAM PROCEDURE -----------------------------------------------
+
   } else {
 
-    # Step 3: Create a data.table for cumulative batches
-    # Initialize an empty list to store cumulative data for each batch
-    cumulative_data_list <- lapply(1:nb_batch, function(t) {
-      # Combine indices for batches 1 through t
-      cumulative_indices <- unlist(batches[1:t])
+    # Store cumulative data for each step of the cram procedure
+    cumulative_data_dt <- create_cumulative_data(
+      X = X,
+      D = D,
+      Y = Y,
+      batches = batches,
+      nb_batch = nb_batch
+    )
 
-      # Subset X, D, Y using cumulative indices
-      list(
-        t = t,  # Add t as the index
-        # cumulative_index = list(cumulative_indices),  # Store cumulative indices as a list in one row
-        X_cumul = list(X[cumulative_indices, ]),
-        D_cumul = list(D[cumulative_indices]),
-        Y_cumul = list(Y[cumulative_indices])
-      )
-    })
-
-    # Convert the list to a data.table
-    cumulative_data_dt <- rbindlist(cumulative_data_list)
-
+    # Use data.table structure to handle fit and predict for each step
     results_dt <- cumulative_data_dt[, {
-      # Extract cumulative X, D, Y for the current batch (t)
+      # Extract cumulative X, D, Y for the current cumulative batches (1:t)
       X_subset <- as.matrix(X_cumul[[1]])
       D_subset <- as.numeric(D_cumul[[1]])
       Y_subset <- as.numeric(Y_cumul[[1]])
 
-      # Train model with validated parameters
+      ## FIT and PREDICT
       if (!(is.null(model_type))) {
+        # Package model
         trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
         learned_policy <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
       } else {
+        # Custom model
         trained_model <- custom_fit(X_subset, Y_subset, D_subset)
         learned_policy <- custom_predict(trained_model, X, D)
       }
 
-
+      ## FINAL MODEL
       final_model <- if (t == nb_batch) trained_model else NULL
 
       .(learned_policy = list(learned_policy), final_model=list(final_model))
@@ -223,7 +219,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
   # Convert the list of learned policies into a matrix
   learned_policy_matrix <- do.call(cbind, lapply(learned_policy_list, as.numeric))
 
-  # Combine baseline_policy as the first column
+  # Add baseline_policy as the first column
   policy_matrix <- cbind(as.numeric(baseline_policy), learned_policy_matrix)
 
   final_policy_model <- results_dt$final_model[[nb_batch]]

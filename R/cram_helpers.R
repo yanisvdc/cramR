@@ -168,3 +168,27 @@ export_cluster_variables <- function(cl, learner_type, model_type, model_params,
 }
 
 
+
+create_cumulative_data <- function(X, D, Y, batches, nb_batch) {
+  # Step 3: Create a data.table for cumulative batches
+  # Initialize an empty list to store cumulative data for each batch
+  cumulative_data_list <- lapply(1:nb_batch, function(t) {
+    # Combine indices for batches 1 through t
+    cumulative_indices <- unlist(batches[1:t])
+
+    # Subset X, D, Y using cumulative indices
+    list(
+      t = t,  # Add t as the index
+      # cumulative_index = list(cumulative_indices),  # Optional: Store cumulative indices as a list in one row
+      X_cumul = list(X[cumulative_indices, ]),
+      D_cumul = list(D[cumulative_indices]),
+      Y_cumul = list(Y[cumulative_indices])
+    )
+  })
+
+  # Convert the list to a data.table
+  cumulative_data_dt <- rbindlist(cumulative_data_list)
+
+  # Explicitly return the cumulative data table
+  return(cumulative_data_dt)
+}
