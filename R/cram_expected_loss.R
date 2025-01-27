@@ -4,6 +4,8 @@
 #' based on the given loss matrix and batch indices.
 #'
 #' @param loss A matrix of loss values with \eqn{N} rows (data points) and \eqn{K} columns (batches).
+#' We assume that the first column of the loss matrix contains only zeros.
+#' The following nb_batch columns contain the losses of each trained model for each individual.
 #' @param batch_indices A list where each element is a vector of indices corresponding to a batch.
 #'                      For example: \code{split(1:N, rep(1:nb_batch, each = N / nb_batch))}.
 #' @return The estimated Cram expected loss \eqn{\hat{R}_{\mathrm{cram}}}.
@@ -29,11 +31,9 @@ cram_expected_loss <- function(loss, batch_indices) {
   }
 
   N <- nrow(loss)  # Number of data points
-  K <- ncol(loss)  # Number of batches
-  B <- length(batch_indices[[1]])  # Batch size
+  nb_batch <- length(batch_indices)  # Number of batches
 
-  # Initialize the Cram expected loss
-  R_cram <- 0
+  loss_diff <- pi[, 2:nb_batch] - pi[, 1:(nb_batch - 1)]
 
   # Loop over batches
   for (k in 1:(K - 1)) {
