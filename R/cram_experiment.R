@@ -1,6 +1,6 @@
-#' CRAM Experiment
+#' CRAM Policy
 #'
-#' This function performs the cram method (simultaneous learning and evaluation)
+#' This function performs the cram method (simultaneous policy learning and evaluation)
 #' on experimental or observational data, for which the data generation process is unknown.
 #'
 #' @param X A matrix or data frame of covariates for each sample.
@@ -40,8 +40,8 @@
 #' Y_data <- rnorm(100)
 #' nb_batch <- 5
 #'
-#' # Perform CRAM experiment
-#' result <- cram_experiment(X = X_data,
+#' # Perform CRAM policy
+#' result <- cram_policy(X = X_data,
 #'                           D = D_data,
 #'                           Y = Y_data,
 #'                           batch = nb_batch)
@@ -56,12 +56,12 @@
 
 
 # Combined experiment function
-cram_experiment <- function(X, D, Y, batch, model_type = "causal_forest",
+cram_policy <- function(X, D, Y, batch, model_type = "causal_forest",
                             learner_type = "ridge", baseline_policy = NULL,
                             parallelize_batch = FALSE, model_params = NULL,
                             custom_fit = NULL, custom_predict = NULL, alpha=0.05) {
 
-  # Step 1: Run the cram learning process to get policies and batch indices
+  ## CRAM LEARNING --------------------------------------------------------------------------
   learning_result <- cram_learning(X, D, Y, batch, model_type = model_type,
                                    learner_type = learner_type, baseline_policy = baseline_policy,
                                    parallelize_batch = parallelize_batch, model_params = model_params,
@@ -73,37 +73,41 @@ cram_experiment <- function(X, D, Y, batch, model_type = "causal_forest",
   final_policy_model <- learning_result$final_policy_model
   nb_batch <- length(batch_indices)
 
-  # Step 2: Calculate the proportion of treated individuals under the final policy
+  # ------------------------------------------------------------------------------------------
+
+  ## PROPORTION OF TREATED UNDER FINAL POLICY
   final_policy <- policies[, nb_batch + 1]  # Extract the final policy
   proportion_treated <- mean(final_policy)  # Proportion of treated individuals
 
-  # Step 3: Estimate delta
+  ## POLICY VALUE DIFFERENCE (DELTA) ---------------------------------------------------------
+  # estimate
   delta_estimate <- cram_estimator(Y, D, policies, batch_indices)
 
-  # Step 4: Estimate the standard error of delta_estimate using cram_variance_estimator
+  # variance
   delta_asymptotic_variance <- cram_variance_estimator(Y, D, policies, batch_indices)
   delta_asymptotic_sd <- sqrt(delta_asymptotic_variance)  # v_T, the asymptotic standard deviation
   delta_standard_error <- delta_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
 
-  # Step 5: Compute the 95% confidence interval for delta_estimate
+  # confidence interval
   z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
   delta_ci_lower <- delta_estimate - z_value * delta_standard_error
   delta_ci_upper <- delta_estimate + z_value * delta_standard_error
   delta_confidence_interval <- c(delta_ci_lower, delta_ci_upper)
 
-  # Step 6: Estimate policy value
+  ## POLICY VALUE (PSI) ---------------------------------------------------------------------
+  # estimate
   policy_value_estimate <- cram_policy_value_estimator(Y, D,
                                                        policies,
                                                        batch_indices)
 
-  # Step 7: Estimate the standard error of policy_value_estimate using cram_variance_estimator_policy_value
+  # variance
   policy_value_asymptotic_variance <- cram_variance_estimator_policy_value(Y, D,
                                                                            policies,
                                                                            batch_indices)
-  policy_value_asymptotic_sd <- sqrt(policy_value_asymptotic_variance)  # w_T, the asymptotic standard deviation
-  policy_value_standard_error <- policy_value_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
+  policy_value_asymptotic_sd <- sqrt(policy_value_asymptotic_variance)
+  policy_value_standard_error <- policy_value_asymptotic_sd / sqrt(nb_batch)
 
-  # Step 8: Compute the 95% confidence interval for policy_value_estimate
+  # confidence interval
   z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
   policy_value_ci_lower <- policy_value_estimate - z_value * policy_value_standard_error
   policy_value_ci_upper <- policy_value_estimate + z_value * policy_value_standard_error
@@ -111,7 +115,7 @@ cram_experiment <- function(X, D, Y, batch, model_type = "causal_forest",
 
 
 
-  # Create a summary table with truncated decimals
+  ## RESULTS: SUMMARY TABLES ----------------------------------------------------------------
   summary_table <- data.frame(
     Metric = c("Delta Estimate", "Delta Standard Error", "Delta CI Lower", "Delta CI Upper",
                "Policy Value Estimate", "Policy Value Standard Error", "Policy Value CI Lower", "Policy Value CI Upper",
