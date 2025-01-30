@@ -11,8 +11,8 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 #'
 #' This function performs batch-wise learning for any ML model.
 #'
-#' @param X A matrix or data frame of features
-#' @param Y Optional target vector for supervised learning (NULL for unsupervised)
+#' @param data A matrix or data frame of data, including or not a target variable (handles both supervised and unsupervised ML models).
+#' @param formula Optional formula relating the target to the predictors for supervised learning (NULL for unsupervised)
 #' @param batch Either an integer specifying the number of batches (which will be created by random sampling) or a vector of length equal to the sample size providing the batch assignment (index) for each individual in the sample.
 #' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
 #' @param loss The model's loss function
@@ -20,9 +20,10 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 #' @param model_params A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
 #' @param custom_fit A custom, user-defined, function that outputs a fitted model given training data (allows flexibility). Defaults to \code{NULL}.
 #' @param custom_predict A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.
+#' @param custom_loss Optional a custom, user-defined, function for calculating the loss of a fitted ML model on some data; data should be a matrix or data frame and the function should return a vector containing the loss for each individual.
 #' @param n_cores Number of cores to use for parallelization when parallelize_batch is set to TRUE. Defaults to detectCores() - 1.
 #' @return A list containing:
-#'   \item{final_policy_model}{The final fitted policy model, depending on \code{model_type} and \code{learner_type}.}
+#'   \item{final_ml_model}{The final fitted ML model, depending on \code{model_type} and \code{model_params}.}
 #'   \item{losses}{A matrix of losses, where each column represents a batch's learned ML model and the first column is all zeroes (baseline ML model)}
 #'   \item{batch_indices}{The indices for each batch, either as generated (if \code{batch} is an integer) or as provided by the user.}
 #' @examples
@@ -53,17 +54,13 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 #' @importFrom grDevices col2rgb
 #' @importFrom stats D
 #' @export
-ml_learning <- function(X, Y=NULL, batch, model_type = "linear_regression",
-                          loss = "mse", parallelize_batch = FALSE,
-                          model_params = NULL, custom_fit = NULL,
-                          custom_predict = NULL, n_cores = detectCores() - 1) {
+ml_learning <- function(data, formula=NULL, batch, model_type = "rf",
+                        loss = "mse", parallelize_batch = FALSE,
+                        model_params = NULL, custom_fit = NULL,
+                        custom_predict = NULL, custom_loss = NULL,
+                        n_cores = detectCores() - 1) {
 
-  n <- nrow(X)
-
-  if (!is.null(Y)){ # Supervised case
-    # Check for mismatched lengths
-    check_lengths(Y, n = n)
-  }
+  n <- nrow(data)
 
   # Process `batch` argument
   batch_results <- test_batch(batch, n)
@@ -71,7 +68,7 @@ ml_learning <- function(X, Y=NULL, batch, model_type = "linear_regression",
   nb_batch <- batch_results$nb_batch
 
   # Process model and model_params
-  model_info <- retrieve_and_validate_model(
+  model_info <- retrieve_and_validate_ML_model(
     model_type = model_type,
     learner_type = learner_type,
     model_params = model_params,
