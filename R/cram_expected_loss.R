@@ -29,7 +29,7 @@
 cram_expected_loss <- function(loss, batch_indices) {
   # Check inputs
   if (!is.matrix(loss)) {
-    stop("`loss` must be a matrix with N rows (data points) and K columns (batches).")
+    stop("`loss` must be a matrix with N rows (data points) and K+1 columns (batches).")
   }
   if (!is.list(batch_indices)) {
     stop("`batch_indices` must be a list of batch index vectors.")

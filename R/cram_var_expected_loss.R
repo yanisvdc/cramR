@@ -3,57 +3,69 @@
 #' This function computes the variance estimator \eqn{\hat{\sigma}^2_2}
 #' based on the given loss matrix and batch indices.
 #'
-#' @param loss A matrix of loss values with \eqn{N} rows (data points) and \eqn{K} columns (batches).
+#' @param loss A matrix of loss values with \eqn{N} rows (data points) and \eqn{K+1} columns (batches).
+#' We assume that the first column of the loss matrix contains only zeros.
+#' The following nb_batch columns contain the losses of each trained model for each individual.
 #' @param batch_indices A list where each element is a vector of indices corresponding to a batch.
-#' @return The estimated variance \eqn{\hat{\sigma}^2_2}.
+#'                      For example: \code{split(1:N, rep(1:nb_batch, each = N / nb_batch))}.
+#' @return The estimated Cram expected loss \eqn{\hat{R}_{\mathrm{cram}}}.
 #' @examples
 #' # Example usage
 #' set.seed(123)
 #' N <- 100  # Number of data points
 #' K <- 10   # Number of batches
 #'
-#' loss <- matrix(rnorm(N * K), nrow = N, ncol = K)  # Random loss values
-#' batch_indices <- split(1:N, rep(1:K, each = N / K))
+#' # Generate a loss matrix with K+1 columns, first column as zeros
+#' loss <- matrix(rnorm(N * (K+1)), nrow = N, ncol = K+1)
+#' loss[, 1] <- 0  # Ensure first column is zero
 #'
-#' cram_variance_estimation(loss, batch_indices)
+#' # Create batch indices dynamically
+#' batch_indices <- split(1:N, rep(1:K, length.out = N))
+#'
+#' # Compute Cram Expected Loss Variance
+#' cram_var_expected_loss(loss, batch_indices)
 #' @export
 
-cram_variance_estimation <- function(loss, batch_indices) {
+cram_var_expected_loss <- function(loss, batch_indices) {
   # Check inputs
   if (!is.matrix(loss)) {
-    stop("`loss` must be a matrix with N rows (data points) and K columns (batches).")
+    stop("`loss` must be a matrix with N rows (data points) and K+1 columns (batches).")
   }
   if (!is.list(batch_indices)) {
     stop("`batch_indices` must be a list of batch index vectors.")
   }
 
   N <- nrow(loss)  # Number of data points
-  K <- ncol(loss)  # Number of batches
+  nb_batch <- length(batch_indices)  # Number of batches
 
-  # Initialize variance estimate
-  variance_estimate <- 0
+  loss_diff <- pi[, 2:nb_batch] - pi[, 1:(nb_batch - 1)]
 
-  # Loop over batches
-  for (l in 2:K) {
-    # Combined batch indices from l to K
-    combined_indices <- unlist(batch_indices[l:K])
+  # Vector of terms for each column
+  loss_diff_weights <- 1 / (nb_batch - (1:(nb_batch - 1)))
 
-    # Compute the inner summation for each i
-    inner_sums <- sapply(combined_indices, function(i) {
-      sum(sapply(1:(l - 1), function(k) {
-        (loss[i, k + 1] - loss[i, k]) / (K - k)
-      }))
-    })
+  # Multiply each column of loss_diff by corresponding loss_diff_weight
+  loss_diff <- sweep(loss_diff, 2, loss_diff_weights, FUN = "*")
 
-    # Compute the sample variance of the inner sums
-    sample_variance <- var(inner_sums)
+  loss_diff <- t(apply(loss_diff, 1, cumsum))
 
-    # Accumulate the variance estimate
-    variance_estimate <- variance_estimate + sample_variance
+  # Create the mask for batch indices
+  mask <- matrix(NA, nrow = nrow(loss_diff), ncol = ncol(loss_diff))
+
+  for (k in 2:nb_batch) {
+    # Set to NA the rows corresponding to batches k and above for column k-1
+    mask[unlist(batch_indices[k:nb_batch]), k-1] <- 1
   }
 
-  # Multiply by K to finalize the variance estimate
-  variance_estimate <- K * variance_estimate
+  # Apply the mask to loss_diff
+  loss_diff <- loss_diff * mask
 
-  return(variance_estimate)
+  # Calculate variance for each column
+  column_variances <- apply(loss_diff, 2, function(x) var(x, na.rm = TRUE))
+
+  total_variance <- sum(column_variances)
+
+  # Final variance estimator, scaled by T
+  total_variance <- nb_batch * total_variance
+
+  return(total_variance)
 }
