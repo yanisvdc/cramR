@@ -101,7 +101,7 @@ ml_learning <- function(data, formula=NULL, batch,
 
       ## LOSS CALCULATION
       if (!(is.null(custom_loss))) {
-        loss_vec <- compute_loss(ml_preds, data)
+        loss_vec <- compute_loss(ml_preds, data, formula=NULL, loss_name)
       } else {
         loss_vec <- custom_loss(ml_preds, data)
       }
