@@ -99,39 +99,37 @@ ml_learning <- function(data, formula=NULL, batch,
         ml_preds <- custom_predict(trained_model, data)
       }
 
-      ## FINAL MODEL
-      if (!is.null(learner_type) && learner_type == "fnn") {
-        # KERAS: serialize the final model at the last iteration
-        final_model <- if (t == nb_batch) serialize_model(trained_model) else NULL
+      ## LOSS CALCULATION
+      if (!(is.null(custom_loss))) {
+        loss_vec <- compute_loss(ml_preds, data)
       } else {
-        # Any other model
-        final_model <- if (t == nb_batch) trained_model else NULL
+        loss_vec <- custom_loss(ml_preds, data)
       }
 
+      ## FINAL MODEL
+      final_model <- if (t == nb_batch) trained_model else NULL
+
+
       # Return the policy matrix - foreach preserves the sequential order when rendering the output
-      list(learned_policy = learned_policy, final_model = final_model)
+      list(loss = loss_vec, final_model = final_model)
     }
 
     stopCluster(cl)
     foreach::registerDoSEQ()
 
     # Combine the learned policies into a matrix
-    policy_matrix <- do.call(cbind, lapply(results, function(x) x$learned_policy))
+    loss_matrix <- do.call(cbind, lapply(results, function(x) x$loss))
 
-    # Add a baseline policy as the first column (optional)
-    policy_matrix <- cbind(as.numeric(baseline_policy), policy_matrix)
+    # Add a baseline loss (all zeros) as the first column
+    zero_column <- matrix(0, nrow = nrow(loss_matrix), ncol = 1)
+    loss_matrix <- cbind(zero_column, loss_matrix)
 
-    if (!is.null(learner_type) && learner_type == "fnn") {
-      # KERAS: unserialize the final policy model
-      serialized_model <- results[[nb_batch]]$final_model
-      final_policy_model <- unserialize_model(serialized_model)
-    } else {
-      # Any other model
-      final_policy_model <- results[[nb_batch]]$final_model
-    }
+    # Retrieve final model
+    final_ml_model <- results[[nb_batch]]$final_model
+
 
     return(list(
-      final_policy_model = final_policy_model,
+      final_ml_model = final_ml_model,
       policies = policy_matrix,
       batch_indices = batches
     ))
