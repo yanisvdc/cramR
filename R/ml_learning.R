@@ -189,7 +189,7 @@ ml_learning <- function(data, formula=NULL, batch,
 
     return(list(
       final_ml_model = final_ml_model,
-      policies = policy_matrix,
+      losses = loss_matrix,
       batch_indices = batches
     ))
   }
