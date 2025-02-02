@@ -92,11 +92,11 @@ ml_learning <- function(data, formula=NULL, batch,
       if (!(is.null(caret_params))) {
         # Caret model
         trained_model <- fit_model_ml(data_subset, formula, caret_params)
-        learned_policy <- model_predict_ml(trained_model, data, formula)
+        ml_preds <- model_predict_ml(trained_model, data, formula)
       } else {
         # Custom model
         trained_model <- custom_fit(data_subset)
-        learned_policy <- custom_predict(trained_model, data)
+        ml_preds <- custom_predict(trained_model, data)
       }
 
       ## FINAL MODEL
