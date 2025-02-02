@@ -1,19 +1,66 @@
-retrieve_and_validate_ML_model <- function(model_type, model_params, data, formula, custom_fit, custom_predict) {
-  if (!is.null(model_type)) {
-    # Retrieve model and validate user-specified parameters
-    if (!is.null(learner_type) && learner_type == "fnn") {
-      model_params <- validate_params_fnn(model_type, learner_type, model_params, X)
-      model <- set_model(model_type, learner_type, model_params)
-    } else {
-      model <- set_model(model_type, learner_type, model_params)
-      model_params <- validate_params(model, model_type, learner_type, model_params)
-    }
-  } else {
-    # Custom mode: ensure custom_fit and custom_predict are specified
-    if (is.null(custom_fit) || is.null(custom_predict)) {
-      stop("As model_type is NULL (custom mode), custom_fit and custom_predict must be specified")
-    }
-    model <- NULL  # No predefined model in custom mode
+# Function to return the appropriate loss function based on a string
+get_loss_function <- function(loss_name) {
+  loss_functions <- list(
+    "mse" = MLmetrics::MSE,
+    "rmse" = MLmetrics::RMSE,
+    "mae" = MLmetrics::MAE,
+    "mape" = MLmetrics::MAPE,
+    "smape" = MLmetrics::SMAPE,
+    "rmsle" = MLmetrics::RMSLE,
+    "msle" = MLmetrics::MSLE,
+    "logloss" = MLmetrics::LogLoss,
+    "multilogloss" = MLmetrics::MultiLogLoss,
+    "f1_score" = MLmetrics::F1_Score,
+    "accuracy" = MLmetrics::Accuracy,
+    "auc" = MLmetrics::AUC,
+    "precision" = MLmetrics::Precision,
+    "recall" = MLmetrics::Recall
+  )
+
+  if (!(loss_name %in% names(loss_functions))) {
+    stop("Error: Loss function not recognized. Choose from: ", paste(names(loss_functions), collapse = ", "))
   }
-  return(list(model = model, model_params = model_params))
+
+  return(loss_functions[[loss_name]])
 }
+
+# Load required package
+library(MLmetrics)
+
+# Function to return the appropriate loss function based on a string
+get_loss_function <- function(loss_name) {
+  loss_functions <- list(
+    "mse" = MLmetrics::MSE,
+    "rmse" = MLmetrics::RMSE,
+    "mae" = MLmetrics::MAE,
+    "mape" = MLmetrics::MAPE,
+    "smape" = MLmetrics::SMAPE,
+    "rmsle" = MLmetrics::RMSLE,
+    "msle" = MLmetrics::MSLE,
+    "logloss" = MLmetrics::LogLoss,
+    "multilogloss" = MLmetrics::MultiLogLoss,
+    "f1_score" = MLmetrics::F1_Score,
+    "accuracy" = MLmetrics::Accuracy,
+    "auc" = MLmetrics::AUC,
+    "precision" = MLmetrics::Precision,
+    "recall" = MLmetrics::Recall
+  )
+
+  if (!(loss_name %in% names(loss_functions))) {
+    stop("Error: Loss function not recognized. Choose from: ", paste(names(loss_functions), collapse = ", "))
+  }
+
+  return(loss_functions[[loss_name]])
+}
+
+# # Example usage:
+# loss_name <- "mse"  # User inputs loss name as a string
+# loss_fn <- get_loss_function(loss_name)  # Fetch corresponding loss function
+#
+# # Compute loss
+# y_true <- c(3, -0.5, 2, 7)
+# y_pred <- c(2.5, 0.0, 2, 8)
+#
+# loss_value <- loss_fn(y_true, y_pred)
+# print(loss_value)
+

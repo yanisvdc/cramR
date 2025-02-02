@@ -14,10 +14,9 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 #' @param data A matrix or data frame of data, including or not a target variable (handles both supervised and unsupervised ML models).
 #' @param formula Optional formula relating the target to the predictors for supervised learning (NULL for unsupervised)
 #' @param batch Either an integer specifying the number of batches (which will be created by random sampling) or a vector of length equal to the sample size providing the batch assignment (index) for each individual in the sample.
-#' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
-#' @param loss The model's loss function
 #' @param parallelize_batch Logical. Whether to parallelize batch processing (i.e. the cram method learns T policies, with T the number of batches. They are learned in parallel when parallelize_batch is TRUE vs. learned sequentially using the efficient data.table structure when parallelize_batch is FALSE, recommended for light weight training). Defaults to \code{FALSE}.
-#' @param model_params A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
+#' @param loss_name The name of the loss the user wants to use.
+#' @param caret_params A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
 #' @param custom_fit A custom, user-defined, function that outputs a fitted model given training data (allows flexibility). Defaults to \code{NULL}.
 #' @param custom_predict A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.
 #' @param custom_loss Optional a custom, user-defined, function for calculating the loss of a fitted ML model on some data; data should be a matrix or data frame and the function should return a vector containing the loss for each individual.
@@ -54,9 +53,9 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 #' @importFrom grDevices col2rgb
 #' @importFrom stats D
 #' @export
-ml_learning <- function(data, formula=NULL, batch, model_type = "rf",
-                        loss = "mse", parallelize_batch = FALSE,
-                        model_params = NULL, custom_fit = NULL,
+ml_learning <- function(data, formula=NULL, batch,
+                        parallelize_batch = FALSE, loss_name = "mse",
+                        caret_params = NULL, custom_fit = NULL,
                         custom_predict = NULL, custom_loss = NULL,
                         n_cores = detectCores() - 1) {
 
@@ -67,20 +66,6 @@ ml_learning <- function(data, formula=NULL, batch, model_type = "rf",
   batches <- batch_results$batches
   nb_batch <- batch_results$nb_batch
 
-  # Process model and model_params
-  model_info <- retrieve_and_validate_ML_model(
-    model_type = model_type,
-    learner_type = learner_type,
-    model_params = model_params,
-    X = X,
-    custom_fit = custom_fit,
-    custom_predict = custom_predict
-  )
-
-  # Extract model and model_params
-  model <- model_info$model
-  model_params <- model_info$model_params
-
   # PARALLEL CRAM PROCEDURE -------------------------------------------------
 
   if (parallelize_batch) {
@@ -89,46 +74,29 @@ ml_learning <- function(data, formula=NULL, batch, model_type = "rf",
     cl <- makeCluster(n_cores)  # Use number of cores specified by the user
     registerDoParallel(cl)
 
+    # Variables to export to the different workers
+    varlist <- c("data", "formula", "fit_model_ml", "model_predict_ml")
 
-    # Export variables to cluster
-    export_cluster_variables(
-      cl = cl,
-      learner_type = learner_type,
-      model_type = model_type,
-      model_params = model_params,
-      custom_fit = custom_fit,
-      custom_predict = custom_predict
-    )
+    # Export the variables to the cluster
+    clusterExport(cl, varlist = varlist, envir = environment())
 
     # Define the list of required packages
-    required_packages <- c("grf", "data.table", "glmnet", "keras")
+    required_packages <- c("caret", "data.table")
 
     results <- foreach(t = 1:nb_batch, .packages = required_packages) %dopar% {
 
       cumulative_indices <- unlist(batches[1:t])
-      X_subset <- as.matrix(X[cumulative_indices, ])
-      D_subset <- as.numeric(D[cumulative_indices])
-      Y_subset <- as.numeric(Y[cumulative_indices])
-
-
-      ## SET KERAS MODEL IN EACH WORKER
-      # I need to set the keras model in each worker
-      # because keras structure cannot be exported to the workers
-      if (!(is.null(model_type))) {
-        if (!is.null(learner_type) && learner_type == "fnn") {
-          model <- set_model(model_type, learner_type, model_params)
-        }
-      }
+      data_subset <- as.matrix(data[cumulative_indices, ])
 
       ## FIT and PREDICT
-      if (!(is.null(model_type))) {
-        # Package model
-        trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
-        learned_policy <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
+      if (!(is.null(caret_params))) {
+        # Caret model
+        trained_model <- fit_model_ml(data_subset, formula, caret_params)
+        learned_policy <- model_predict_ml(trained_model, data, formula, caret_params)
       } else {
         # Custom model
-        trained_model <- custom_fit(X_subset, Y_subset, D_subset)
-        learned_policy <- custom_predict(trained_model, X, D)
+        trained_model <- custom_fit(data_subset)
+        learned_policy <- custom_predict(trained_model, data)
       }
 
       ## FINAL MODEL
