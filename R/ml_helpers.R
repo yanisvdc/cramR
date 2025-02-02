@@ -50,7 +50,7 @@ get_loss_function <- function(loss_name) {
 }
 
 
-compute_loss <- function(ml_preds, data, formula = NULL, loss_name) {
+compute_loss <- function(ml_preds, data, formula, loss_name) {
 
   # Get the appropriate loss function
   loss_function <- get_loss_function(loss_name)
@@ -175,3 +175,27 @@ compute_loss <- function(ml_preds, data, formula = NULL, loss_name) {
 # # Compute distances
 # kmeans_loss <- compute_loss(kmeans_model$cluster, features, loss_name = "euclidean_distance")
 # cat("K-Means Total Within-SS:", sum(kmeans_loss), "(Model's Within-SS:", kmeans_model$tot.withinss, ")\n")
+
+
+
+create_cumulative_data_ml <- function(data, batches, nb_batch) {
+  # Step 3: Create a data.table for cumulative batches
+  # Initialize an empty list to store cumulative data for each batch
+  cumulative_data_list <- lapply(1:nb_batch, function(t) {
+    # Combine indices for batches 1 through t
+    cumulative_indices <- unlist(batches[1:t])
+
+    # Subset X, D, Y using cumulative indices
+    list(
+      t = t,  # Add t as the index
+      # cumulative_index = list(cumulative_indices),  # Optional: Store cumulative indices as a list in one row
+      data_cumul = list(data[cumulative_indices, ])
+    )
+  })
+
+  # Convert the list to a data.table
+  cumulative_data_dt <- rbindlist(cumulative_data_list)
+
+  # Explicitly return the cumulative data table
+  return(cumulative_data_dt)
+}

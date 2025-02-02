@@ -101,7 +101,7 @@ ml_learning <- function(data, formula=NULL, batch,
 
       ## LOSS CALCULATION
       if (!(is.null(custom_loss))) {
-        loss_vec <- compute_loss(ml_preds, data, formula=NULL, loss_name)
+        loss_vec <- compute_loss(ml_preds, data, formula, loss_name)
       } else {
         loss_vec <- custom_loss(ml_preds, data)
       }
@@ -130,7 +130,7 @@ ml_learning <- function(data, formula=NULL, batch,
 
     return(list(
       final_ml_model = final_ml_model,
-      policies = policy_matrix,
+      losses = loss_matrix,
       batch_indices = batches
     ))
 
@@ -140,10 +140,8 @@ ml_learning <- function(data, formula=NULL, batch,
   } else {
 
     # Store cumulative data for each step of the cram procedure
-    cumulative_data_dt <- create_cumulative_data(
-      X = X,
-      D = D,
-      Y = Y,
+    cumulative_data_dt <- create_cumulative_data_ml(
+      data = data,
       batches = batches,
       nb_batch = nb_batch
     )
@@ -151,40 +149,46 @@ ml_learning <- function(data, formula=NULL, batch,
     # Use data.table structure to handle fit and predict for each step
     results_dt <- cumulative_data_dt[, {
       # Extract cumulative X, D, Y for the current cumulative batches (1:t)
-      X_subset <- as.matrix(X_cumul[[1]])
-      D_subset <- as.numeric(D_cumul[[1]])
-      Y_subset <- as.numeric(Y_cumul[[1]])
+      data_subset <- as.matrix(data_cumul[[1]])
 
       ## FIT and PREDICT
-      if (!(is.null(model_type))) {
-        # Package model
-        trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
-        learned_policy <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
+      if (!(is.null(caret_params))) {
+        # Caret model
+        trained_model <- fit_model_ml(data_subset, formula, caret_params)
+        ml_preds <- model_predict_ml(trained_model, data, formula, caret_params)
       } else {
         # Custom model
-        trained_model <- custom_fit(X_subset, Y_subset, D_subset)
-        learned_policy <- custom_predict(trained_model, X, D)
+        trained_model <- custom_fit(data_subset)
+        ml_preds <- custom_predict(trained_model, data)
+      }
+
+      ## LOSS CALCULATION
+      if (!(is.null(custom_loss))) {
+        loss_vec <- compute_loss(ml_preds, data, formula, loss_name)
+      } else {
+        loss_vec <- custom_loss(ml_preds, data)
       }
 
       ## FINAL MODEL
       final_model <- if (t == nb_batch) trained_model else NULL
 
-      .(learned_policy = list(learned_policy), final_model=list(final_model))
+      .(loss = list(loss_vec), final_model=list(final_model))
     }, by = t]
 
-    # Extract learned_policy list
-    learned_policy_list <- results_dt$learned_policy
+    # Extract loss list
+    loss_list <- results_dt$loss
 
-    # Convert the list of learned policies into a matrix
-    learned_policy_matrix <- do.call(cbind, lapply(learned_policy_list, as.numeric))
+    # Convert the list of losses into a matrix
+    loss_matrix <- do.call(cbind, lapply(loss_list, as.numeric))
 
-    # Add baseline_policy as the first column
-    policy_matrix <- cbind(as.numeric(baseline_policy), learned_policy_matrix)
+    # Add zeros as the first column
+    zero_column <- matrix(0, nrow = nrow(loss_matrix), ncol = 1)
+    loss_matrix <- cbind(zero_column, loss_matrix)
 
-    final_policy_model <- results_dt$final_model[[nb_batch]]
+    final_ml_model <- results_dt$final_model[[nb_batch]]
 
     return(list(
-      final_policy_model = final_policy_model,
+      final_ml_model = final_ml_model,
       policies = policy_matrix,
       batch_indices = batches
     ))
