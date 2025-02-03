@@ -85,7 +85,7 @@
 
 # Combined experiment function
 cram_ml <- function(data, batch, formula=NULL, caret_params = NULL,
-                    parallelize_batch = FALSE, loss_name='accuracy',
+                    parallelize_batch = FALSE, loss_name=NULL,
                     custom_fit = NULL, custom_predict = NULL,
                     custom_loss = NULL, alpha=0.05) {
 
