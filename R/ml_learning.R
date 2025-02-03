@@ -169,7 +169,7 @@ ml_learning <- function(data, formula=NULL, batch,
     # Use data.table structure to handle fit and predict for each step
     results_dt <- cumulative_data_dt[, {
       # Extract cumulative X, D, Y for the current cumulative batches (1:t)
-      data_subset <- as.matrix(data_cumul[[1]])
+      data_subset <- data_cumul[[1]]
 
       ## FIT and PREDICT
       if (!(is.null(caret_params))) {
