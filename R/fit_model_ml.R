@@ -7,6 +7,7 @@
 #' @param formula The formula
 #' @param caret_params The parameters for caret model
 #' @return The fitted model object.
+#' @importFrom caret trainControl
 #' @export
 fit_model_ml <- function(data, formula, caret_params) {
 
@@ -22,7 +23,7 @@ fit_model_ml <- function(data, formula, caret_params) {
 
   # Set default trControl if not provided
   if (!"trControl" %in% names(caret_params)) {
-    caret_params$trControl <- trainControl(method = "none")  # Default to no resampling
+    caret_params$trControl <- caret::trainControl(method = "none")  # Default to no resampling
   }
 
   # Call caret::train() with correctly formatted parameters

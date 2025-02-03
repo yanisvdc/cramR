@@ -5,7 +5,7 @@ library(doParallel)
 library(foreach)
 
 # Declare global variables to suppress devtools::check warnings
-utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
+utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "data_cumul", "."))
 
 #' Generalized ML Learning
 #'
@@ -56,6 +56,7 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 #'   data = data_df,
 #'   formula = Y ~ .,  # Linear regression model
 #'   batch = nb_batch,
+#'   loss_name = 'mse',
 #'   caret_params = caret_params_lm
 #' )
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}
@@ -119,7 +120,7 @@ ml_learning <- function(data, formula=NULL, batch,
       }
 
       ## LOSS CALCULATION
-      if (!(is.null(custom_loss))) {
+      if (!(is.null(loss_name))) {
         loss_vec <- compute_loss(ml_preds, data, formula, loss_name)
       } else {
         loss_vec <- custom_loss(ml_preds, data)
@@ -174,9 +175,7 @@ ml_learning <- function(data, formula=NULL, batch,
       if (!(is.null(caret_params))) {
         # Caret model
         trained_model <- fit_model_ml(data_subset, formula, caret_params)
-        print(trained_model)
         ml_preds <- model_predict_ml(trained_model, data, formula, caret_params)
-        print(ml_preds)
 
       } else {
         # Custom model
@@ -185,7 +184,7 @@ ml_learning <- function(data, formula=NULL, batch,
       }
 
       ## LOSS CALCULATION
-      if (!(is.null(custom_loss))) {
+      if (!(is.null(loss_name))) {
         loss_vec <- compute_loss(ml_preds, data, formula, loss_name)
       } else {
         loss_vec <- custom_loss(ml_preds, data)

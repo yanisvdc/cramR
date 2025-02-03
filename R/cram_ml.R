@@ -42,28 +42,34 @@
 #' }
 #'
 #' @examples
-#' \donttest{
-#' # Supervised learning example
+#' # Load necessary libraries
 #' library(caret)
+#'
+#' # Set seed for reproducibility
 #' set.seed(42)
-#' data(mtcars)
 #'
-#' caret_params <- list(
-#'   method = "glm",
-#'   trControl = trainControl(method = "cv", number = 5)
+#' # Generate example dataset
+#' X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
+#' Y_data <- rnorm(100)  # Continuous target variable for regression
+#' data_df <- data.frame(X_data, Y = Y_data)  # Ensure target variable is included
+#'
+#' # Define caret parameters for simple linear regression (no cross-validation)
+#' caret_params_lm <- list(
+#'   method = "lm",
+#'   trControl = trainControl(method = "none")
 #' )
 #'
+#' # Define the batch count (not used in this simple example)
+#' nb_batch <- 5
+#'
+#' # Run ML learning function
 #' result <- cram_ml(
-#'   data = mtcars,
-#'   formula = mpg ~ .,
-#'   batch = 5,
-#'   caret_params = caret_params,
-#'   loss_name = "mse"
+#'   data = data_df,
+#'   formula = Y ~ .,  # Linear regression model
+#'   batch = nb_batch,
+#'   loss_name = 'mse',
+#'   caret_params = caret_params_lm
 #' )
-#'
-#' print(result$raw_results)
-#' }
-#'
 #' @seealso
 #' \code{\link[caret]{train}} for model training parameters
 #' \code{\link[stats]{kmeans}} for unsupervised clustering

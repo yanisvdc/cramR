@@ -5,3 +5,5 @@
 ^Meta$
 ^__pycache__$
 ^tests/testthat/_snaps/.*
+^tests/testthat/_snaps$
+

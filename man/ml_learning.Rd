@@ -65,8 +65,8 @@ data_df <- data.frame(X_data, Y = Y_data)  # Ensure target variable is included
 
 # Define caret parameters for simple linear regression (no cross-validation)
 caret_params_lm <- list(
-  method = "lm"
-  # trControl = trainControl(method = "none")
+  method = "lm",
+  trControl = trainControl(method = "none")
 )
 
 # Define the batch count (not used in this simple example)
@@ -77,6 +77,7 @@ result_lm <- ml_learning(
   data = data_df,
   formula = Y ~ .,  # Linear regression model
   batch = nb_batch,
+  loss_name = 'mse',
   caret_params = caret_params_lm
 )
 }

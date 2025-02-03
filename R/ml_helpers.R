@@ -95,7 +95,7 @@ compute_loss <- function(ml_preds, data, formula=NULL, loss_name) {
       }
 
       # Compute centroids (one centroid per cluster)
-      cluster_centers <- aggregate(data, by = list(cluster = ml_preds), FUN = mean)[, -1]
+      cluster_centers <- stats::aggregate(data, by = list(cluster = ml_preds), FUN = mean)[, -1]
 
       # Assign each individual its corresponding centroid
       assigned_centroids <- cluster_centers[ml_preds, ]
