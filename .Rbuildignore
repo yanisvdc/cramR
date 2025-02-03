@@ -4,4 +4,4 @@
 ^doc$
 ^Meta$
 ^__pycache__$
-
+^tests/testthat/_snaps/.*

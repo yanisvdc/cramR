@@ -24,16 +24,3 @@ The crammed variance estimate \eqn{\hat{\sigma}^2_T}.
 This function implements the crammed variance estimator \eqn{\hat{\sigma}^2_T}
 as described in the provided formula.
 }
-\examples{
-# Example usage
-set.seed(123)
-T <- 10
-K <- 5  # Number of actions
-
-Y <- rnorm(T)
-D <- rbinom(T, 1, 0.5)
-pi <- matrix(runif(T * K, 0.1, 0.9), nrow = T, ncol = K)
-X <- matrix(rnorm(T * K), nrow = T, ncol = K)
-
-crammed_variance_estimator(Y, D, pi, X, T)
-}

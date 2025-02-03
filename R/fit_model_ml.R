@@ -7,30 +7,79 @@
 #' @param formula The formula
 #' @param caret_params The parameters for caret model
 #' @return The fitted model object.
-#' @examples
-#' # Example usage for Ridge Regression S-learner
-#' set.seed(123)
-#' X <- matrix(rnorm(1000), nrow = 100, ncol = 10)
-#' D <- sample(0:1, 100, replace = TRUE)
-#' Y <- rnorm(100)
-#' # Set up the model
-#' model <- set_model("s_learner", "ridge")
-#' # Define model parameters
-#' model_params <- list(alpha = 0)
-#' # Fit the model
-#' fitted_model <- fit_model(
-#'                         model, X, Y, D = D,
-#'                         model_type = "s_learner",
-#'                         learner_type = "ridge",
-#'                         model_params = model_params)
 #' @export
 fit_model_ml <- function(data, formula, caret_params) {
 
-  caret_params$formula <- formula
-  caret_params$data <- data
+  # Ensure `formula` is provided
+  if (is.null(formula)) {
+    stop("Error: A formula must be provided for model training.")
+  }
 
-  # Train the model using do.call
-  fitted_model <- do.call(train, caret_params)
+  # Ensure `method` is specified
+  if (!"method" %in% names(caret_params)) {
+    stop("Error: 'method' must be specified in caret_params.")
+  }
+
+  # Call caret::train() with correctly formatted parameters
+  fitted_model <- do.call(caret::train, c(list(formula, data = data), caret_params))
 
   return(fitted_model)
 }
+
+
+
+
+# # Load necessary library
+# library(caret)
+#
+# # Set seed for reproducibility
+# set.seed(42)
+#
+# # Generate example dataset
+# X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
+# Y_data <- rnorm(100)  # Continuous target variable for regression
+#
+# # Combine into a single data frame
+# data_df <- data.frame(X_data, Y = Y_data)
+#
+# # Define train control settings to use 10-fold cross-validation
+# ctrl <- trainControl(method = "cv", number = 10)
+#
+# # Train the model using cross-validation
+# model <- train(
+#   Y ~ .,  # Formula specifying the model
+#   data = data_df,
+#   method = "lm",  # Linear regression method
+#   trControl = ctrl  # Use the cross-validation control
+# )
+#
+# # Print the model summary
+# print(model)
+
+
+# # Load necessary library
+# library(caret)
+#
+# # Set seed for reproducibility
+# set.seed(42)
+#
+# # Generate example dataset
+# X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
+# Y_data <- rnorm(100)  # Continuous target variable for regression
+#
+# # Combine into a single data frame
+# data_df <- data.frame(X_data, Y = Y_data)
+#
+# # Define caret parameters for simple linear regression with NO resampling
+# train_control <- trainControl(method = "none")  # No resampling, fit once on full data
+#
+# # Train the model using caret (formula-based approach)
+# model <- caret::train(
+#   Y ~ .,  # Linear regression formula
+#   data = data_df,
+#   method = "lm",  # Linear regression model
+#   trControl = train_control  # No resampling
+# )
+#
+# # Print the model summary
+# print(model)

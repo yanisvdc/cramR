@@ -34,25 +34,29 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 #' # Load necessary libraries
 #' library(caret)
 #'
+#' # Set seed for reproducibility
 #' set.seed(42)
 #'
 #' # Generate example dataset
 #' X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
-#' Y_data <- sample(c(0, 1), 100, replace = TRUE)  # Binary
-#' nb_batch <- 5  # Number of batches
+#' Y_data <- rnorm(100)  # Continuous target variable for regression
+#' data_df <- data.frame(X_data, Y = Y_data)  # Ensure target variable is included
 #'
-#' # Logistic Regression (Supervised Learning)
-#' caret_params_glm <- list(
-#'   method = "glm",
-#'   family = "binomial",  # Logistic regression for binary classification
-#'   trControl = trainControl(method = "cv", number = 5)  # 5-fold cross-validation
+#' # Define caret parameters for simple linear regression (no cross-validation)
+#' caret_params_lm <- list(
+#'   method = "lm",
+#'   trControl = trainControl(method = "none")
 #' )
 #'
-#' result_glm <- ml_learning(
-#'   data = cbind(X_data, Y = Y_data),
-#'   formula = Y ~ .,  # Predicting binary assignment
+#' # Define the batch count (not used in this simple example)
+#' nb_batch <- 5
+#'
+#' # Run ML learning function
+#' result_lm <- ml_learning(
+#'   data = data_df,
+#'   formula = Y ~ .,  # Linear regression model
 #'   batch = nb_batch,
-#'   caret_params = caret_params_glm
+#'   caret_params = caret_params_lm
 #' )
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}
 #' @importFrom grf causal_forest
@@ -170,7 +174,10 @@ ml_learning <- function(data, formula=NULL, batch,
       if (!(is.null(caret_params))) {
         # Caret model
         trained_model <- fit_model_ml(data_subset, formula, caret_params)
+        print(trained_model)
         ml_preds <- model_predict_ml(trained_model, data, formula, caret_params)
+        print(ml_preds)
+
       } else {
         # Custom model
         trained_model <- custom_fit(data_subset)

@@ -9,18 +9,6 @@
 #' @param X A matrix or data frame of covariates observed at each time step.
 #' @param T The total number of iterations in the bandit process.
 #' @return The crammed variance estimate \eqn{\hat{\sigma}^2_T}.
-#' @examples
-#' # Example usage
-#' set.seed(123)
-#' T <- 10
-#' K <- 5  # Number of actions
-#'
-#' Y <- rnorm(T)
-#' D <- rbinom(T, 1, 0.5)
-#' pi <- matrix(runif(T * K, 0.1, 0.9), nrow = T, ncol = K)
-#' X <- matrix(rnorm(T * K), nrow = T, ncol = K)
-#'
-#' crammed_variance_estimator(Y, D, pi, X, T)
 #' @export
 
 crammed_variance_estimator <- function(Y, D, pi, X, T) {

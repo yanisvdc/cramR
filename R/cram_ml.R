@@ -1,55 +1,80 @@
-#' CRAM ML
+#' CRAM ML - Simultaneous Machine Learning and Evaluation
 #'
-#' This function performs the cram method (simultaneous ML learning and evaluation)
-#' on experimental or observational data, for which the data generation process is unknown.
+#' Performs the CRAM method (Causal Regularization via Approximate Models) for
+#' simultaneous machine learning and evaluation in experimental or observational
+#' studies with unknown data generating processes.
 #'
-#' @param data A matrix or data frame of covariates for each sample.
-#' @param batch Either an integer specifying the number of batches (which will be created by random sampling) or a vector of length equal to the sample size providing the batch assignment (index) for each individual in the sample.
-#' @param formula Optional formula relating the target to the predictors for supervised learning (NULL for unsupervised)
-#' @param caret_params The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
-#' @param parallelize_batch Logical. Whether to parallelize batch processing (i.e. the cram method learns T policies, with T the number of batches. They are learned in parallel when parallelize_batch is TRUE vs. learned sequentially using the efficient data.table structure when parallelize_batch is FALSE, recommended for light weight training). Defaults to \code{FALSE}.
-#' @param custom_fit A custom, user-defined, function that outputs a fitted model given training data (allows flexibility). Defaults to \code{NULL}.
-#' @param custom_predict A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.
-#' @param custom_loss A custom loss
-#' @param alpha Significance level for confidence intervals. Default is 0.05 (95\% confidence).
+#' @param data A matrix or data frame of covariates. For supervised learning,
+#'   must include the target variable specified in `formula`.
+#' @param batch Integer specifying number of batches or vector of pre-defined
+#'   batch assignments.
+#' @param formula Optional formula for supervised learning (e.g., y ~ .).
+#'   Use NULL for unsupervised methods like clustering.
+#' @param caret_params List of parameters for `caret::train()` containing:
+#' \itemize{
+#'   \item{method: Model type (e.g., "rf", "glm", "xgbTree" for supervised;
+#'         "kmeans" for clustering)}
+#'   \item{Additional method-specific parameters}
+#' }
+#' @param parallelize_batch Logical indicating whether to parallelize batch
+#'   processing (default = FALSE).
+#' @param custom_fit Optional custom model training function.
+#' @param custom_predict Optional custom prediction function.
+#' @param custom_loss Optional custom loss function.
+#' @param loss_name Name of loss metric (supported: "mse", "logloss",
+#'   "accuracy", "euclidean_distance", "pca_projection_error").
+#' @param alpha Confidence level for intervals (default = 0.05).
+#'
 #' @return A list containing:
 #' \itemize{
-#'   \item \code{raw_results}: A data frame summarizing key metrics with truncated decimals:
-#'     \itemize{
-#'       \item \code{Delta Estimate}: The estimated treatment effect (delta).
-#'       \item \code{Delta Standard Error}: The standard error of the delta estimate.
-#'       \item \code{Delta CI Lower}: The lower bound of the confidence interval for delta.
-#'       \item \code{Delta CI Upper}: The upper bound of the confidence interval for delta.
-#'       \item \code{Policy Value Estimate}: The estimated policy value.
-#'       \item \code{Policy Value Standard Error}: The standard error of the policy value estimate.
-#'       \item \code{Policy Value CI Lower}: The lower bound of the confidence interval for policy value.
-#'       \item \code{Policy Value CI Upper}: The upper bound of the confidence interval for policy value.
-#'       \item \code{Proportion Treated}: The proportion of individuals treated under the final policy.
-#'     }
-#'   \item \code{interactive_table}: An interactive table summarizing key metrics for detailed exploration.
-#'   \item \code{final_policy_model}: The final fitted policy model based on \code{model_type} and \code{learner_type} or \code{custom_fit}.
+#'   \item{raw_results: Data frame with performance metrics}
+#'   \item{interactive_table: DT::datatable interactive view}
+#'   \item{final_ml_model: Trained model object}
+#' }
+#'
+#' @details The CRAM method implements a novel approach for simultaneous model
+#' training and evaluation under unknown data distributions. Key features:
+#' \itemize{
+#'   \item{Automated batch-wise model training}
+#'   \item{Cross-validation compatible}
+#'   \item{Supports both supervised and unsupervised learning}
+#'   \item{Provides confidence intervals for loss estimates}
 #' }
 #'
 #' @examples
-#' # Example data
-#' X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)
-#' D_data <- D_data <- as.integer(sample(c(0, 1), 100, replace = TRUE))
-#' Y_data <- rnorm(100)
-#' nb_batch <- 5
+#' \donttest{
+#' # Supervised learning example
+#' library(caret)
+#' set.seed(42)
+#' data(mtcars)
 #'
-#' # Perform CRAM policy
-#' result <- cram_policy(X = X_data,
-#'                           D = D_data,
-#'                           Y = Y_data,
-#'                           batch = nb_batch)
+#' caret_params <- list(
+#'   method = "glm",
+#'   trControl = trainControl(method = "cv", number = 5)
+#' )
 #'
-#' # Access results
-#' result$raw_results
-#' result$interactive_table
-#' result$final_policy_model
-#' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}
+#' result <- cram_ml(
+#'   data = mtcars,
+#'   formula = mpg ~ .,
+#'   batch = 5,
+#'   caret_params = caret_params,
+#'   loss_name = "mse"
+#' )
+#'
+#' print(result$raw_results)
+#' }
+#'
+#' @seealso
+#' \code{\link[caret]{train}} for model training parameters
+#' \code{\link[stats]{kmeans}} for unsupervised clustering
+#' \code{\link[DT]{datatable}} for interactive tables
+#'
+#' @importFrom caret train
 #' @importFrom DT datatable
+#' @importFrom stats qnorm
+#' @importFrom parallel detectCores
 #' @export
+
 
 
 # Combined experiment function

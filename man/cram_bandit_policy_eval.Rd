@@ -21,15 +21,3 @@ The estimated policy value difference \eqn{\Delta(\pi_T; \pi_0)}.
 This function implements the armed bandit policy evaluation formula for
 estimating \eqn{\Delta(\pi_T; \pi_0)} as given in the user-provided formula.
 }
-\examples{
-# Example usage
-set.seed(123)
-T <- 10
-K <- 5  # Number of actions
-
-# Simulate policy differences and rewards
-policy_diff <- matrix(runif(T * K, -0.5, 0.5), nrow = T, ncol = K)
-reward <- matrix(rnorm(T * K), nrow = T, ncol = K)
-
-cram_bandit_policy_eval(policy_diff, reward, T)
-}

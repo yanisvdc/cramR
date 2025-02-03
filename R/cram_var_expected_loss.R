@@ -38,7 +38,7 @@ cram_var_expected_loss <- function(loss, batch_indices) {
   N <- nrow(loss)  # Number of data points
   nb_batch <- length(batch_indices)  # Number of batches
 
-  loss_diff <- pi[, 2:nb_batch] - pi[, 1:(nb_batch - 1)]
+  loss_diff <- loss[, 2:nb_batch] - loss[, 1:(nb_batch - 1)]
 
   # Vector of terms for each column
   loss_diff_weights <- 1 / (nb_batch - (1:(nb_batch - 1)))

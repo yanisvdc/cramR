@@ -8,17 +8,6 @@
 #' @param reward A matrix of observed rewards corresponding to each action and time step.
 #' @param T The total number of iterations in the bandit process.
 #' @return The estimated policy value difference \eqn{\Delta(\pi_T; \pi_0)}.
-#' @examples
-#' # Example usage
-#' set.seed(123)
-#' T <- 10
-#' K <- 5  # Number of actions
-#'
-#' # Simulate policy differences and rewards
-#' policy_diff <- matrix(runif(T * K, -0.5, 0.5), nrow = T, ncol = K)
-#' reward <- matrix(rnorm(T * K), nrow = T, ncol = K)
-#'
-#' cram_bandit_policy_eval(policy_diff, reward, T)
 #' @export
 
 cram_bandit_policy_eval <- function(policy_diff, reward, T) {
