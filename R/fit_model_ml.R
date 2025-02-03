@@ -20,6 +20,11 @@ fit_model_ml <- function(data, formula, caret_params) {
     stop("Error: 'method' must be specified in caret_params.")
   }
 
+  # Set default trControl if not provided
+  if (!"trControl" %in% names(caret_params)) {
+    caret_params$trControl <- trainControl(method = "none")  # Default to no resampling
+  }
+
   # Call caret::train() with correctly formatted parameters
   fitted_model <- do.call(caret::train, c(list(formula, data = data), caret_params))
 
