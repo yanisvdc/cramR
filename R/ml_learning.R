@@ -106,7 +106,7 @@ ml_learning <- function(data, formula=NULL, batch,
     results <- foreach(t = 1:nb_batch, .packages = required_packages) %dopar% {
 
       cumulative_indices <- unlist(batches[1:t])
-      data_subset <- as.matrix(data[cumulative_indices, ])
+      data_subset <- data[cumulative_indices, ]
 
       ## FIT and PREDICT
       if (!(is.null(caret_params))) {
