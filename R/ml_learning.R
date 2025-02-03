@@ -9,36 +9,51 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 
 #' Generalized ML Learning
 #'
-#' This function performs batch-wise learning for any ML model.
+#' This function performs batch-wise learning for both **supervised** and **unsupervised** machine learning models.
 #'
-#' @param data A matrix or data frame of data, including or not a target variable (handles both supervised and unsupervised ML models).
-#' @param formula Optional formula relating the target to the predictors for supervised learning (NULL for unsupervised)
-#' @param batch Either an integer specifying the number of batches (which will be created by random sampling) or a vector of length equal to the sample size providing the batch assignment (index) for each individual in the sample.
-#' @param parallelize_batch Logical. Whether to parallelize batch processing (i.e. the cram method learns T policies, with T the number of batches. They are learned in parallel when parallelize_batch is TRUE vs. learned sequentially using the efficient data.table structure when parallelize_batch is FALSE, recommended for light weight training). Defaults to \code{FALSE}.
-#' @param loss_name The name of the loss the user wants to use.
-#' @param caret_params A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
-#' @param custom_fit A custom, user-defined, function that outputs a fitted model given training data (allows flexibility). Defaults to \code{NULL}.
-#' @param custom_predict A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.
-#' @param custom_loss Optional a custom, user-defined, function for calculating the loss of a fitted ML model on some data; data should be a matrix or data frame and the function should return a vector containing the loss for each individual.
-#' @param n_cores Number of cores to use for parallelization when parallelize_batch is set to TRUE. Defaults to detectCores() - 1.
-#' @return A list containing:
-#'   \item{final_ml_model}{The final fitted ML model, depending on \code{model_type} and \code{model_params}.}
-#'   \item{losses}{A matrix of losses, where each column represents a batch's learned ML model and the first column is all zeroes (baseline ML model)}
-#'   \item{batch_indices}{The indices for each batch, either as generated (if \code{batch} is an integer) or as provided by the user.}
+#' @param data A matrix or data frame of features. If a supervised model is used, it should also include the target variable.
+#' @param formula Optional formula specifying the relationship between the target and predictors for **supervised learning** (use `NULL` for unsupervised learning).
+#' @param batch Either an integer specifying the number of batches (randomly sampled) or a vector of length equal to the sample size indicating batch assignment for each observation.
+#' @param parallelize_batch Logical. Whether to parallelize batch processing. Defaults to `FALSE`.
+#'  - If `TRUE`, batch models are trained in parallel.
+#'  - If `FALSE`, training is performed sequentially using `data.table` for efficiency.
+#' @param loss_name The name of the loss function to be used (e.g., `"mse"`, `"logloss"`).
+#' @param caret_params A **list** of parameters to pass to the `caret::train()` function.
+#'   - Required: `method` (e.g., `"glm"`, `"rf"`, `"kmeans"`).
+#'   - If `method = "kmeans"`, the function will automatically return **cluster assignments**.
+#' @param custom_fit A **custom function** for training user-defined models. Defaults to `NULL`.
+#' @param custom_predict A **custom function** for making predictions from user-defined models. Defaults to `NULL`.
+#' @param custom_loss Optional **custom function** for computing the loss of a trained model on the data. Should return a **vector** containing per-instance losses.
+#' @param n_cores Number of CPU cores to use for parallel processing (`parallelize_batch = TRUE`). Defaults to `detectCores() - 1`.
+#'
+#' @return A **list** containing:
+#'   \item{final_ml_model}{The final trained ML model.}
+#'   \item{losses}{A matrix of losses where each column represents a batch's trained model. The first column contains zeros (baseline model).}
+#'   \item{batch_indices}{The indices of observations in each batch.}
 #' @examples
-#' # Example usage
-#' X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)
-#' D_data <- sample(c(0, 1), 100, replace = TRUE)
-#' Y_data <- rnorm(100)
-#' nb_batch <- 5
+#' # Load necessary libraries
+#' library(caret)
 #'
-#' # Perform CRAM learning
-#' result <- cram_learning(X = X_data, D = D_data, Y = Y_data, batch = nb_batch)
+#' set.seed(42)
 #'
-#' # Access the learned policies and final model
-#' policies_matrix <- result$policies
-#' final_model <- result$final_policy_model
-#' batch_indices <- result$batch_indices
+#' # Generate example dataset
+#' X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
+#' Y_data <- sample(c(0, 1), 100, replace = TRUE)  # Binary
+#' nb_batch <- 5  # Number of batches
+#'
+#' # Logistic Regression (Supervised Learning)
+#' caret_params_glm <- list(
+#'   method = "glm",
+#'   family = "binomial",  # Logistic regression for binary classification
+#'   trControl = trainControl(method = "cv", number = 5)  # 5-fold cross-validation
+#' )
+#'
+#' result_glm <- ml_learning(
+#'   data = cbind(X_data, Y = Y_data),
+#'   formula = Y ~ .,  # Predicting binary assignment
+#'   batch = nb_batch,
+#'   caret_params = caret_params_glm
+#' )
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}
 #' @importFrom grf causal_forest
 #' @importFrom glmnet cv.glmnet

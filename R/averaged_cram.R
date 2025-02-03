@@ -75,7 +75,7 @@ averaged_cram <- function(X, D, Y, batch, model_type, learner_type = NULL,
     batch_assignment[current_permutation] <- batch_indices
 
     # Run CRAM experiment with permuted batches
-    results[[l]] <- cram_experiment(
+    results[[l]] <- cram_policy(
       X = X, D = D, Y = Y, batch = batch_assignment,
       model_type = model_type, learner_type = learner_type,
       baseline_policy = baseline_policy,

@@ -69,68 +69,42 @@ cram_ml <- function(data, batch, formula=NULL, caret_params = NULL,
                                  n_cores = detectCores() - 1)
 
 
-  policies <- learning_result$policies
+  losses <- learning_result$losses
   batch_indices <- learning_result$batch_indices
-  final_policy_model <- learning_result$final_policy_model
+  final_ml_model <- learning_result$final_ml_model
   nb_batch <- length(batch_indices)
 
   # ------------------------------------------------------------------------------------------
 
-  ## PROPORTION OF TREATED UNDER FINAL POLICY
-  final_policy <- policies[, nb_batch + 1]  # Extract the final policy
-  proportion_treated <- mean(final_policy)  # Proportion of treated individuals
-
-  ## POLICY VALUE DIFFERENCE (DELTA) ---------------------------------------------------------
+  ## EXPECTED LOSS  --------------------------------------------------------------------------
   # estimate
-  delta_estimate <- cram_estimator(Y, D, policies, batch_indices)
+  expected_loss_estimate <- cram_expected_loss(losses, batch_indices)
 
   # variance
-  delta_asymptotic_variance <- cram_variance_estimator(Y, D, policies, batch_indices)
-  delta_asymptotic_sd <- sqrt(delta_asymptotic_variance)  # v_T, the asymptotic standard deviation
-  delta_standard_error <- delta_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
+  expected_loss_asymptotic_variance <- cram_var_expected_loss(losses, batch_indices)
+  expected_loss_asymptotic_sd <- sqrt(expected_loss_asymptotic_variance)  # v_T, the asymptotic standard deviation
+  expected_loss_standard_error <- expected_loss_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
 
   # confidence interval
   z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
-  delta_ci_lower <- delta_estimate - z_value * delta_standard_error
-  delta_ci_upper <- delta_estimate + z_value * delta_standard_error
-  delta_confidence_interval <- c(delta_ci_lower, delta_ci_upper)
-
-  ## POLICY VALUE (PSI) ---------------------------------------------------------------------
-  # estimate
-  policy_value_estimate <- cram_policy_value_estimator(Y, D,
-                                                       policies,
-                                                       batch_indices)
-
-  # variance
-  policy_value_asymptotic_variance <- cram_variance_estimator_policy_value(Y, D,
-                                                                           policies,
-                                                                           batch_indices)
-  policy_value_asymptotic_sd <- sqrt(policy_value_asymptotic_variance)
-  policy_value_standard_error <- policy_value_asymptotic_sd / sqrt(nb_batch)
-
-  # confidence interval
-  z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
-  policy_value_ci_lower <- policy_value_estimate - z_value * policy_value_standard_error
-  policy_value_ci_upper <- policy_value_estimate + z_value * policy_value_standard_error
-  policy_value_confidence_interval <- c(policy_value_ci_lower, policy_value_ci_upper)
-
+  expected_loss_ci_lower <- expected_loss_estimate - z_value * expected_loss_standard_error
+  expected_loss_ci_upper <- expected_loss_estimate + z_value * expected_loss_standard_error
+  expected_loss_confidence_interval <- c(expected_loss_ci_lower, expected_loss_ci_upper)
 
 
   ## RESULTS: SUMMARY TABLES ----------------------------------------------------------------
   summary_table <- data.frame(
-    Metric = c("Delta Estimate", "Delta Standard Error", "Delta CI Lower", "Delta CI Upper",
-               "Policy Value Estimate", "Policy Value Standard Error", "Policy Value CI Lower", "Policy Value CI Upper",
-               "Proportion Treated"),
-    Value = round(c(delta_estimate, delta_standard_error, delta_ci_lower, delta_ci_upper,
-                    policy_value_estimate, policy_value_standard_error, policy_value_ci_lower, policy_value_ci_upper,
-                    proportion_treated), 5)  # Truncate to 5 decimals
+    Metric = c("Expected Loss Estimate", "Expected Loss Standard Error",
+               "Expected Loss CI Lower", "Expected Loss CI Upper"),
+    Value = round(c(expected_loss_estimate, expected_loss_standard_error,
+                    expected_loss_ci_lower, expected_loss_ci_upper), 5)  # Truncate to 5 decimals
   )
 
   # Create an interactive table
   interactive_table <- datatable(
     summary_table,
     options = list(pageLength = 5),  # 5 rows, no extra controls
-    caption = "CRAM Experiment Results"
+    caption = "CRAM ML Results"
   )
 
 
@@ -138,7 +112,7 @@ cram_ml <- function(data, batch, formula=NULL, caret_params = NULL,
   return(list(
     raw_results = summary_table,      # Raw table data for programmatic use
     interactive_table = interactive_table, # Interactive table for exploration
-    final_policy_model = final_policy_model  # Model (not displayed in the summary)
+    final_ml_model = final_ml_model  # Model (not displayed in the summary)
   ))
 
 }

@@ -50,7 +50,7 @@ get_loss_function <- function(loss_name) {
 }
 
 
-compute_loss <- function(ml_preds, data, formula, loss_name) {
+compute_loss <- function(ml_preds, data, formula=NULL, loss_name) {
 
   # Get the appropriate loss function
   loss_function <- get_loss_function(loss_name)
