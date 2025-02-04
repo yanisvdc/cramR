@@ -10,7 +10,7 @@ cram_ml(
   formula = NULL,
   caret_params = NULL,
   parallelize_batch = FALSE,
-  loss_name = "accuracy",
+  loss_name = NULL,
   custom_fit = NULL,
   custom_predict = NULL,
   custom_loss = NULL,

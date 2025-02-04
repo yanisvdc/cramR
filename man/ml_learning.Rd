@@ -9,7 +9,7 @@ ml_learning(
   formula = NULL,
   batch,
   parallelize_batch = FALSE,
-  loss_name = "mse",
+  loss_name = NULL,
   caret_params = NULL,
   custom_fit = NULL,
   custom_predict = NULL,
