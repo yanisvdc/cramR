@@ -35,6 +35,20 @@ cram_bandit_est <- function(pi, reward, arm) {
   cols <- rows - 1    # Corresponding column indices
   pi_arm_selection <- pi[cbind(rows, cols), , drop = FALSE]
 
+  # for each row i of the matrix, we retain the column of index arm[i+2]
+  # for i from 1 to T-2, i=1 corresponds to j=3 (see how we got the matrix)
+  # so the row corresponds to pi_2(X_3, a), for a in 1, .., K
+  # arm[i+2] is arm[3] in this case, and corresponds to what pi_2 ended up chosing
+  # which is not necessarily the arm with highest probability
+  # it is the arm that maximized the linear part of the reward using the
+  # arm-specific parameters sampled by pi_2 for each arm and using the context X_3
+
+  # This is a vector containing the probability that the arm chosen
+  # had to be chosen given the current policy and the context at time t
+  pi_arm_chosen <- pi[ , arm[3:nb_timesteps], drop = FALSE]
+
+
+
 
 
 
