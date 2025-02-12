@@ -18,6 +18,7 @@ cram_bandit_est <- function(pi, reward, arm) {
   nb_arms <- dims_result[3]
   nb_timesteps <- dims_result[2]
 
+
   ## POLICY SLICED: remove the arm dimension as Xj is associated to Aj
 
   # pi:
@@ -44,129 +45,46 @@ cram_bandit_est <- function(pi, reward, arm) {
   # pi_diff is a (T-2) x (T-2) matrix
 
 
+  ## MULTIPLY by Rj / pi_j-1
+
+  # Get diagonal elements from pi (i, i+1 positions)
+  pi_diag <- pi[cbind(1:(nrow(pi)), 2:(ncol(pi)))]  # Vectorized indexing
+
+  # Create multipliers using vectorized operations
+  multipliers <- (1 / pi_diag) * reward[3:length(reward)]
+
+  # Apply row-wise multiplication using efficient matrix operation
+  mult_pi_diff <- pi_diff * multipliers  # Works via R's recycling rules (most efficient)
 
 
+  ## AVERAGE TRIANGLE INF COLUMN-WISE
+
+  mult_pi_diff[upper.tri(mult_pi_diff, diag = FALSE)] <- NA
+
+  deltas <- colMeans(mult_pi_diff, na.rm = TRUE, dims = 1)  # `dims=1` ensures row-wise efficiency
 
 
+  ## SUM DELTAS
+
+  sum_deltas <- sum(deltas)
 
 
+  ## ADD V(pi_1)
+
+  pi_first_col <- pi[, 1]
+  pi_first_col <- pi_first_col * multipliers
+
+  # add the term for j = 2, this is only reward 2!
+  r2 <- reward[2]
+  pi_first_col <- c(pi_first_col, r2)
+
+  # V(pi_1) is the average
+  v_pi_1 <-  mean(pi_first_col)
 
 
+  ## FINAL ESTIMATE
 
+  estimate <- sum_deltas + v_pi_1
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  # Initialize the overall policy difference estimate
-  delta_estimate <- 0
-
-  # Compute the sum of weighted policy differences
-  for (j in 2:T) {
-    gamma_j_T <- 0
-    for (t in 1:(j - 1)) {
-      weight <- 1 / (T - t)
-      gamma_j_T <- gamma_j_T + weight * sum(policy_diff[t, ] * reward[j, ])
-    }
-    delta_estimate <- delta_estimate + gamma_j_T
-  }
-
-  return(delta_estimate)
+  return(estimate)
 }
-
-
-
-
-
-
-
-
-
-
-extract_2d_from_3d <- function(array3d, depth_indices) {
-  # Get array dimensions
-  dims <- dim(array3d)
-  nrow <- dims[1]  # Rows
-  ncol <- dims[2]  # Columns
-
-  # Ensure depth_indices length matches required rows
-  if (length(depth_indices) != nrow) {
-    stop("Depth indices vector must have exactly (T-2) elements.")
-  }
-
-  # Vectorized index calculation
-  i <- rep(1:nrow, each = ncol)  # Row indices
-  j <- rep(1:ncol, times = nrow) # Column indices
-  k <- rep(depth_indices, each = ncol)  # Depth indices
-
-  # Calculate linear indices for efficient extraction
-  linear_indices <- i + (j - 1) * nrow + (k - 1) * nrow * ncol
-
-  # Create result matrix using vectorized indexing
-  result_matrix <- matrix(array3d[linear_indices], nrow = nrow, ncol = ncol, byrow = TRUE)
-
-  return(result_matrix)
-}
-
-# # Define parameters
-# T <- 5   # Total time points
-# K <- 2   # Number of depth layers
-#
-# # Create a 3D array (T-2 x T-1 x K)
-# array3d <- array(1:((T-2)*(T-1)*K), dim = c(T-2, T-1, K))
-#
-# # Create arm vector (must contain indices between 1 and K)
-# arm <- c(1, 2, 1, 2, 1)  # Example arm vector
-#
-# # Vectorized index calculation
-# depth_indices <- arm[3:T]  # Select arm[i+2] values
-#
-# res <- extract_2d_from_3d(array3d, depth_indices)
-
-
-
-
-
-
-
-# # Define new test parameters
-# T_new <- 6   # New total time points
-# K_new <- 3   # New number of depth layers
-#
-# # Create a new 3D array (T-2 x T-1 x K)
-# array3d_new <- array(1:((T_new-2)*(T_new-1)*K_new), dim = c(T_new-2, T_new-1, K_new))
-#
-# # Create a new arm vector (must contain indices between 1 and K)
-# arm_new <- c(2, 3, 1, 2, 3, 1)  # Example arm vector
-#
-# # Extract depth indices from arm
-# depth_indices_new <- arm_new[3:T_new]  # Select arm[i+2] values
-#
-# # Apply function to new data
-# result_new <- extract_2d_from_3d(array3d_new, depth_indices_new)
-#
-# # Output results
-# cat("\nNew 3D Array:\n")
-# print(array3d_new)
-#
-# cat("\nNew Arm Vector:\n")
-# print(arm_new)
-#
-# cat("\nNew Depth Indices:\n")
-# print(depth_indices_new)
-#
-# cat("\nExtracted 2D Matrix:\n")
-# print(result_new)
-#
