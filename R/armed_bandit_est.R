@@ -18,53 +18,33 @@ cram_bandit_est <- function(pi, reward, arm) {
   nb_arms <- dims_result[3]
   nb_timesteps <- dims_result[2]
 
-  ## POLICY DIFFERENCE along the column axis
+  ## POLICY SLICED: remove the arm dimension as Xj is associated to Aj
 
   # pi:
   # for each row j, column t, depth a, gives pi_t(Xj, a)
 
-  # pi has T columns, we do not need the last one (vs for policy learning, we had nb_batch+1 columns)
+  # We do not need the last column and the first two rows
+  # We only need, for each row j, pi_t(Xj, Aj), where Aj is the arm chosen from context j
+  # Aj is the jth element of the vector arm, and corresponds to a depth index
+
   # drop = False to maintain 3D structure
-  # we remove the first two rows corresponding to context j=1 and j=2
-  # Finally, for row j (corresponding to context Xj)
 
   pi <- pi[-c(1,2), -ncol(pi), , drop = FALSE]
-  pi <- pi[cbind(1:(nb_timesteps-2), 1:(nb_timesteps-1), arm[3:nb_timesteps])]
-  # Reshape
-  dim(pi) <- c(nb_timesteps-2, nb_timesteps-1)
+  depth_indices <- arm[3:nb_timesteps]
+
+  pi <- extract_2d_from_3d(pi, depth_indices)
+
+  # pi is now a (T-2) x (T-1) matrix
+
+
+  ## POLICY DIFFERENCE
+
+  pi_diff <- pi[, -1] - pi[, -ncol(pi)]
+
+  # pi_diff is a (T-2) x (T-2) matrix
 
 
 
-
-  # pi_diff <- diff(pi[-c(1,2), 1:(nb_timesteps - 1), , drop = FALSE], differences = 1, lag = 1, dim = 2)
-
-
-  ## MATRIX OF PI_{j-1} of X_j, for j from 3 to nb_timesteps, across all arms
-
-  # each row of the result matrix corresponds to a j
-  # each column of the result matrix corresponds to an arm
-
-  rows <- 3:nb_timesteps    # Indices for row selection
-  cols <- rows - 1    # Corresponding column indices
-  pi_arm_selection <- pi[cbind(rows, cols), , drop = TRUE]
-
-  # for each row i of the matrix, we retain the column of index arm[i+2]
-  # for i from 1 to T-2, i=1 corresponds to j=3 (see how we got the matrix)
-  # so the row corresponds to pi_2(X_3, a), for a in 1, .., K
-  # arm[i+2] is arm[3] in this case, and corresponds to what pi_2 ended up choosing
-  # which is not necessarily the arm with highest probability
-  # it is the arm that maximized the linear part of the reward using the
-  # arm-specific parameters sampled by pi_2 for each arm and using the context X_3
-
-  # This is a vector containing the probability that the arm chosen
-  # had to be chosen given the current policy and the context at time t
-  pi_arm_chosen <- pi_arm_selection[cbind(1:(nb_timesteps-2), arm[3:nb_timesteps]), drop = TRUE]
-
-
-  ## PI DIFF FOR CHOSEN ARM
-
-  # Use advanced indexing to extract selected depth values
-  pi_diff <- A[cbind(rows, cols, depth_indices)]
 
 
 
