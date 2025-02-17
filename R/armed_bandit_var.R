@@ -11,7 +11,7 @@
 #' @return The crammed variance estimate \eqn{\hat{\sigma}^2_T}.
 #' @export
 
-crammed_variance_estimator <- function(Y, D, pi, X, T) {
+cram_bandit_var <- function(pi, reward, arm) {
   if (length(Y) != T || length(D) != T || nrow(pi) != T || nrow(X) != T) {
     stop("All input vectors/matrices must have the same number of rows equal to T.")
   }
