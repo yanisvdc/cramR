@@ -3,12 +3,9 @@
 #' Performs the Cram method for On-policy Statistical Evaluation
 #' in Contextual Bandit
 #'
-#' @param pi A matrix or data frame of covariates. For supervised learning,
-#'   must include the target variable specified in `formula`.
-#' @param arm Integer specifying number of batches or vector of pre-defined
-#'   batch assignments.
-#' @param reward Optional formula for supervised learning (e.g., y ~ .).
-#'   Use NULL for unsupervised methods like clustering.
+#' @param pi for each row j, column t, depth a, gives pi_t(Xj, a)
+#' @param arm arms selected at each time step
+#' @param reward rewards at each time step
 #' @param alpha Confidence level for intervals (default = 0.05).
 #'
 #' @return A list containing:
@@ -17,45 +14,6 @@
 #'   \item{interactive_table: DT::datatable interactive view}
 #'   \item{final_ml_model: Trained model object}
 #' }
-#'
-#' @details The CRAM method implements a novel approach for simultaneous model
-#' training and evaluation under unknown data distributions. Key features:
-#' \itemize{
-#'   \item{Automated batch-wise model training}
-#'   \item{Cross-validation compatible}
-#'   \item{Supports both supervised and unsupervised learning}
-#'   \item{Provides confidence intervals for loss estimates}
-#' }
-#'
-#' @examples
-#' # Load necessary libraries
-#' library(caret)
-#'
-#' # Set seed for reproducibility
-#' set.seed(42)
-#'
-#' # Generate example dataset
-#' X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
-#' Y_data <- rnorm(100)  # Continuous target variable for regression
-#' data_df <- data.frame(X_data, Y = Y_data)  # Ensure target variable is included
-#'
-#' # Define caret parameters for simple linear regression (no cross-validation)
-#' caret_params_lm <- list(
-#'   method = "lm",
-#'   trControl = trainControl(method = "none")
-#' )
-#'
-#' # Define the batch count (not used in this simple example)
-#' nb_batch <- 5
-#'
-#' # Run ML learning function
-#' result <- cram_ml(
-#'   data = data_df,
-#'   formula = Y ~ .,  # Linear regression model
-#'   batch = nb_batch,
-#'   loss_name = 'mse',
-#'   caret_params = caret_params_lm
-#' )
 #' @seealso
 #' \code{\link[caret]{train}} for model training parameters
 #' \code{\link[stats]{kmeans}} for unsupervised clustering
@@ -70,66 +28,46 @@
 
 
 # Combined experiment function
-cram_ml <- function(data, batch, formula=NULL, caret_params = NULL,
-                    parallelize_batch = FALSE, loss_name=NULL,
-                    custom_fit = NULL, custom_predict = NULL,
-                    custom_loss = NULL, alpha=0.05) {
+cram_bandit <- function(pi, arm, reward, alpha=0.05) {
 
-  ## CRAM LEARNING --------------------------------------------------------------------------
-  learning_result <- ml_learning(data=data, formula=formula, batch=batch,
-                                 parallelize_batch = parallelize_batch,
-                                 loss_name = loss_name,
-                                 caret_params = caret_params,
-                                 custom_fit = custom_fit,
-                                 custom_predict = custom_predict,
-                                 custom_loss = custom_loss,
-                                 n_cores = detectCores() - 1)
+  nb_timesteps <- length(arm)
 
-
-  losses <- learning_result$losses
-  batch_indices <- learning_result$batch_indices
-  final_ml_model <- learning_result$final_ml_model
-  nb_batch <- length(batch_indices)
-
-  # ------------------------------------------------------------------------------------------
-
-  ## EXPECTED LOSS  --------------------------------------------------------------------------
+  ## POLICY VALUE   --------------------------------------------------------------------------
   # estimate
-  expected_loss_estimate <- cram_expected_loss(losses, batch_indices)
+  policy_val_estimate <- cram_bandit_est(pi, reward, arm)
 
   # variance
-  expected_loss_asymptotic_variance <- cram_var_expected_loss(losses, batch_indices)
-  expected_loss_asymptotic_sd <- sqrt(expected_loss_asymptotic_variance)  # v_T, the asymptotic standard deviation
-  expected_loss_standard_error <- expected_loss_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
+  policy_val_variance <- cram_bandit_var(pi, reward, arm)
+  policy_val_sd <- sqrt(policy_val_variance)
+  policy_val_standard_error <- policy_val_sd / sqrt(nb_timesteps - 1)
 
   # confidence interval
   z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
-  expected_loss_ci_lower <- expected_loss_estimate - z_value * expected_loss_standard_error
-  expected_loss_ci_upper <- expected_loss_estimate + z_value * expected_loss_standard_error
-  expected_loss_confidence_interval <- c(expected_loss_ci_lower, expected_loss_ci_upper)
+  policy_val_ci_lower <- policy_val_estimate - z_value * policy_val_standard_error
+  policy_val_ci_upper <- policy_val_estimate + z_value * policy_val_standard_error
+  policy_val_confidence_interval <- c(policy_val_ci_lower, policy_val_ci_upper)
 
 
   ## RESULTS: SUMMARY TABLES ----------------------------------------------------------------
   summary_table <- data.frame(
-    Metric = c("Expected Loss Estimate", "Expected Loss Standard Error",
-               "Expected Loss CI Lower", "Expected Loss CI Upper"),
-    Value = round(c(expected_loss_estimate, expected_loss_standard_error,
-                    expected_loss_ci_lower, expected_loss_ci_upper), 5)  # Truncate to 5 decimals
+    Metric = c("Policy Value Estimate", "Policy Value Standard Error",
+               "Policy Value CI Lower", "Policy Value CI Upper"),
+    Value = round(c(policy_val_estimate, policy_val_standard_error,
+                    policy_val_ci_lower, policy_val_ci_upper), 5)  # Truncate to 5 decimals
   )
 
   # Create an interactive table
   interactive_table <- datatable(
     summary_table,
     options = list(pageLength = 5),  # 5 rows, no extra controls
-    caption = "CRAM ML Results"
+    caption = "CRAM Bandit Policy Evaluation Results"
   )
 
 
   # Return results as a list with raw data, styled outputs, and the model
   return(list(
     raw_results = summary_table,      # Raw table data for programmatic use
-    interactive_table = interactive_table, # Interactive table for exploration
-    final_ml_model = final_ml_model  # Model (not displayed in the summary)
+    interactive_table = interactive_table # Interactive table for exploration
   ))
 
 }
