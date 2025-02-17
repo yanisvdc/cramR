@@ -6,7 +6,7 @@ extract_2d_from_3d <- function(array3d, depth_indices) {
 
   # Ensure depth_indices length matches required rows
   if (length(depth_indices) != nrow) {
-    stop("Depth indices vector must have exactly (T-2) elements.")
+    stop("The arm selection vector should have same length as the first dimension of the policy array.")
   }
 
   # Vectorized index calculation

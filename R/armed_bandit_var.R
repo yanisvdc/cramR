@@ -12,45 +12,44 @@
 #' @export
 
 cram_bandit_var <- function(pi, reward, arm) {
-  if (length(Y) != T || length(D) != T || nrow(pi) != T || nrow(X) != T) {
-    stop("All input vectors/matrices must have the same number of rows equal to T.")
-  }
+  dims_result <- dim(result)
 
-  # Initialize the overall variance estimate
-  sigma_squared_T <- 0
+  # Extract relevant dimensions
+  nb_arms <- dims_result[3]
+  nb_timesteps <- dims_result[2]
 
-  for (j in 2:T) {
-    # Initialize the variance estimate for each j
-    variance_Tj <- 0
 
-    # Calculate the GTjk values for k = j to T
-    GTjk <- numeric(T - j + 1)
-    for (k in j:T) {
-      term1 <- (Y[k] * D[k]) / pi[k - 1, D[k] + 1]
-      term2 <- (Y[k] * (1 - D[k])) / (1 - pi[k - 1, D[k] + 1])
-      inner_sum <- 0
+  ## POLICY SLICED: remove the arm dimension as Xj is associated to Aj
 
-      for (a in 1:ncol(pi)) {
-        for (t in 1:(j - 1)) {
-          weight <- (pi[t, a] - pi[t - 1, a]) / (T - t)
-          inner_sum <- inner_sum + weight
-        }
-      }
-      GTjk[k - j + 1] <- (term1 - term2) * inner_sum
-    }
+  # pi:
+  # for each row j, column t, depth a, gives pi_t(Xj, a)
 
-    # Compute the mean of GTjk
-    GTj_mean <- mean(GTjk)
+  # We do not need the last column and the first row
+  # We only need, for each row j, pi_t(Xj, Aj), where Aj is the arm chosen from context j
+  # Aj is the jth element of the vector arm, and corresponds to a depth index
 
-    # Compute the variance for j
-    variance_Tj <- sum((GTjk - GTj_mean)^2) / (T - j)
+  # drop = False to maintain 3D structure
 
-    # Add to the overall variance estimate
-    sigma_squared_T <- sigma_squared_T + variance_Tj
-  }
+  pi <- pi[-1, -ncol(pi), , drop = FALSE]
 
-  # Scale by T as per the formula
-  sigma_squared_T <- T * sigma_squared_T
+  depth_indices <- arm[2:nb_timesteps]
+
+  pi <- extract_2d_from_3d(pi, depth_indices)
+
+  # pi is now a (T-1) x (T-1) matrix
+
+  ## POLICY DIFFERENCE
+
+  pi_diff <- pi[, -1] - pi[, -ncol(pi)]
+
+  # Vector of terms for each column
+  policy_diff_weights <- 1 / (nb_timesteps - (1:(nb_timesteps - 1)))
+
+  # pi_diff is a (T-1) x (T-2) matrix
+
+
+
+
 
   return(sigma_squared_T)
 }
