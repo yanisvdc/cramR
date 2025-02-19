@@ -64,12 +64,7 @@ validate_params <- function(model_function, model_type, learner_type, user_param
     if (length(invalid_params) > 0) {
       stop(paste("Invalid parameters for the model:", paste(invalid_params, collapse = ", ")))
     }
-
-  } else {
-      # If ... is present, assume all user-provided parameters are allowed
-      message("The function accepts additional parameters via '...'. Assume that all user-provided parameters are allowed.")
   }
-
   # Return the valid parameters
   return(user_params)
 }
