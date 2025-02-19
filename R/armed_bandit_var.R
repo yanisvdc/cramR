@@ -58,7 +58,7 @@ cram_bandit_var <- function(pi, reward, arm) {
   ## MULTIPLY by Rk / pi_k-1
 
   # Get diagonal elements from pi
-  pi_diag <- diag(pi)
+  pi_diag <- pi[cbind(1:(nrow(pi)), 2:(ncol(pi)))]
 
   # Create multipliers using vectorized operations
   multipliers <- (1 / pi_diag) * reward[2:length(reward)]
@@ -80,10 +80,21 @@ cram_bandit_var <- function(pi, reward, arm) {
 
   # Calculate variance for each column
   # column_variances <- apply(mult_pi_diff, 2, function(x) var(x, na.rm = TRUE))
+  # column_variances <- apply(mult_pi_diff, 2, function(x) {
+  #   n <- sum(!is.na(x))  # Count of non-NA values
+  #   sample_var <- var(x, na.rm = TRUE)  # Compute sample variance (divides by n-1)
+  #   sample_var * (n - 1) / n  # Convert to population variance (divides by n)
+  # })
+
   column_variances <- apply(mult_pi_diff, 2, function(x) {
     n <- sum(!is.na(x))  # Count of non-NA values
-    sample_var <- var(x, na.rm = TRUE)  # Compute sample variance (divides by n-1)
-    sample_var * (n - 1) / n  # Convert to population variance (divides by n)
+    if (n == 1){
+      return(0)
+    } else {
+      sample_var <- var(x, na.rm = TRUE)  # Compute sample variance (divides by n-1)
+      sample_var * (n - 1) / n  # Convert to population variance (divides by n)
+      return(sample_var)
+    }
   })
 
   total_variance <- sum(column_variances)
