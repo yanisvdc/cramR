@@ -34,7 +34,7 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "data_cumul", "."))
 #' @importFrom stats var
 #' @importFrom grDevices col2rgb
 #' @importFrom stats D
-#' @export
+
 cram_bandit_sim <- function(data, formula=NULL, batch,
                         parallelize_batch = FALSE, loss_name = NULL,
                         caret_params = NULL, custom_fit = NULL,
@@ -580,14 +580,11 @@ res_subset[, context := lapply(1:.N, function(i) unlist(.SD[i, ], use.names = FA
 res_subset[, (X_columns) := NULL]
 
 
-# Retrieve k (number of arms) dynamically from any row
-k_value <- res$k[1]
-
-# Convert context vectors into k × d matrices
-res_subset[, context := lapply(context, function(vec) matrix(rep(vec, each = k_value), nrow = k_value, byrow = TRUE))]
-
-
-check <- res_subset$context
+# # Retrieve k (number of arms) dynamically from any row
+# k_value <- res$k[1]
+#
+# # Convert context vectors into k × d matrices
+# res_subset[, context := lapply(context, function(vec) matrix(rep(vec, each = k_value), nrow = k_value, byrow = TRUE))]
 
 
 # Step 1: Convert NULL values in theta to NA (without modifying res_subset)
@@ -608,3 +605,177 @@ res_subset[, theta_na := NULL]
 
 # Ensure data is sorted correctly by agent, sim, t
 setorder(res_subset, agent, sim, t)
+
+
+
+
+
+# GET PROBA THOMPSON SAMPLING
+get_proba_thompson <- function(theta_hat, sigma_hat, Xa, k) {
+  K <- length(theta_hat)  # Number of arms
+
+  # Define the function for integration
+  integrand <- function(x) {
+    # P( X_k = x ) where X_k ~ N(Xa_k^T theta_hat_k, Xa_k^T sigma_hat_k Xa_k)
+    mean_k <- Xa[k, ] %*% theta_hat[[k]]  # Xa * theta_hat for arm k
+    var_k  <- Xa[k, ] %*% sigma_hat[[k]] %*% Xa[k, ]  # Xa * sigma_hat * Xa^T
+
+    p_xk <- dnorm(x, mean = mean_k, sd = sqrt(var_k))  # P(X_k = x)
+
+    # Compute the probability that all other arms have a smaller value
+    cdf_prod <- prod(sapply(setdiff(1:K, k), function(i) {
+      mean_i <- Xa[i, ] %*% theta_hat[[i]]
+      var_i  <- Xa[i, ] %*% sigma_hat[[i]] %*% Xa[i, ]
+      pnorm(x, mean = mean_i, sd = sqrt(var_i))  # P(X_i < x)
+    }))
+
+    return(p_xk * cdf_prod)
+  }
+
+  # Adaptive numerical integration
+  prob <- integral(integrand, -Inf, Inf)  # Efficient computation
+
+  return(prob)
+}
+
+# Example Usage
+theta_hat_example <- list(
+  c(1.0, -0.5),  # Theta for arm 1
+  c(0.5, 0.2),   # Theta for arm 2
+  c(-0.2, 0.8)   # Theta for arm 3
+)
+
+sigma_hat_example <- list(
+  matrix(c(0.3, 0.1, 0.1, 0.2), 2, 2),  # Covariance for arm 1
+  matrix(c(0.4, 0.05, 0.05, 0.3), 2, 2), # Covariance for arm 2
+  matrix(c(0.2, 0.02, 0.02, 0.25), 2, 2) # Covariance for arm 3
+)
+
+Xa_example <- matrix(c(1, 2,  # Context vector for arm 1
+                       0.5, 1,  # Context vector for arm 2
+                       -1, 0.5), 3, 2, byrow = TRUE)
+
+chosen_arm <- 1  # Compute probability for arm 1
+
+p_max_single_arm(theta_hat_example, sigma_hat_example, Xa_example, chosen_arm)
+
+
+
+
+
+
+
+
+
+
+get_proba_c_eps_greedy <- function(eps = 0.1, A, b, contexts, ind_arm) {
+  # ind_arm is the index of the arm that was chosen
+
+  # K is the number of arms
+  K <- length(b)  # Number of arms
+
+  # each element of contexts is a vector containing the context at time t
+  nb_timesteps <- length(contexts)
+
+  # Store the probas for each context
+  proba_results <- rep(0.0, nb_timesteps)
+
+
+
+
+  for (Xa in contexts) {
+    expected_rewards <- rep(0.0, K)
+    for (arm in 1:k) {
+      A_arm <- A[arm]
+      b_arm <- b[arm]
+      A_inv     <- inv(A_arm)
+      theta_hat <- A_inv %*% b_arm
+      expected_rewards[arm] <- Xa %*% theta_hat
+    }
+
+
+  }
+
+  ties <- unlist(expected_rewards, FALSE, FALSE)
+  ties <- seq_along(ties)[ties == max(ties)]
+
+
+
+
+
+
+
+
+}
+
+
+
+CramContextualEpsilonGreedyPolicy <- R6::R6Class(
+  portable = FALSE,
+  class = FALSE,
+  inherit = Policy,
+  public = list(
+    epsilon = NULL,
+    class_name = "CramContextualEpsilonGreedyPolicy",
+
+    initialize = function(epsilon = 0.1) {
+      super$initialize()
+      self$epsilon <- epsilon
+    },
+
+    set_parameters = function(context_params) {
+      d <- context_params$d
+      self$theta_to_arms <- list('A' = diag(1, d, d), 'b' = rep(0, d))
+    },
+
+    get_action = function(t, context) {
+      k <- context$k  # Number of arms
+
+      if (runif(1) > self$epsilon) {
+        # EXPLOIT: Select the arm with the highest estimated reward
+        expected_rewards <- rep(0.0, k)
+
+        for (arm in 1:k) {
+          Xa        <- get_arm_context(context, arm)  # Get feature vector for arm
+          A         <- self$theta$A[[arm]]
+          b         <- self$theta$b[[arm]]
+          A_inv     <- inv(A)  # Compute inverse of A
+          theta_hat <- A_inv %*% b  # Compute estimated theta
+
+          expected_rewards[arm] <- Xa %*% theta_hat
+        }
+
+        ties <- unlist(expected_rewards, FALSE, FALSE)
+        ties <- seq_along(ties)[ties == max(ties)]
+        num_best_arms <- length(ties)
+
+        self$action$choice  <- which_max_tied(expected_rewards)
+
+        # Corrected propensity calculation
+        self$action$propensity <- (1 - self$epsilon) / num_best_arms + self$epsilon*(1/context$k)
+
+      } else {
+        # EXPLORE: Choose a random arm
+        self$action$choice        <- sample.int(context$k, 1, replace = TRUE)
+
+        # Exploration probability
+        self$action$propensity <- self$epsilon*(1/context$k)
+      }
+
+      self$action
+    },
+
+    set_reward = function(t, context, action, reward) {
+      arm    <- action$choice
+      reward <- reward$reward
+      Xa     <- get_arm_context(context, arm)
+
+      # Update A and b for the chosen arm
+      inc(self$theta$A[[arm]]) <- outer(Xa, Xa)  # Update A
+      inc(self$theta$b[[arm]]) <- reward * Xa    # Update b
+
+      return(self$theta)
+    }
+  )
+)
+
