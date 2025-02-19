@@ -7,12 +7,11 @@
 cram_bandit_est(pi, reward, arm)
 }
 \arguments{
-\item{reward}{A matrix of observed rewards corresponding to each action and time step.}
+\item{pi}{A 3-d array, for each row j, column t, depth a, gives pi_t(Xj, a)}
 
-\item{policy_diff}{A matrix where each entry represents the difference in policies
-between iterations, i.e., \eqn{\pi_t(X, a) - \pi_{t-1}(X, a)} for each t.}
+\item{reward}{A vector of rewards}
 
-\item{T}{The total number of iterations in the bandit process.}
+\item{arm}{A vector of arms chosen}
 }
 \value{
 The estimated policy value difference \eqn{\Delta(\pi_T; \pi_0)}.

@@ -2,25 +2,20 @@
 % Please edit documentation in R/armed_bandit_var.R
 \name{cram_bandit_var}
 \alias{cram_bandit_var}
-\title{Crammed Variance Estimator}
+\title{Cram Bandit Variance}
 \usage{
 cram_bandit_var(pi, reward, arm)
 }
 \arguments{
-\item{pi}{A matrix where each row represents the policy probabilities for actions at time t.}
+\item{pi}{A 3-d array, for each row j, column t, depth a, gives pi_t(Xj, a)}
 
-\item{Y}{A vector of observed rewards for each time step.}
+\item{reward}{A vector of rewards}
 
-\item{D}{A vector of treatment indicators (1 if treated, 0 if not) for each time step.}
-
-\item{X}{A matrix or data frame of covariates observed at each time step.}
-
-\item{T}{The total number of iterations in the bandit process.}
+\item{arm}{A vector of arms chosen}
 }
 \value{
-The crammed variance estimate \eqn{\hat{\sigma}^2_T}.
+The crammed variance estimate for bandit.
 }
 \description{
-This function implements the crammed variance estimator \eqn{\hat{\sigma}^2_T}
-as described in the provided formula.
+This function implements the crammed variance estimator for bandit policy
 }

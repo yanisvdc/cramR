@@ -15,6 +15,7 @@
 #' @param custom_fit A custom, user-defined, function that outputs a fitted model given training data (allows flexibility). Defaults to \code{NULL}.
 #' @param custom_predict A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.
 #' @param alpha Significance level for confidence intervals. Default is 0.05 (95\% confidence).
+#' @param propensity The propensity score function
 #' @return A list containing:
 #' \itemize{
 #'   \item \code{raw_results}: A data frame summarizing key metrics with truncated decimals:
@@ -59,7 +60,8 @@
 cram_policy <- function(X, D, Y, batch, model_type = "causal_forest",
                             learner_type = "ridge", baseline_policy = NULL,
                             parallelize_batch = FALSE, model_params = NULL,
-                            custom_fit = NULL, custom_predict = NULL, alpha=0.05) {
+                            custom_fit = NULL, custom_predict = NULL,
+                            alpha=0.05, propensity = NULL) {
 
   ## CRAM LEARNING --------------------------------------------------------------------------
   learning_result <- cram_learning(X, D, Y, batch, model_type = model_type,
@@ -81,10 +83,10 @@ cram_policy <- function(X, D, Y, batch, model_type = "causal_forest",
 
   ## POLICY VALUE DIFFERENCE (DELTA) ---------------------------------------------------------
   # estimate
-  delta_estimate <- cram_estimator(Y, D, policies, batch_indices)
+  delta_estimate <- cram_estimator(X, Y, D, policies, batch_indices, propensity = propensity)
 
   # variance
-  delta_asymptotic_variance <- cram_variance_estimator(Y, D, policies, batch_indices)
+  delta_asymptotic_variance <- cram_variance_estimator(X, Y, D, policies, batch_indices, propensity = propensity)
   delta_asymptotic_sd <- sqrt(delta_asymptotic_variance)  # v_T, the asymptotic standard deviation
   delta_standard_error <- delta_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
 
@@ -96,14 +98,16 @@ cram_policy <- function(X, D, Y, batch, model_type = "causal_forest",
 
   ## POLICY VALUE (PSI) ---------------------------------------------------------------------
   # estimate
-  policy_value_estimate <- cram_policy_value_estimator(Y, D,
+  policy_value_estimate <- cram_policy_value_estimator(X, Y, D,
                                                        policies,
-                                                       batch_indices)
+                                                       batch_indices,
+                                                       propensity = propensity)
 
   # variance
-  policy_value_asymptotic_variance <- cram_variance_estimator_policy_value(Y, D,
+  policy_value_asymptotic_variance <- cram_variance_estimator_policy_value(X, Y, D,
                                                                            policies,
-                                                                           batch_indices)
+                                                                           batch_indices,
+                                                                           propensity = propensity)
   policy_value_asymptotic_sd <- sqrt(policy_value_asymptotic_variance)
   policy_value_standard_error <- policy_value_asymptotic_sd / sqrt(nb_batch)
 

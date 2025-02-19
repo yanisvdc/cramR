@@ -2,6 +2,7 @@
 #'
 #' This function returns the cram estimator for the policy value (psi).
 #'
+#' @param X A matrix or data frame of covariates for each sample.
 #' @param Y A vector of outcomes for the n individuals.
 #' @param D A vector of binary treatments for the n individuals.
 #' @param pi A matrix of n rows and (nb_batch + 1) columns,
@@ -9,6 +10,7 @@
 #'           containing the policy assignment for each individual for each policy.
 #'           The first column represents the baseline policy.
 #' @param batch_indices A list where each element is a vector of indices corresponding to the individuals in each batch.
+#' @param propensity Propensity score function
 #' @return The estimated policy value.
 #' @examples
 #' # Example usage
@@ -19,7 +21,7 @@
 #' estimate <- cram_policy_value_estimator(Y, D, pi, batch_indices)
 #' @export
 
-cram_policy_value_estimator <- function(Y, D, pi, batch_indices) {
+cram_policy_value_estimator <- function(X, Y, D, pi, batch_indices, propensity = NULL) {
 
   # Determine number of batches
   nb_batch <- length(batch_indices)
@@ -34,8 +36,21 @@ cram_policy_value_estimator <- function(Y, D, pi, batch_indices) {
     stop("D must be a binary vector containing only 0 and 1")
   }
 
-  # IPW component for all individuals
-  weight_diff <- Y * D / 0.5 - Y * (1 - D) / 0.5
+  if (is.null(propensity)) {
+    # IPW component for all individuals using default propensity = 0.5
+    weight_diff <- Y * D / 0.5 - Y * (1 - D) / 0.5
+    part_1_weight <- Y * D / 0.5
+    part_2_weight <- Y * (1 - D) / 0.5
+  } else {
+    # Compute propensity scores
+    propensity_scores <- propensity(X)
+
+    # Compute IPW component with custom propensity scores
+    weight_diff <- Y * D / propensity_scores - Y * (1 - D) / propensity_scores
+    part_1_weight <- Y * D / propensity_scores
+    part_2_weight <- Y * (1 - D) / propensity_scores
+  }
+
 
   policy_diff <- pi[, 2:nb_batch] - pi[, 1:(nb_batch - 1)]
 
@@ -68,9 +83,9 @@ cram_policy_value_estimator <- function(Y, D, pi, batch_indices) {
   # How to adjust for Psi calculation:
   ## Step 1: calculate the terms from eta_j for j=2, .., T (inside the average)
 
-  part_1_weight <- Y * D / 0.5
-
-  part_2_weight <- Y * (1 - D) / 0.5
+  # part_1_weight <- Y * D / 0.5
+  #
+  # part_2_weight <- Y * (1 - D) / 0.5
 
   eta_terms <- (part_1_weight * pi[, 1] + part_2_weight * (1-pi[, 1])) / nb_batch
 

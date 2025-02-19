@@ -3,16 +3,15 @@
 #' This function implements the armed bandit policy evaluation formula for
 #' estimating \eqn{\Delta(\pi_T; \pi_0)} as given in the user-provided formula.
 #'
-#' @param policy_diff A matrix where each entry represents the difference in policies
-#'        between iterations, i.e., \eqn{\pi_t(X, a) - \pi_{t-1}(X, a)} for each t.
-#' @param reward A matrix of observed rewards corresponding to each action and time step.
-#' @param T The total number of iterations in the bandit process.
+#' @param pi A 3-d array, for each row j, column t, depth a, gives pi_t(Xj, a)
+#' @param reward A vector of rewards
+#' @param arm A vector of arms chosen
 #' @return The estimated policy value difference \eqn{\Delta(\pi_T; \pi_0)}.
 #' @export
 
 cram_bandit_est <- function(pi, reward, arm) {
 
-  dims_result <- dim(result)
+  dims_result <- dim(pi)
 
   # Extract relevant dimensions
   nb_arms <- dims_result[3]

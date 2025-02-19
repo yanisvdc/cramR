@@ -3,6 +3,7 @@
 #' This function estimates the asymptotic variance of the cram estimator
 #' for the policy value (psi).
 #'
+#' @param X A matrix or data frame of covariates for each sample.
 #' @param Y A vector of outcomes for the n individuals.
 #' @param D A vector of binary treatments for the n individuals.
 #' @param pi A matrix of n rows and (nb_batch + 1) columns,
@@ -10,6 +11,7 @@
 #'           containing the policy assignment for each individual for each policy.
 #'           The first column represents the baseline policy.
 #' @param batch_indices A list where each element is a vector of indices corresponding to the individuals in each batch.
+#' @param propensity Propensity score function
 #' @return The estimated variance \eqn{\hat{w}^2_T}.
 #' @examples
 #' # Example usage:
@@ -20,7 +22,7 @@
 #' batch_indices <- split(1:100, rep(1:nb_batch, each = 10))
 #' variance_estimate <- cram_variance_estimator_policy_value(Y, D, pi, batch_indices)
 #' @export
-cram_variance_estimator_policy_value <- function(Y, D, pi, batch_indices) {
+cram_variance_estimator_policy_value <- function(X, Y, D, pi, batch_indices, propensity = NULL) {
   # Determine number of batches
   nb_batch <- length(batch_indices)
   # Batch size (assuming all batches are the same size)
@@ -30,10 +32,20 @@ cram_variance_estimator_policy_value <- function(Y, D, pi, batch_indices) {
     stop("Y, D, and pi must have matching lengths")
   }
 
-  # IPW component for all individuals
-  weight_diff <- Y * D / 0.5 - Y * (1 - D) / 0.5
-  part_1_weight <- Y * D / 0.5
-  part_2_weight <- Y * (1 - D) / 0.5
+  if (is.null(propensity)) {
+    # IPW component for all individuals using default propensity = 0.5
+    weight_diff <- Y * D / 0.5 - Y * (1 - D) / 0.5
+    part_1_weight <- Y * D / 0.5
+    part_2_weight <- Y * (1 - D) / 0.5
+  } else {
+    # Compute propensity scores
+    propensity_scores <- propensity(X)
+
+    # Compute IPW component with custom propensity scores
+    weight_diff <- Y * D / propensity_scores - Y * (1 - D) / propensity_scores
+    part_1_weight <- Y * D / propensity_scores
+    part_2_weight <- Y * (1 - D) / propensity_scores
+  }
 
   policy_diff <- pi[, 2:nb_batch] - pi[, 1:(nb_batch - 1)]
 
