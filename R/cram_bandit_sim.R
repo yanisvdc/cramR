@@ -113,6 +113,9 @@ param_lookup <- res$theta
 
 ## FINAL HERE ---------------------------------------------------------
 
+library(stats)
+library(pracma)  # For numerical integration
+library(MASS)    # For multivariate normal sampling (mvrnorm)
 
 CramContextualEpsilonGreedyPolicy <- R6::R6Class(
   portable = FALSE,
@@ -256,6 +259,89 @@ CramLinUCBDisjointPolicy <- R6::R6Class(
 )
 
 
+CramContextualLinTSPolicy <- R6::R6Class(
+  portable = FALSE,
+  class = FALSE,
+  inherit = Policy,
+  public = list(
+    sigma = NULL,
+    class_name = "CramContextualLinTSPolicy",
+    initialize = function(v = 0.2) {
+      super$initialize()
+      self$sigma   <- v^2
+    },
+    set_parameters = function(context_params) {
+      ul                 <- length(context_params$unique)
+      self$theta_to_arms <- list('A_inv' = diag(1, ul, ul), 'b' = rep(0, ul))
+    },
+    get_action = function(t, context) {
+      expected_rewards           <- rep(0.0, context$k)
+      means <- vector("list", context$k)  # Store theta_hat as a list of vectors
+      sigmas <- vector("list", context$k) # Store sigma_hat as a list of matrices
+      contexts <- matrix(0, nrow = context$k, ncol = length(context$unique)) # Store Xa as a matrix
+
+      for (arm in 1:context$k) {
+        Xa                       <- get_arm_context(context, arm, context$unique)
+        A_inv                    <- self$theta$A_inv[[arm]]
+        b                        <- self$theta$b[[arm]]
+
+        theta_hat                <- A_inv %*% b
+        sigma_hat                <- self$sigma * A_inv
+        theta_tilde              <- as.vector(contextual::mvrnorm(1, theta_hat, sigma_hat))
+        expected_rewards[arm]    <- Xa %*% theta_tilde
+
+        means[[arm]] <- as.vector(theta_hat)  # Store theta_hat correctly
+        sigmas[[arm]] <- sigma_hat  # Store sigma_hat as a matrix
+        contexts[arm, ] <- Xa  # Store Xa as a row in the matrix
+      }
+      self$action$choice              <- which_max_tied(expected_rewards)
+
+      ind_arm <- self$action$choice
+      self$action$propensity <- self$get_prob(means, sigmas, contexts, ind_arm)
+
+      self$action
+    },
+    set_reward = function(t, context, action, reward) {
+      arm    <- action$choice
+      reward <- reward$reward
+
+      Xa    <- get_arm_context(context, arm, context$unique)
+
+      self$theta$A_inv[[arm]]  <- sherman_morrisson(self$theta$A_inv[[arm]],Xa)
+      self$theta$b[[arm]]      <- self$theta$b[[arm]] + reward * Xa
+
+      self$theta
+    },
+    get_prob = function(mu, Sigma, Xa, k) {
+      K <- length(mu)  # Number of arms
+
+      # Define the function for integration
+      integrand <- function(x) {
+        # Compute the transformed mean and variance for the chosen arm
+        mean_k <- Xa[k, ] %*% mu[[k]]
+        var_k  <- Xa[k, ] %*% Sigma[[k]] %*% Xa[k, ]
+
+        log_p_xk <- dnorm(x, mean = mean_k, sd = sqrt(var_k), log = TRUE)  # Log-PDF
+
+        # Compute log-probabilities that all other arms have a lower reward
+        log_cdf_sum <- sum(sapply(setdiff(1:K, k), function(i) {
+          mean_i <- Xa[i, ] %*% mu[[i]]
+          var_i  <- Xa[i, ] %*% Sigma[[i]] %*% Xa[i, ]
+          pnorm(x, mean = mean_i, sd = sqrt(var_i), log.p = TRUE)  # Log-CDF
+        }))
+
+        return(exp(log_p_xk + log_cdf_sum))  # Convert back to probability space
+      }
+
+      # Adaptive numerical integration
+      prob <- pracma::integral(integrand, -Inf, Inf)
+
+      return(prob)
+    }
+  )
+)
+
+
 
 library(contextual)
 
@@ -270,6 +356,7 @@ agents <- list(Agent$new(EpsilonGreedyPolicy$new(0.1), bandit, "EGreedy"),
                Agent$new(CramContextualEpsilonGreedyPolicy$new(0.1), bandit, "cramcEGreedy"),
                Agent$new(ContextualEpsilonGreedyPolicy$new(0.1), bandit, "cEGreedy"),
                Agent$new(ContextualLinTSPolicy$new(0.1), bandit, "LinTS"),
+               Agent$new(CramContextualLinTSPolicy$new(0.1), bandit, "cramLinTS"),
                Agent$new(CramLinUCBDisjointPolicy$new(0.6, 0.5), bandit, "CramLinUCB"),
                Agent$new(LinUCBDisjointPolicy$new(0.6), bandit, "LinUCB"))
 
@@ -288,7 +375,7 @@ param_lookup <- history$data$theta
 
 
 
-
+res$t
 
 
 
@@ -322,3 +409,202 @@ chosen_arm <- 1  # Compute probability for arm 1 (1-based index in R)
 
 p_max_single_arm(theta_example, sigma_example, chosen_arm)
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+library(stats)
+library(pracma)  # For numerical integration
+library(MASS)    # For multivariate normal sampling (mvrnorm)
+
+p_max_single_arm <- function(theta_hat, sigma_hat, Xa, k) {
+  K <- length(theta_hat)  # Number of arms
+
+  # Define the function for integration
+  integrand <- function(x) {
+    # P( X_k = x ) where X_k ~ N(Xa_k^T theta_hat_k, Xa_k^T sigma_hat_k Xa_k)
+    mean_k <- Xa[k, ] %*% theta_hat[[k]]  # Xa * theta_hat for arm k
+    var_k  <- Xa[k, ] %*% sigma_hat[[k]] %*% Xa[k, ]  # Xa * sigma_hat * Xa^T
+
+    p_xk <- dnorm(x, mean = mean_k, sd = sqrt(var_k))  # P(X_k = x)
+
+    # Compute the probability that all other arms have a smaller value
+    cdf_prod <- prod(sapply(setdiff(1:K, k), function(i) {
+      mean_i <- Xa[i, ] %*% theta_hat[[i]]
+      var_i  <- Xa[i, ] %*% sigma_hat[[i]] %*% Xa[i, ]
+      pnorm(x, mean = mean_i, sd = sqrt(var_i))  # P(X_i < x)
+    }))
+
+    return(p_xk * cdf_prod)
+  }
+
+  # Adaptive numerical integration
+  prob <- integral(integrand, -Inf, Inf)  # Efficient computation
+
+  return(prob)
+}
+
+# Example Usage
+theta_hat_example <- list(
+  c(1.0, -0.5),  # Theta for arm 1
+  c(0.5, 0.2),   # Theta for arm 2
+  c(-0.2, 0.8)   # Theta for arm 3
+)
+
+sigma_hat_example <- list(
+  matrix(c(0.3, 0.1, 0.1, 0.2), 2, 2),  # Covariance for arm 1
+  matrix(c(0.4, 0.05, 0.05, 0.3), 2, 2), # Covariance for arm 2
+  matrix(c(0.2, 0.02, 0.02, 0.25), 2, 2) # Covariance for arm 3
+)
+
+Xa_example <- matrix(c(1, 2,  # Context vector for arm 1
+                       0.5, 1,  # Context vector for arm 2
+                       -1, 0.5), 3, 2, byrow = TRUE)
+
+chosen_arm <- 1  # Compute probability for arm 1
+
+p_max_single_arm(theta_hat_example, sigma_hat_example, Xa_example, chosen_arm)
+
+
+
+
+
+
+
+library(stats)
+library(pracma)  # For numerical integration
+library(MASS)    # For multivariate normal sampling (mvrnorm)
+
+p_max_single_arm <- function(mu, Sigma, Xa, k) {
+  K <- length(mu)  # Number of arms
+
+  # Define the function for integration
+  integrand <- function(x) {
+    # Compute the transformed mean and variance for the chosen arm
+    mean_k <- Xa[k, ] %*% mu[[k]]
+    var_k  <- Xa[k, ] %*% Sigma[[k]] %*% Xa[k, ]
+
+    log_p_xk <- dnorm(x, mean = mean_k, sd = sqrt(var_k), log = TRUE)  # Log-PDF
+
+    # Compute log-probabilities that all other arms have a lower reward
+    log_cdf_sum <- sum(sapply(setdiff(1:K, k), function(i) {
+      mean_i <- Xa[i, ] %*% mu[[i]]
+      var_i  <- Xa[i, ] %*% Sigma[[i]] %*% Xa[i, ]
+      pnorm(x, mean = mean_i, sd = sqrt(var_i), log.p = TRUE)  # Log-CDF
+    }))
+
+    return(exp(log_p_xk + log_cdf_sum))  # Convert back to probability space
+  }
+
+  # Adaptive numerical integration
+  prob <- integral(integrand, -Inf, Inf)
+
+  return(prob)
+}
+
+# Example Usage
+theta_hat_example <- list(
+  c(1.0, -0.5),  # Theta for arm 1
+  c(0.5, 0.2),   # Theta for arm 2
+  c(-0.2, 0.8)   # Theta for arm 3
+)
+
+sigma_hat_example <- list(
+  matrix(c(0.3, 0.1, 0.1, 0.2), 2, 2),  # Covariance for arm 1
+  matrix(c(0.4, 0.05, 0.05, 0.3), 2, 2), # Covariance for arm 2
+  matrix(c(0.2, 0.02, 0.02, 0.25), 2, 2) # Covariance for arm 3
+)
+
+Xa_example <- matrix(c(1, 2,  # Context vector for arm 1
+                       0.5, 1,  # Context vector for arm 2
+                       -1, 0.5), 3, 2, byrow = TRUE)
+
+chosen_arm <- 1
+
+p_max_single_arm(theta_hat_example, sigma_hat_example, Xa_example, chosen_arm)
+
+
+
+
+
+library(contextual)
+
+horizon       <- 100L
+simulations   <- 100L
+
+bandit        <- ContextualLinearBandit$new(k = 4, d = 3, sigma = 0.3)
+
+# Linear CMAB policies comparison
+
+agents <- list(Agent$new(ContextualEpsilonGreedyPolicy$new(0.1), bandit, "cEGreedy"),
+               Agent$new(ContextualLinTSPolicy$new(0.1), bandit, "LinTS"),
+               Agent$new(LinUCBDisjointPolicy$new(0.6), bandit, "LinUCB"))
+
+simulation     <- Simulator$new(agents, horizon, simulations,
+                                do_parallel = TRUE, save_theta = TRUE,
+                                save_context = TRUE)
+
+history        <- simulation$run()
+
+plot(history, type = "cumulative", rate = FALSE, legend_position = "topleft")
+
+
+res <- history$data
+
+param_lookup <- history$data$theta
+
+
+# Retrieve d (feature dimension) from any row
+d_value <- res$d[1]  # Assuming d is constant across rows
+
+# Dynamically select the X.1 to X.d columns
+X_columns <- paste0("X.", 1:d_value)
+
+# Subset res, keeping only the relevant columns
+res_subset <- res[, c("agent", "sim", "t", "choice", "reward", "theta", X_columns), with = FALSE]
+
+# Convert X.1, ..., X.d into a single list-column `context`
+res_subset[, context := lapply(1:.N, function(i) unlist(.SD[i, ], use.names = FALSE)), .SDcols = X_columns]
+
+# Remove original X.1, ..., X.d columns after storing in `context`
+res_subset[, (X_columns) := NULL]
+
+
+# Retrieve k (number of arms) dynamically from any row
+k_value <- res$k[1]
+
+# Convert context vectors into k × d matrices
+res_subset[, context := lapply(context, function(vec) matrix(rep(vec, each = k_value), nrow = k_value, byrow = TRUE))]
+
+
+check <- res_subset$context
+
+
+# Step 1: Convert NULL values in theta to NA (without modifying res_subset)
+res_subset[, theta_na := lapply(theta, function(x) if (is.null(x)) NA else x)]
+
+# Step 2: Count the number of NA values in theta_na per simulation
+null_counts <- res_subset[, .(num_nulls = sum(is.na(theta_na))), by = sim]
+
+# Step 3: Identify simulations to drop (where num_nulls >= 1)
+sims_to_remove <- null_counts[num_nulls >= 1, sim]
+
+# Step 4: Remove these simulations from res_subset in place
+res_subset <- res_subset[!sim %in% sims_to_remove]
+
+# Step 5: Drop the temporary column (optional)
+res_subset[, theta_na := NULL]
+
+
+# Ensure data is sorted correctly by agent, sim, t
+setorder(res_subset, agent, sim, t)
