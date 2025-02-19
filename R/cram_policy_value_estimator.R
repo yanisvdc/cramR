@@ -12,13 +12,6 @@
 #' @param batch_indices A list where each element is a vector of indices corresponding to the individuals in each batch.
 #' @param propensity Propensity score function
 #' @return The estimated policy value.
-#' @examples
-#' # Example usage
-#' Y <- sample(0:1, 100, replace = TRUE)
-#' D <- sample(0:1, 100, replace = TRUE)
-#' pi <- matrix(sample(0:1, 100 * 11, replace = TRUE), nrow = 100, ncol = 11)
-#' batch_indices <- split(1:100, rep(1:10, each = 10))
-#' estimate <- cram_policy_value_estimator(Y, D, pi, batch_indices)
 #' @export
 
 cram_policy_value_estimator <- function(X, Y, D, pi, batch_indices, propensity = NULL) {

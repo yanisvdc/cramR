@@ -4,9 +4,11 @@
 \alias{cram_policy_value_estimator}
 \title{Cram Estimator for Policy Value (Psi)}
 \usage{
-cram_policy_value_estimator(Y, D, pi, batch_indices)
+cram_policy_value_estimator(X, Y, D, pi, batch_indices, propensity = NULL)
 }
 \arguments{
+\item{X}{A matrix or data frame of covariates for each sample.}
+
 \item{Y}{A vector of outcomes for the n individuals.}
 
 \item{D}{A vector of binary treatments for the n individuals.}
@@ -17,18 +19,12 @@ containing the policy assignment for each individual for each policy.
 The first column represents the baseline policy.}
 
 \item{batch_indices}{A list where each element is a vector of indices corresponding to the individuals in each batch.}
+
+\item{propensity}{Propensity score function}
 }
 \value{
 The estimated policy value.
 }
 \description{
 This function returns the cram estimator for the policy value (psi).
-}
-\examples{
-# Example usage
-Y <- sample(0:1, 100, replace = TRUE)
-D <- sample(0:1, 100, replace = TRUE)
-pi <- matrix(sample(0:1, 100 * 11, replace = TRUE), nrow = 100, ncol = 11)
-batch_indices <- split(1:100, rep(1:10, each = 10))
-estimate <- cram_policy_value_estimator(Y, D, pi, batch_indices)
 }

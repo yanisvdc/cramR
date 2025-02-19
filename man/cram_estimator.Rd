@@ -4,9 +4,11 @@
 \alias{cram_estimator}
 \title{Cram Estimator for Policy Value Difference (Delta)}
 \usage{
-cram_estimator(Y, D, pi, batch_indices)
+cram_estimator(X, Y, D, pi, batch_indices, propensity = NULL)
 }
 \arguments{
+\item{X}{A matrix or data frame of covariates for each sample.}
+
 \item{Y}{A vector of outcomes for the n individuals.}
 
 \item{D}{A vector of binary treatments for the n individuals.}
@@ -17,19 +19,12 @@ containing the policy assignment for each individual for each policy.
 The first column represents the baseline policy.}
 
 \item{batch_indices}{A list where each element is a vector of indices corresponding to the individuals in each batch.}
+
+\item{propensity}{The propensity score function}
 }
 \value{
 The estimated policy value difference \(\eqn{\hat{\Delta}}(\eqn{\hat{\pi}}_T; \eqn{\pi}_0)\).
 }
 \description{
 This function returns the cram estimator for the policy value difference (delta).
-}
-\examples{
-# Example usage:
-Y <- sample(0:1, 100, replace = TRUE)
-D <- sample(0:1, 100, replace = TRUE)
-pi <- matrix(sample(0:1, 100 * 11, replace = TRUE), nrow = 100, ncol = 11)
-nb_batch <- 10
-batch_indices <- split(1:100, rep(1:nb_batch, each = 10))
-estimate <- cram_estimator(Y, D, pi, batch_indices)
 }

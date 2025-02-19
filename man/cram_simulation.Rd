@@ -20,7 +20,8 @@ cram_simulation(
   parallelize_batch = FALSE,
   model_params = NULL,
   custom_fit = NULL,
-  custom_predict = NULL
+  custom_predict = NULL,
+  propensity = NULL
 )
 }
 \arguments{
@@ -78,6 +79,8 @@ Defaults to \code{NULL}.}
 
 \item{custom_predict}{A custom, user-defined, function for making predictions given a fitted model
 and test data (allow flexibility). Defaults to \code{NULL}.}
+
+\item{propensity}{The propensity score model}
 }
 \value{
 A list containing:

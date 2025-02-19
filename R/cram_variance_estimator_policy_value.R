@@ -13,14 +13,6 @@
 #' @param batch_indices A list where each element is a vector of indices corresponding to the individuals in each batch.
 #' @param propensity Propensity score function
 #' @return The estimated variance \eqn{\hat{w}^2_T}.
-#' @examples
-#' # Example usage:
-#' Y <- sample(0:1, 100, replace = TRUE)
-#' D <- sample(0:1, 100, replace = TRUE)
-#' pi <- matrix(sample(0:1, 100 * 11, replace = TRUE), nrow = 100, ncol = 11)
-#' nb_batch <- 10
-#' batch_indices <- split(1:100, rep(1:nb_batch, each = 10))
-#' variance_estimate <- cram_variance_estimator_policy_value(Y, D, pi, batch_indices)
 #' @export
 cram_variance_estimator_policy_value <- function(X, Y, D, pi, batch_indices, propensity = NULL) {
   # Determine number of batches

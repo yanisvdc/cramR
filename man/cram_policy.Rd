@@ -16,7 +16,8 @@ cram_policy(
   model_params = NULL,
   custom_fit = NULL,
   custom_predict = NULL,
-  alpha = 0.05
+  alpha = 0.05,
+  propensity = NULL
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ cram_policy(
 \item{custom_predict}{A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.}
 
 \item{alpha}{Significance level for confidence intervals. Default is 0.05 (95\% confidence).}
+
+\item{propensity}{The propensity score function}
 }
 \value{
 A list containing:

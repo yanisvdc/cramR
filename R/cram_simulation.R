@@ -48,6 +48,7 @@ utils::globalVariables(c("X", "D", "Y", "sim_id", "."))
 #'                   (allows flexibility). Defaults to \code{NULL}.
 #' @param custom_predict A custom, user-defined, function for making predictions given a fitted model
 #'                       and test data (allow flexibility). Defaults to \code{NULL}.
+#' @param propensity The propensity score model
 #' @return A list containing:
 #' \describe{
 #'   \item{\code{avg_proportion_treated}}{The average proportion of treated individuals across simulations.}
@@ -107,7 +108,7 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D, dgp_Y, batch,
                             model_type = "causal_forest", learner_type = "ridge",
                             alpha=0.05, baseline_policy = NULL,
                             parallelize_batch = FALSE, model_params = NULL,
-                            custom_fit = NULL, custom_predict = NULL) {
+                            custom_fit = NULL, custom_predict = NULL, propensity = NULL) {
 
   if (is.null(X) && is.null(dgp_X)) {
     stop("Either a dataset 'X' or a data generation process 'dgp_X' must be provided.")
@@ -221,12 +222,13 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D, dgp_Y, batch,
     nb_batch <- length(batch_indices)
 
     # Step 5: Estimate delta
-    delta_estimate <- cram_estimator(Y_slice, D_slice, policies, batch_indices)
+    delta_estimate <- cram_estimator(X_matrix, Y_slice, D_slice, policies,
+                                     batch_indices, propensity = propensity)
 
     # Step 5': Estimate policy value
-    policy_value_estimate <- cram_policy_value_estimator(Y_slice, D_slice,
+    policy_value_estimate <- cram_policy_value_estimator(X_matrix, Y_slice, D_slice,
                                                          policies,
-                                                         batch_indices)
+                                                         batch_indices, propensity = propensity)
 
     # Step 5 TRUE: Estimate true delta and true policy value
     pop_X <- if (!is.null(nb_simulations_truth)) {
@@ -236,14 +238,17 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D, dgp_Y, batch,
     }
 
     true_results <- pop_X[, {
+      X_matrix2 <- as.matrix(.SD[, !c("Y", "D"), with = FALSE])  # Exclude Y and D dynamically
       # Extract D and Y for the current group
       D_slice <- D
       Y_slice <- Y
 
-      true_delta_estimate <- cram_estimator(Y_slice, D_slice, policies, batch_indices)
-      true_policy_value_estimate <- cram_policy_value_estimator(Y_slice, D_slice,
+      true_delta_estimate <- cram_estimator(X_matrix2, Y_slice, D_slice, policies,
+                                            batch_indices, propensity = propensity)
+      true_policy_value_estimate <- cram_policy_value_estimator(X_matrix2, Y_slice, D_slice,
                                                            policies,
-                                                           batch_indices)
+                                                           batch_indices,
+                                                           propensity = propensity)
 
       .(
         true_delta_estimate,
@@ -260,7 +265,8 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D, dgp_Y, batch,
     proportion_treated <- mean(final_policy)
 
     # Step 7: Estimate the standard error of delta_estimate using cram_variance_estimator
-    delta_asymptotic_variance <- cram_variance_estimator(Y_slice, D_slice, policies, batch_indices)
+    delta_asymptotic_variance <- cram_variance_estimator(X_matrix, Y_slice, D_slice,
+                                                         policies, batch_indices, propensity = propensity)
     delta_asymptotic_sd <- sqrt(delta_asymptotic_variance)  # v_T, the asymptotic standard deviation
     delta_standard_error <- delta_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
 
@@ -270,10 +276,12 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D, dgp_Y, batch,
     delta_confidence_interval <- c(delta_ci_lower, delta_ci_upper)
 
     # Step 9: Estimate the standard error of policy_value_estimate using cram_variance_estimator_policy_value
-    policy_value_asymptotic_variance <- cram_variance_estimator_policy_value(Y_slice,
+    policy_value_asymptotic_variance <- cram_variance_estimator_policy_value(X_matrix,
+                                                                             Y_slice,
                                                                              D_slice,
                                                                              policies,
-                                                                             batch_indices)
+                                                                             batch_indices,
+                                                                             propensity = propensity)
     policy_value_asymptotic_sd <- sqrt(policy_value_asymptotic_variance)  # w_T, the asymptotic standard deviation
     policy_value_standard_error <- policy_value_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
 
