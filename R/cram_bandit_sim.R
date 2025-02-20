@@ -720,13 +720,13 @@ get_proba_thompson <- function(sigma = 0.01, A_inv, b, contexts, ind_arm) {
 
       log_p_xk <- dnorm(x, mean = mean_k, sd = sqrt(var_k), log = TRUE)  # Log-PDF
 
-      log_cdf_values <- sapply(seq_along(mean_values), function(j) {
-        pnorm(x, mean = mean_values[j], sd = sqrt(var_values[j]), log.p = TRUE)
-      })
+      for (j in seq_along(mean_values)) {
+        log_p_xk <- log_p_xk + pnorm(x, mean = mean_values[j], sd = sqrt(var_values[j]), log.p = TRUE)
+      }
 
       # max_log_cdf <- apply(log_cdf_values, 1, function(row) max(row))  # (15 × 1) row-wise max
       # log_cdf_sum <- max_log_cdf + log(rowSums(exp(log_cdf_values - max_log_cdf)))  # (15 × 1)
-      log_cdf_sum <- rowSums(log_cdf_values)
+      # log_cdf_sum <- rowSums(log_cdf_values)
 
       # # Compute log-probabilities that all other arms have a lower reward
       # log_cdf_sum <- sum(sapply(setdiff(1:K, ind_arm), function(i) {
@@ -744,7 +744,7 @@ get_proba_thompson <- function(sigma = 0.01, A_inv, b, contexts, ind_arm) {
       # log_cdf_sum <- sum(log_cdf_values)  # Sum logs before exponentiation
       #
 
-      return(exp(log_p_xk) * exp(log_cdf_sum))  # Convert back to probability space
+      return(exp(log_p_xk))  # Convert back to probability space
     }
 
     lower_bound <- mean_k - 10 * sqrt(var_k)
