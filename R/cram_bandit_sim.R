@@ -686,7 +686,7 @@ get_proba_c_eps_greedy <- function(eps = 0.1, A, b, contexts, ind_arm) {
 #   return(prob)
 # }
 
-get_proba_thompson <- function(sigma = 0.2, A_inv, b, contexts, ind_arm) {
+get_proba_thompson <- function(sigma = 0.01, A_inv, b, contexts, ind_arm) {
   # ind_arm is the index of the arm that was chosen
 
   K <- length(b)  # Number of arms
@@ -698,7 +698,7 @@ get_proba_thompson <- function(sigma = 0.2, A_inv, b, contexts, ind_arm) {
 
   # Compute theta_hat for each arm efficiently
   for (arm in 1:K) {
-    theta_hat[[arm]] <- as.vector(A_inv[[arm]] %*% b[[arm]])
+    theta_hat[[arm]] <- A_inv[[arm]] %*% b[[arm]]
     sigma_hat[[arm]] <- sigma * A_inv[[arm]]
   }
 
@@ -706,13 +706,27 @@ get_proba_thompson <- function(sigma = 0.2, A_inv, b, contexts, ind_arm) {
   for (t in 1:nb_timesteps) {
     Xa <- matrix(contexts[[t]], nrow = 1)  # Ensure Xa is a 1 × d matrix
 
+    mean_k <- Xa %*% theta_hat[[ind_arm]]
+    var_k  <-  Xa %*% sigma_hat[[ind_arm]] %*% t(Xa)
+
+    competing_arms <- setdiff(1:K, ind_arm)
+
+    mean_values <- sapply(competing_arms, function(i) as.numeric(Xa %*% theta_hat[[i]]))
+    var_values  <- sapply(competing_arms, function(i) max(as.numeric(Xa %*% sigma_hat[[i]] %*% t(Xa)), 1e-6))  # Avoid zero variance
+
     # Define the function for integration
     integrand <- function(x) {
       # Compute the transformed mean and variance for the chosen arm
-      mean_k <- Xa %*% theta_hat[[ind_arm]]
-      var_k  <-  Xa %*% sigma_hat[[ind_arm]] %*% t(Xa)
 
       log_p_xk <- dnorm(x, mean = mean_k, sd = sqrt(var_k), log = TRUE)  # Log-PDF
+
+      log_cdf_values <- sapply(seq_along(mean_values), function(j) {
+        pnorm(x, mean = mean_values[j], sd = sqrt(var_values[j]), log.p = TRUE)
+      })
+
+      # max_log_cdf <- apply(log_cdf_values, 1, function(row) max(row))  # (15 × 1) row-wise max
+      # log_cdf_sum <- max_log_cdf + log(rowSums(exp(log_cdf_values - max_log_cdf)))  # (15 × 1)
+      log_cdf_sum <- rowSums(log_cdf_values)
 
       # # Compute log-probabilities that all other arms have a lower reward
       # log_cdf_sum <- sum(sapply(setdiff(1:K, ind_arm), function(i) {
@@ -721,19 +735,24 @@ get_proba_thompson <- function(sigma = 0.2, A_inv, b, contexts, ind_arm) {
       #   pnorm(x, mean = mean_i, sd = sqrt(var_i), log.p = TRUE)  # Log-CDF
       # }))
       # Compute log-probabilities for all other arms
-      log_cdf_values <- sapply(setdiff(1:K, ind_arm), function(i) {
-        mean_i <- Xa %*% theta_hat[[i]]
-        var_i  <- as.numeric(Xa %*% sigma_hat[[i]] %*% t(Xa))  # Convert to scalar
-        pnorm(x, mean = mean_i, sd = sqrt(var_i), log.p = TRUE)  # Log-CDF
-      })
+      # log_cdf_values <- sapply(setdiff(1:K, ind_arm), function(i) {
+      #   mean_i <- Xa %*% theta_hat[[i]]
+      #   var_i  <- as.numeric(Xa %*% sigma_hat[[i]] %*% t(Xa))  # Convert to scalar
+      #   pnorm(x, mean = mean_i, sd = sqrt(var_i), log.p = TRUE)  # Log-CDF
+      # })
+      #
+      # log_cdf_sum <- sum(log_cdf_values)  # Sum logs before exponentiation
+      #
 
-      log_cdf_sum <- sum(log_cdf_values)  # Sum logs before exponentiation
-      return(exp(log_p_xk + log_cdf_sum))  # Convert back to probability space
+      return(exp(log_p_xk) * exp(log_cdf_sum))  # Convert back to probability space
     }
 
+    lower_bound <- mean_k - 10 * sqrt(var_k)
+    upper_bound <- mean_k + 10 * sqrt(var_k)
+
     # Adaptive numerical integration
-    # prob <- pracma::integral(integrand, -Inf, Inf)
-    prob <- integrate(integrand, lower = -Inf, upper = Inf, subdivisions = 1000)$value
+    # prob <- pracma::integral(integrand, lower_bound, upper_bound)
+    prob <- integrate(integrand, lower = lower_bound, upper = upper_bound, subdivisions = 500, rel.tol = 1e-2)$value
 
     proba_results[t] <- prob
     }
@@ -806,5 +825,97 @@ Xa_example <- matrix(c(1, 2,  # Context vector for arm 1
 chosen_arm <- 1  # Compute probability for arm 1
 
 p_max_single_arm(theta_hat_example, sigma_hat_example, Xa_example, chosen_arm)
+
+
+
+# Load required library
+library(pracma)
+
+# Generate test data
+set.seed(42)
+K <- 3  # Number of arms
+d <- 2  # Context dimension
+nb_timesteps <- 1  # Single test case
+
+# Generate random A_inv (d × d matrices) and b (d × 1 vectors)
+A_inv <- lapply(1:K, function(i) solve(diag(runif(d, 0.1, 1))))
+b <- lapply(1:K, function(i) matrix(runif(d, -1, 1), nrow = d, ncol = 1))
+
+# Generate random context
+contexts <- list(matrix(runif(d, -1, 1), nrow = 1))
+
+# Set an arbitrary chosen arm (matching R's 1-based indexing)
+ind_arm <- sample(1:K, 1)
+
+# Run the function
+proba_results <- get_proba_thompson(sigma = 0.01, A_inv = A_inv, b = b, contexts = contexts, ind_arm = ind_arm)
+
+# Display results
+print(proba_results)
+
+
+
+# Load required library
+library(pracma)
+
+# Generate test data
+set.seed(42)
+K <- 3  # Number of arms
+d <- 2  # Context dimension
+nb_timesteps <- 1  # Single test case
+
+# Generate random A_inv (d × d matrices) and b (d × 1 vectors)
+A_inv <- lapply(1:K, function(i) solve(diag(runif(d, 0.1, 1))))
+b <- lapply(1:K, function(i) matrix(runif(d, -1, 1), nrow = d, ncol = 1))
+
+# Generate random context
+contexts <- list(matrix(runif(d, -1, 1), nrow = 1))
+
+# Set an arbitrary chosen arm (matching R's 1-based indexing)
+ind_arm <- sample(1:K, 1)
+
+# Run the function
+proba_results <- get_proba_thompson(sigma = 0.01, A_inv = A_inv, b = b, contexts = contexts, ind_arm = ind_arm)
+
+# Monte Carlo Simulation
+num_samples <- 100000  # Large number of samples for better accuracy
+
+# Sample from the chosen arm’s distribution
+mean_k <- contexts[[1]] %*% b[[ind_arm]]
+var_k  <- as.numeric(contexts[[1]] %*% A_inv[[ind_arm]] %*% t(contexts[[1]]))
+samples_k <- rnorm(num_samples, mean = mean_k, sd = sqrt(var_k))
+
+# Compute empirical probability using Monte Carlo
+proba_mc <- mean(sapply(samples_k, function(x) {
+  all(sapply(setdiff(1:K, ind_arm), function(i) {
+    mean_i <- contexts[[1]] %*% b[[i]]
+    var_i  <- as.numeric(contexts[[1]] %*% A_inv[[i]] %*% t(contexts[[1]]))
+    pnorm(x, mean = mean_i, sd = sqrt(var_i))  # Probability all others are smaller
+  }))
+}))
+
+# Print results
+print(paste("Function Probability Estimate:", proba_results))
+print(paste("Monte Carlo Probability Estimate:", proba_mc))
+
+# Compare and check if the difference is significant
+if (abs(proba_results - proba_mc) > 0.1) {
+  warning("Significant discrepancy between Monte Carlo and numerical integration results.")
+} else {
+  print("Monte Carlo and function results are close. Function appears correct.")
+}
+
+
+f <- function(x) {
+  print(x)
+  return(sin(x))
+}
+
+# Perform integration
+integrate(f, 0, pi)
+
+# Check unique x values used
+length(unique(track_x))
+
 
 
