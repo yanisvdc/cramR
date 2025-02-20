@@ -13,26 +13,37 @@ cram_bandit_est <- function(pi, reward, arm) {
 
   dims_result <- dim(pi)
 
-  # Extract relevant dimensions
-  nb_arms <- dims_result[3]
-  nb_timesteps <- dims_result[2]
+  if (length(dims_result) == 3) {
+    # Extract relevant dimensions
+    nb_arms <- dims_result[3]
+    nb_timesteps <- dims_result[2]
 
 
-  ## POLICY SLICED: remove the arm dimension as Xj is associated to Aj
+    ## POLICY SLICED: remove the arm dimension as Xj is associated to Aj
 
-  # pi:
-  # for each row j, column t, depth a, gives pi_t(Xj, a)
+    # pi:
+    # for each row j, column t, depth a, gives pi_t(Xj, a)
 
-  # We do not need the last column and the first two rows
-  # We only need, for each row j, pi_t(Xj, Aj), where Aj is the arm chosen from context j
-  # Aj is the jth element of the vector arm, and corresponds to a depth index
+    # We do not need the last column and the first two rows
+    # We only need, for each row j, pi_t(Xj, Aj), where Aj is the arm chosen from context j
+    # Aj is the jth element of the vector arm, and corresponds to a depth index
 
-  # drop = False to maintain 3D structure
+    # drop = False to maintain 3D structure
 
-  pi <- pi[-c(1,2), -ncol(pi), , drop = FALSE]
-  depth_indices <- arm[3:nb_timesteps]
+    pi <- pi[-c(1,2), -ncol(pi), , drop = FALSE]
+    depth_indices <- arm[3:nb_timesteps]
 
-  pi <- extract_2d_from_3d(pi, depth_indices)
+    pi <- extract_2d_from_3d(pi, depth_indices)
+
+  } else {
+
+    # 2D case
+    nb_timesteps <- dims_result[2]
+
+    # Remove the first two rows and the last column
+    pi <- pi[-c(1,2), -ncol(pi), drop = FALSE]
+
+  }
 
   # pi is now a (T-2) x (T-1) matrix
 

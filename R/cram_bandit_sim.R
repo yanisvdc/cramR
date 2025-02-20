@@ -470,9 +470,9 @@ bandit        <- ContextualLinearBandit$new(k = 4, d = 3, sigma = 0.3)
 #                Agent$new(ContextualLinTSPolicy$new(0.1), bandit, "LinTS"),
 #                Agent$new(LinUCBDisjointPolicy$new(0.6), bandit, "LinUCB"))
 
-# agents <- list(Agent$new(ContextualEpsilonGreedyPolicy$new(0.1), bandit, "cEGreedy"))
+agents <- list(Agent$new(ContextualEpsilonGreedyPolicy$new(0.1), bandit, "cEGreedy"))
 
-agents <- list(Agent$new(ContextualLinTSPolicy$new(0.1), bandit, "LinTS"))
+# agents <- list(Agent$new(ContextualLinTSPolicy$new(0.1), bandit, "LinTS"))
 
 simulation     <- Simulator$new(agents, horizon, simulations,
                                 do_parallel = TRUE, save_theta = TRUE,
@@ -747,12 +747,12 @@ get_proba_thompson <- function(sigma = 0.01, A_inv, b, contexts, ind_arm) {
       return(exp(log_p_xk))  # Convert back to probability space
     }
 
-    lower_bound <- mean_k - 10 * sqrt(var_k)
-    upper_bound <- mean_k + 10 * sqrt(var_k)
+    # lower_bound <- mean_k - 10 * sqrt(var_k)
+    # upper_bound <- mean_k + 10 * sqrt(var_k)
 
     # Adaptive numerical integration
     # prob <- pracma::integral(integrand, lower_bound, upper_bound)
-    prob <- integrate(integrand, lower = lower_bound, upper = upper_bound, subdivisions = 500, rel.tol = 1e-2)$value
+    prob <- integrate(integrand, lower = -Inf, upper = Inf, subdivisions = 500, rel.tol = 1e-2)$value
 
     proba_results[t] <- prob
     }
@@ -777,15 +777,15 @@ compute_probas <- function(df) {
   # Iterate over each time step `t` within this (agent, sim) group
   for (i in seq_len(nrow(df))) {
     # Extract A and b for the specific time step `t`
-    A_inv <- df$theta[[i]]$A_inv  # Already a list of matrices
+    A <- df$theta[[i]]$A  # Already a list of matrices
     b <- df$theta[[i]]$b  # Already a list of vectors
 
     # Extract chosen arm for this row (ind_arm is just the 'choice' column)
     ind_arm <- df$choice[i]
 
     # Compute probability using the function
-    # probas[[i]] <- get_proba_c_eps_greedy(eps = 0.1, A = A, b = b, contexts = contexts, ind_arm = ind_arm)
-    probas[[i]] <- get_proba_thompson(A_inv = A_inv, b = b, contexts = contexts, ind_arm = ind_arm)
+    probas[[i]] <- get_proba_c_eps_greedy(eps = 0.1, A = A, b = b, contexts = contexts, ind_arm = ind_arm)
+    # probas[[i]] <- get_proba_thompson(A_inv = A_inv, b = b, contexts = contexts, ind_arm = ind_arm)
   }
 
   # Add probabilities back to the dataframe as a list-column
@@ -904,18 +904,6 @@ if (abs(proba_results - proba_mc) > 0.1) {
 } else {
   print("Monte Carlo and function results are close. Function appears correct.")
 }
-
-
-f <- function(x) {
-  print(x)
-  return(sin(x))
-}
-
-# Perform integration
-integrate(f, 0, pi)
-
-# Check unique x values used
-length(unique(track_x))
 
 
 
