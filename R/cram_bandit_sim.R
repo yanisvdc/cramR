@@ -452,8 +452,202 @@ chosen_arm <- 1
 
 p_max_single_arm(theta_hat_example, sigma_hat_example, Xa_example, chosen_arm)
 
+cram_bandit_var <- function(pi, reward, arm) {
+  dims_result <- dim(pi)
+
+  if (length(dims_result) == 3) {
+
+    # Extract relevant dimensions
+    nb_arms <- dims_result[3]
+    nb_timesteps <- dims_result[2]
 
 
+    ## POLICY SLICED: remove the arm dimension as Xj is associated to Aj
+
+    # pi:
+    # for each row j, column t, depth a, gives pi_t(Xj, a)
+
+    # We do not need the last column and the first row
+    # We only need, for each row j, pi_t(Xj, Aj), where Aj is the arm chosen from context j
+    # Aj is the jth element of the vector arm, and corresponds to a depth index
+
+    # drop = False to maintain 3D structure
+
+    pi <- pi[-1, -ncol(pi), , drop = FALSE]
+
+    depth_indices <- arm[2:nb_timesteps]
+
+    pi <- extract_2d_from_3d(pi, depth_indices)
+
+  } else {
+
+    nb_timesteps <- dims_result[2]
+
+    pi <- pi[-1, -ncol(pi), drop = FALSE]
+
+  }
+
+  # pi is now a (T-1) x (T-1) matrix
+
+  ## POLICY DIFFERENCE
+
+  # Before doing policy differences with lag 1, we add a column of 0
+  # such that the first policy difference corresponds to pi_1
+  pi <- cbind(0, pi)
+
+  pi_diff <- pi[, -1] - pi[, -ncol(pi)]
+
+  # Vector of terms for each column
+  policy_diff_weights <- 1 / (nb_timesteps - (1:(nb_timesteps - 1)))
+
+  # Multiply each column of pi_diff by corresponding policy_diff_weight
+  pi_diff <- sweep(pi_diff, 2, policy_diff_weights, FUN = "*")
+
+  # Cumulative sum
+  pi_diff <- t(apply(pi_diff, 1, cumsum))
+
+  # pi_diff is a (T-1) x (T-1) matrix
+
+
+  ## MULTIPLY by Rk / pi_k-1
+
+  # Get diagonal elements from pi
+  pi_diag <- pi[cbind(1:(nrow(pi)), 2:(ncol(pi)))]
+
+  # Create multipliers using vectorized operations
+  multipliers <- (1 / pi_diag) * reward[2:length(reward)]
+
+  # Apply row-wise multiplication using efficient matrix operation
+  mult_pi_diff <- pi_diff * multipliers  # Works via R's recycling rules (most efficient)
+
+
+  ## VARIANCE PER COLUMN
+
+  # Create the mask for batch indices
+  mask <- matrix(1, nrow = nrow(mult_pi_diff), ncol = ncol(mult_pi_diff))
+
+  # Assign NaN to upper triangle elements (excluding diagonal)
+  mask[upper.tri(mask, diag = FALSE)] <- NaN
+
+  # Apply the mask to policy_diff
+  mult_pi_diff <- mult_pi_diff * mask
+
+  # Calculate variance for each column
+  # column_variances <- apply(mult_pi_diff, 2, function(x) var(x, na.rm = TRUE))
+  # column_variances <- apply(mult_pi_diff, 2, function(x) {
+  #   n <- sum(!is.na(x))  # Count of non-NA values
+  #   sample_var <- var(x, na.rm = TRUE)  # Compute sample variance (divides by n-1)
+  #   sample_var * (n - 1) / n  # Convert to population variance (divides by n)
+  # })
+
+  column_variances <- apply(mult_pi_diff, 2, function(x) {
+    n <- sum(!is.na(x))  # Count of non-NA values
+    if (n == 1){
+      return(0)
+    } else {
+      sample_var <- var(x, na.rm = TRUE)  # Compute sample variance (divides by n-1)
+      sample_var * (n - 1) / n  # Convert to population variance (divides by n)
+      return(sample_var)
+    }
+  })
+
+  total_variance <- sum(column_variances)
+
+  # Final variance estimator, scaled by T / B
+  total_variance <- (nb_timesteps - 1) * total_variance
+
+  return(total_variance)
+}
+
+cram_bandit_est <- function(pi, reward, arm) {
+
+  dims_result <- dim(pi)
+
+  if (length(dims_result) == 3) {
+    # Extract relevant dimensions
+    nb_arms <- dims_result[3]
+    nb_timesteps <- dims_result[2]
+
+
+    ## POLICY SLICED: remove the arm dimension as Xj is associated to Aj
+
+    # pi:
+    # for each row j, column t, depth a, gives pi_t(Xj, a)
+
+    # We do not need the last column and the first two rows
+    # We only need, for each row j, pi_t(Xj, Aj), where Aj is the arm chosen from context j
+    # Aj is the jth element of the vector arm, and corresponds to a depth index
+
+    # drop = False to maintain 3D structure
+
+    pi <- pi[-c(1,2), -ncol(pi), , drop = FALSE]
+    depth_indices <- arm[3:nb_timesteps]
+
+    pi <- extract_2d_from_3d(pi, depth_indices)
+
+  } else {
+
+    # 2D case
+    nb_timesteps <- dims_result[2]
+
+    # Remove the first two rows and the last column
+    pi <- pi[-c(1,2), -ncol(pi), drop = FALSE]
+
+  }
+
+  # pi is now a (T-2) x (T-1) matrix
+
+
+  ## POLICY DIFFERENCE
+
+  pi_diff <- pi[, -1] - pi[, -ncol(pi)]
+
+  # pi_diff is a (T-2) x (T-2) matrix
+
+
+  ## MULTIPLY by Rj / pi_j-1
+
+  # Get diagonal elements from pi (i, i+1 positions)
+  pi_diag <- pi[cbind(1:(nrow(pi)), 2:(ncol(pi)))]  # Vectorized indexing
+
+  # Create multipliers using vectorized operations
+  multipliers <- (1 / pi_diag) * reward[3:length(reward)]
+
+  # Apply row-wise multiplication using efficient matrix operation
+  mult_pi_diff <- pi_diff * multipliers  # Works via R's recycling rules (most efficient)
+
+
+  ## AVERAGE TRIANGLE INF COLUMN-WISE
+
+  mult_pi_diff[upper.tri(mult_pi_diff, diag = FALSE)] <- NA
+
+  deltas <- colMeans(mult_pi_diff, na.rm = TRUE, dims = 1)  # `dims=1` ensures row-wise efficiency
+
+
+  ## SUM DELTAS
+
+  sum_deltas <- sum(deltas)
+
+
+  ## ADD V(pi_1)
+
+  pi_first_col <- pi[, 1]
+  pi_first_col <- pi_first_col * multipliers
+
+  # add the term for j = 2, this is only reward 2!
+  r2 <- reward[2]
+  pi_first_col <- c(pi_first_col, r2)
+
+  # V(pi_1) is the average
+  v_pi_1 <-  mean(pi_first_col)
+
+
+  ## FINAL ESTIMATE
+
+  estimate <- sum_deltas + v_pi_1
+
+  return(estimate)
+}
 
 
 library(contextual)
@@ -536,7 +730,7 @@ setorder(res_subset, agent, sim, t)
 # CONTEXTUAL EPSILON GREEDY -------------------------------------------------------
 
 get_proba_c_eps_greedy <- function(eps = 0.1, A, b, contexts, ind_arm) {
-  # ind_arm is the index of the arm that was chosen
+  # ind_arm is the vector of indices of the arms that was chosen at each t
 
   K <- length(b)  # Number of arms
   nb_timesteps <- length(contexts)
@@ -560,7 +754,7 @@ get_proba_c_eps_greedy <- function(eps = 0.1, A, b, contexts, ind_arm) {
     ties <- which(expected_rewards == max(expected_rewards))  # Get indices of max expected rewards
 
     # Compute probability
-    if (ind_arm %in% ties) {
+    if (ind_arm[t] %in% ties) {
       proba_results[t] <- (1 - eps) / length(ties) + eps / K
     } else {
       proba_results[t] <- eps / K
@@ -770,6 +964,7 @@ library(tidyr)
 compute_probas <- function(df) {
   # Extract contexts for the entire (agent, sim) group (same for all t)
   contexts <- df$context  # Already a list
+  ind_arm <- df$choice
 
   # Initialize a list to store probabilities for each row
   probas <- vector("list", nrow(df))
@@ -781,7 +976,6 @@ compute_probas <- function(df) {
     b <- df$theta[[i]]$b  # Already a list of vectors
 
     # Extract chosen arm for this row (ind_arm is just the 'choice' column)
-    ind_arm <- df$choice[i]
 
     # Compute probability using the function
     probas[[i]] <- get_proba_c_eps_greedy(eps = 0.1, A = A, b = b, contexts = contexts, ind_arm = ind_arm)
@@ -800,6 +994,68 @@ res_subset_updated <- res_subset %>%
   ungroup()
 
 check <- res_subset_updated$probas
+
+library(dplyr)
+library(purrr)  # For `map2_dbl`
+
+# Step 1: Process Data by Simulation
+estimates <- res_subset_updated %>%
+  group_by(sim) %>%
+  summarise(
+    arms = list(choice),  # Vector of chosen arms
+    rewards = list(reward),  # Vector of rewards
+    policy_matrix = list(do.call(cbind, probas))  # Concatenate probability vectors into a matrix
+  ) %>%
+  mutate(
+    estimate = map2_dbl(arms, rewards, ~ cram_bandit_est(policy_matrix[[cur_group_id()]], .y, .x)),
+    variance_est = map2_dbl(arms, rewards, ~ cram_bandit_var(policy_matrix[[cur_group_id()]], .y, .x))  # Variance estimation
+  )
+
+# Step 2: Compute True Estimate (Average across Sims)
+true_estimate <- mean(estimates$estimate)
+
+# Step 3: Compute Prediction Errors
+estimates <- estimates %>%
+  mutate(prediction_error = estimate - true_estimate)
+
+# Step 4: Compute True Variance (Sample Variance of Prediction Errors)
+true_variance <- var(estimates$prediction_error)
+
+# Step 5: Compute Prediction Error on Variance
+estimates <- estimates %>%
+  mutate(variance_prediction_error = variance_est - true_variance)
+
+# Step 6: Exclude 20% of Simulations Randomly
+set.seed(123)  # Ensure reproducibility
+num_excluded <- ceiling(0.2 * nrow(estimates))  # 20% of total sims
+excluded_sims <- sample(nrow(estimates), size = num_excluded)
+
+# Select only the remaining 80% of simulations
+filtered_errors <- estimates$prediction_error[-excluded_sims]
+filtered_variance_errors <- estimates$variance_prediction_error[-excluded_sims]
+
+# Step 7: Compute and Report Final Average Prediction Errors
+avg_prediction_error <- mean(filtered_errors)
+avg_variance_prediction_error <- mean(filtered_variance_errors)
+
+print(paste("Average Prediction Error:", avg_prediction_error))
+print(paste("Average Variance Prediction Error:", avg_variance_prediction_error))
+
+# Step 8: Compute 95% Confidence Intervals
+T_steps <- max(res_subset_updated$t)  # Get total timesteps
+estimates <- estimates %>%
+  mutate(
+    # std_error = sqrt(variance_est) * sqrt(T_steps - 1),
+    std_error = sqrt(variance_est),
+    ci_lower = estimate - 1.96 * std_error,
+    ci_upper = estimate + 1.96 * std_error
+  )
+
+# Step 9: Compute Empirical Coverage
+empirical_coverage <- mean((true_estimate >= estimates$ci_lower) & (true_estimate <= estimates$ci_upper))
+
+print(paste("Empirical Coverage of 95% Confidence Interval:", empirical_coverage))
+
 
 
 # GET PROBA THOMPSON SAMPLING
@@ -905,5 +1161,373 @@ if (abs(proba_results - proba_mc) > 0.1) {
   print("Monte Carlo and function results are close. Function appears correct.")
 }
 
+# Extract first simulation data
+first_sim_data <- res_subset_updated %>% filter(sim == unique(sim)[1])
+
+# Extract policy matrix, reward vector, and arm choices
+policy_matrix_test <- do.call(cbind, first_sim_data$probas)  # Ensure proper structure
+reward_test <- first_sim_data$reward
+arm_test <- first_sim_data$choice
+
+# Check dimensions
+dim(policy_matrix_test)
+length(reward_test)
+length(arm_test)
 
 
+cram_bandit_var <- function(pi, reward, arm) {
+  print("=== Starting cram_bandit_var Debugging ===")
+
+  dims_result <- dim(pi)
+  print(paste("Dimensions of pi:", paste(dims_result, collapse = " x ")))
+
+  if (length(dims_result) == 3) {
+    nb_arms <- dims_result[3]
+    nb_timesteps <- dims_result[2]
+    print(paste("3D Case: nb_arms =", nb_arms, ", nb_timesteps =", nb_timesteps))
+
+    pi <- pi[-1, -ncol(pi), , drop = FALSE]
+    depth_indices <- arm[2:nb_timesteps]
+    pi <- extract_2d_from_3d(pi, depth_indices)
+
+  } else {
+    nb_timesteps <- dims_result[2]
+    print(paste("2D Case: nb_timesteps =", nb_timesteps))
+    pi <- pi[-1, -ncol(pi), drop = FALSE]
+  }
+
+  print(paste("Updated Dimensions of pi after slicing:", paste(dim(pi), collapse = " x ")))
+
+  # Policy Difference Computation
+  pi <- cbind(0, pi)
+  pi_diff <- pi[, -1] - pi[, -ncol(pi)]
+
+  # Compute weights
+  policy_diff_weights <- 1 / (nb_timesteps - (1:(nb_timesteps - 1)))
+  print("Policy Difference Weights:")
+  print(policy_diff_weights)
+
+  # Apply Weights
+  pi_diff <- sweep(pi_diff, 2, policy_diff_weights, FUN = "*")
+  pi_diff <- t(apply(pi_diff, 1, cumsum))
+
+  print("Sample of pi_diff (first 5 values after weighting & cumsum):")
+  print(head(pi_diff, 5))
+
+  # Multiplication by Rk / pi_k-1
+  pi_diag <- pi[cbind(1:(nrow(pi)), 2:(ncol(pi)))]
+  print("Sample of pi_diag (first 5 values):")
+  print(head(pi_diag, 5))
+
+  print("Range of pi_diag:")
+  print(range(pi_diag, na.rm = TRUE))
+
+  print("Reward Range:")
+  print(range(reward, na.rm = TRUE))
+
+  multipliers <- (1 / pi_diag) * reward[2:length(reward)]
+
+  print("Sample of Multipliers (first 5 values):")
+  print(head(multipliers, 5))
+
+  print("Range of Multipliers:")
+  print(range(multipliers, na.rm = TRUE))
+
+  # Matrix Multiplication
+  mult_pi_diff <- pi_diff * multipliers
+
+  print("Sample of mult_pi_diff (first 5 values):")
+  print(head(mult_pi_diff, 5))
+
+  # Masking upper triangle
+  mask <- matrix(1, nrow = nrow(mult_pi_diff), ncol = ncol(mult_pi_diff))
+  mask[upper.tri(mask, diag = FALSE)] <- NaN
+  mult_pi_diff <- mult_pi_diff * mask
+
+  # Variance Computation
+  column_variances <- apply(mult_pi_diff, 2, function(x) {
+    n <- sum(!is.na(x))
+    if (n == 1) {
+      return(0)
+    } else {
+      sample_var <- var(x, na.rm = TRUE)
+
+      if (!is.na(sample_var) && sample_var > 1) {  # Flagging high variance
+        print(paste("⚠️ High variance detected:", sample_var))
+        print("Values producing this variance:")
+        print(x)
+      }
+
+      return(sample_var)
+    }
+  })
+
+  print("Sample of column_variances (first 5 values):")
+  print(head(column_variances, 5))
+
+  total_variance <- sum(column_variances)
+  print(paste("Sum of column_variances (before scaling):", total_variance))
+
+  # Final Variance Estimation Scaling
+  total_variance <- (nb_timesteps - 1) * total_variance
+
+  print(paste("Final Total Variance Estimate:", total_variance))
+  print("=== End of Debugging ===")
+
+  return(total_variance)
+}
+
+
+
+
+# Run variance estimation for the first simulation
+test_variance <- cram_bandit_var(policy_matrix_test, reward_test, arm_test)
+
+print(paste("Test Variance Estimate:", test_variance))
+
+
+
+
+
+library(reticulate)
+np <- import("numpy")
+
+reward <- np$load("C:/Users/yanis/Documents/Documents/Ytotal.npy")
+arm <- np$load("C:/Users/yanis/Documents/Documents/Atotal.npy")
+pi <- np$load("C:/Users/yanis/Documents/Documents/Ptable.npy")
+
+arm_vector <- apply(arm, c(1, 2), function(x) which(x == 1))
+arm_vector <- as.vector(arm_vector)
+
+pi_reduced <- drop(pi)  # Removes dimensions of size 1 automatically
+pi_reduced <- pi_reduced[-1, , ]  # Remove the first row from the first dimension
+pi_transformed <- aperm(pi_reduced, c(2, 1, 3))  # Swap the first and second dimensions
+
+reward_vector <- as.vector(reward)
+
+extract_2d_from_3d <- function(array3d, depth_indices) {
+  # Get array dimensions
+  dims <- dim(array3d)
+  nrow <- dims[1]  # Rows
+  ncol <- dims[2]  # Columns
+
+  # Ensure depth_indices length matches required rows
+  if (length(depth_indices) != nrow) {
+    stop("The arm selection vector should have same length as the first dimension of the policy array.")
+  }
+
+  # Vectorized index calculation
+  i <- rep(1:nrow, each = ncol)  # Row indices
+  j <- rep(1:ncol, times = nrow) # Column indices
+  k <- rep(depth_indices, each = ncol)  # Depth indices
+
+  # Calculate linear indices for efficient extraction
+  linear_indices <- i + (j - 1) * nrow + (k - 1) * nrow * ncol
+
+  # Create result matrix using vectorized indexing
+  result_matrix <- matrix(array3d[linear_indices], nrow = nrow, ncol = ncol, byrow = TRUE)
+
+  return(result_matrix)
+}
+
+cram_bandit_est <- function(pi, reward, arm) {
+
+  dims_result <- dim(pi)
+
+  if (length(dims_result) == 3) {
+    # Extract relevant dimensions
+    nb_arms <- dims_result[3]
+    nb_timesteps <- dims_result[2]
+
+
+    ## POLICY SLICED: remove the arm dimension as Xj is associated to Aj
+
+    # pi:
+    # for each row j, column t, depth a, gives pi_t(Xj, a)
+
+    # We do not need the last column and the first two rows
+    # We only need, for each row j, pi_t(Xj, Aj), where Aj is the arm chosen from context j
+    # Aj is the jth element of the vector arm, and corresponds to a depth index
+
+    # drop = False to maintain 3D structure
+
+    pi <- pi[-c(1,2), -ncol(pi), , drop = FALSE]
+    depth_indices <- arm[3:nb_timesteps]
+
+    pi <- extract_2d_from_3d(pi, depth_indices)
+
+  } else {
+
+    # 2D case
+    nb_timesteps <- dims_result[2]
+
+    # Remove the first two rows and the last column
+    pi <- pi[-c(1,2), -ncol(pi), drop = FALSE]
+
+  }
+
+  # pi is now a (T-2) x (T-1) matrix
+
+
+  ## POLICY DIFFERENCE
+
+  pi_diff <- pi[, -1] - pi[, -ncol(pi)]
+
+  # pi_diff is a (T-2) x (T-2) matrix
+
+
+  ## MULTIPLY by Rj / pi_j-1
+
+  # Get diagonal elements from pi (i, i+1 positions)
+  pi_diag <- pi[cbind(1:(nrow(pi)), 2:(ncol(pi)))]  # Vectorized indexing
+
+  # Create multipliers using vectorized operations
+  multipliers <- (1 / pi_diag) * reward[3:length(reward)]
+
+  # Apply row-wise multiplication using efficient matrix operation
+  mult_pi_diff <- pi_diff * multipliers  # Works via R's recycling rules (most efficient)
+
+
+  ## AVERAGE TRIANGLE INF COLUMN-WISE
+
+  mult_pi_diff[upper.tri(mult_pi_diff, diag = FALSE)] <- NA
+
+  deltas <- colMeans(mult_pi_diff, na.rm = TRUE, dims = 1)  # `dims=1` ensures row-wise efficiency
+
+
+  ## SUM DELTAS
+
+  sum_deltas <- sum(deltas)
+
+
+  ## ADD V(pi_1)
+
+  pi_first_col <- pi[, 1]
+  pi_first_col <- pi_first_col * multipliers
+
+  # add the term for j = 2, this is only reward 2!
+  r2 <- reward[2]
+  pi_first_col <- c(pi_first_col, r2)
+
+  # V(pi_1) is the average
+  v_pi_1 <-  mean(pi_first_col)
+
+
+  ## FINAL ESTIMATE
+
+  estimate <- sum_deltas + v_pi_1
+
+  return(estimate)
+}
+
+
+cram_bandit_var <- function(pi, reward, arm) {
+  dims_result <- dim(pi)
+
+  if (length(dims_result) == 3) {
+
+    # Extract relevant dimensions
+    nb_arms <- dims_result[3]
+    nb_timesteps <- dims_result[2]
+
+
+    ## POLICY SLICED: remove the arm dimension as Xj is associated to Aj
+
+    # pi:
+    # for each row j, column t, depth a, gives pi_t(Xj, a)
+
+    # We do not need the last column and the first row
+    # We only need, for each row j, pi_t(Xj, Aj), where Aj is the arm chosen from context j
+    # Aj is the jth element of the vector arm, and corresponds to a depth index
+
+    # drop = False to maintain 3D structure
+
+    pi <- pi[-1, -ncol(pi), , drop = FALSE]
+
+    depth_indices <- arm[2:nb_timesteps]
+
+    pi <- extract_2d_from_3d(pi, depth_indices)
+
+  } else {
+
+    nb_timesteps <- dims_result[2]
+
+    pi <- pi[-1, -ncol(pi), drop = FALSE]
+
+  }
+
+  # pi is now a (T-1) x (T-1) matrix
+
+  ## POLICY DIFFERENCE
+
+  # Before doing policy differences with lag 1, we add a column of 0
+  # such that the first policy difference corresponds to pi_1
+  pi <- cbind(0, pi)
+
+  pi_diff <- pi[, -1] - pi[, -ncol(pi)]
+
+  # Vector of terms for each column
+  policy_diff_weights <- 1 / (nb_timesteps - (1:(nb_timesteps - 1)))
+
+  # Multiply each column of pi_diff by corresponding policy_diff_weight
+  pi_diff <- sweep(pi_diff, 2, policy_diff_weights, FUN = "*")
+
+  # Cumulative sum
+  pi_diff <- t(apply(pi_diff, 1, cumsum))
+
+  # pi_diff is a (T-1) x (T-1) matrix
+
+
+  ## MULTIPLY by Rk / pi_k-1
+
+  # Get diagonal elements from pi
+  pi_diag <- pi[cbind(1:(nrow(pi)), 2:(ncol(pi)))]
+
+  # Create multipliers using vectorized operations
+  multipliers <- (1 / pi_diag) * reward[2:length(reward)]
+
+  # Apply row-wise multiplication using efficient matrix operation
+  # mult_pi_diff <- pi_diff * multipliers  # Works via R's recycling rules (most efficient)
+  mult_pi_diff <- sweep(pi_diff, 1, multipliers, FUN = "*")
+
+
+  ## VARIANCE PER COLUMN
+
+  # Create the mask for batch indices
+  mask <- matrix(1, nrow = nrow(mult_pi_diff), ncol = ncol(mult_pi_diff))
+
+  # Assign NaN to upper triangle elements (excluding diagonal)
+  mask[upper.tri(mask, diag = FALSE)] <- NaN
+
+  # Apply the mask to policy_diff
+  mult_pi_diff <- mult_pi_diff * mask
+
+  # Calculate variance for each column
+  # column_variances <- apply(mult_pi_diff, 2, function(x) var(x, na.rm = TRUE))
+  # column_variances <- apply(mult_pi_diff, 2, function(x) {
+  #   n <- sum(!is.na(x))  # Count of non-NA values
+  #   sample_var <- var(x, na.rm = TRUE)  # Compute sample variance (divides by n-1)
+  #   sample_var * (n - 1) / n  # Convert to population variance (divides by n)
+  # })
+
+  column_variances <- apply(mult_pi_diff, 2, function(x) {
+    n <- sum(!is.na(x))  # Count of non-NA values
+    if (n == 1){
+      return(0)
+    } else {
+      sample_var <- var(x, na.rm = TRUE)  # Compute sample variance (divides by n-1)
+      sample_var * (n - 1) / n  # Convert to population variance (divides by n)
+      return(sample_var)
+    }
+  })
+
+  print(column_variances)
+  total_variance <- sum(column_variances)
+
+  return(total_variance)
+}
+
+
+cram_bandit_var(pi_transformed, reward_vector, arm_vector)
+
+cram_bandit_est(pi_transformed, reward_vector, arm_vector)
