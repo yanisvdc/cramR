@@ -34,7 +34,10 @@ Imports:
     doParallel (>= 1.0.17),
     foreach (>= 1.5.2),
     DT (>= 0.33),
-    data.table (>= 1.16.4)
+    data.table (>= 1.16.4),
+    contextual,
+    dplyr,
+    purrr
 Suggests: 
     testthat (>= 3.0.0),
     kableExtra (>= 1.4.0),

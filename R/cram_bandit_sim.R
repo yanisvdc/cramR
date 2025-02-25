@@ -2,36 +2,44 @@
 library(dplyr)
 library(purrr)  # For `map2_dbl`
 
+utils::globalVariables(c(
+  "context", "theta_na", "theta", "sim", "num_nulls", "agent",
+  "choice", "reward", "probas", "arms", "rewards", "estimate",
+  "variance_est", "std_error"
+))
+
+
 #' On-policy CRAM Bandit
 #'
 #' This function performs simulation for cram bandit policy learning and evaluation.
 #'
-#' @param pi for each row j, column t, depth a, gives pi_t(Xj, a)
-#' @param arm arms selected at each time step
-#' @param reward rewards at each time step
+#' @param horizon The number of timesteps
+#' @param simulations The number of simulations
+#' @param bandit The bandit, generating contextual features and observed rewards
+#' @param policy The policy, choosing the arm at each timestep
+#' @param policy_name The name of the policy. We currently support "LinTS", "LinUCB" and "cEGreedy"
+#' @param alpha Significance level for confidence intervals for calculating the empirical coverage. Default is 0.05 (95\% confidence).
+#' @param do_parallel Whether to parallelize the simulations. Default to FALSE.
 #'
 #' @return A **list** containing:
-#'   \item{final_ml_model}{The final trained ML model.}
-#'   \item{losses}{A matrix of losses where each column represents a batch's trained model. The first column contains zeros (baseline model).}
-#'   \item{batch_indices}{The indices of observations in each batch.}
+#'   \item{raw_results}{A data frame summarizing key metrics:
+#'   Average Prediction Error on the Policy Value Estimate,
+#'   Average Prediction Error on the Variance Estimate,
+#'   Empirical Coverage of the alpha level Confidence Interval.}
+#'   \item{interactive_table}{An interactive table summarizing key metrics for detailed exploration.}
 #'
-#' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}
 #' @import contextual
-#' @importFrom grf causal_forest
-#' @importFrom glmnet cv.glmnet
-#' @importFrom keras keras_model_sequential layer_dense compile fit
+#' @importFrom dplyr group_by group_modify ungroup summarise mutate
+#' @importFrom purrr map2_dbl
 #' @importFrom stats glm predict qnorm rbinom rnorm
 #' @importFrom magrittr %>%
 #' @import data.table
-#' @importFrom parallel makeCluster detectCores stopCluster clusterExport
-#' @importFrom doParallel registerDoParallel
-#' @importFrom foreach %dopar% foreach
-#' @importFrom stats var
-#' @importFrom grDevices col2rgb
-#' @importFrom stats D
+#' @importFrom stats var dnorm pnorm integrate
+
 
 cram_bandit_sim <- function(horizon, simulations,
-                            bandit, policy, policy_name, do_parallel = FALSE) {
+                            bandit, policy, policy_name,
+                            alpha=0.05, do_parallel = FALSE) {
 
   horizon <- as.integer(horizon)
   # Add 1 as first sim of the contextual package has a writing error for theta
@@ -145,13 +153,14 @@ cram_bandit_sim <- function(horizon, simulations,
   print(paste("Average Variance Prediction Error:", avg_variance_prediction_error))
 
   # Compute 95% Confidence Intervals
+  z_value <- qnorm(1 - alpha / 2)
   T_steps <- max(res_subset_updated$t)  # Get total timesteps
   estimates <- estimates %>%
     mutate(
       # std_error = sqrt(variance_est) * sqrt(T_steps - 1),
       std_error = sqrt(variance_est),
-      ci_lower = estimate - 1.96 * std_error,
-      ci_upper = estimate + 1.96 * std_error
+      ci_lower = estimate - z_value * std_error,
+      ci_upper = estimate + z_value * std_error
     )
 
   # Compute Empirical Coverage
