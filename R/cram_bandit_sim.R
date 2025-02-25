@@ -104,7 +104,7 @@ cram_bandit_sim <- function(horizon, simulations,
   # Apply function efficiently per (agent, sim) group
   res_subset_updated <- res_subset %>%
     group_by(agent, sim) %>%
-    group_modify(~ compute_probas(.x)) %>%
+    group_modify(~ compute_probas(.x, policy_name)) %>%
     ungroup()
 
   check <- res_subset_updated$probas
