@@ -74,7 +74,8 @@ cram_bandit_var <- function(pi, reward, arm) {
   multipliers <- (1 / pi_diag) * reward[2:length(reward)]
 
   # Apply row-wise multiplication using efficient matrix operation
-  mult_pi_diff <- pi_diff * multipliers  # Works via R's recycling rules (most efficient)
+  # mult_pi_diff <- pi_diff * multipliers  # Works via R's recycling rules (most efficient)
+  mult_pi_diff <- sweep(pi_diff, 1, multipliers, FUN = "*")
 
 
   ## VARIANCE PER COLUMN
@@ -102,15 +103,13 @@ cram_bandit_var <- function(pi, reward, arm) {
       return(0)
     } else {
       sample_var <- var(x, na.rm = TRUE)  # Compute sample variance (divides by n-1)
-      sample_var * (n - 1) / n  # Convert to population variance (divides by n)
+      sample_var <- sample_var * (n - 1) / n  # Convert to population variance (divides by n)
       return(sample_var)
     }
   })
 
+  # print(column_variances)
   total_variance <- sum(column_variances)
-
-  # Final variance estimator, scaled by T / B
-  total_variance <- (nb_timesteps - 1) * total_variance
 
   return(total_variance)
 }
