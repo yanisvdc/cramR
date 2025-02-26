@@ -1,7 +1,3 @@
-# Load necessary libraries
-library(dplyr)
-library(purrr)  # For `map2_dbl`
-
 utils::globalVariables(c(
   "context", "theta_na", "theta", "sim", "num_nulls", "agent",
   "choice", "reward", "probas", "arms", "rewards", "estimate",
@@ -28,12 +24,12 @@ utils::globalVariables(c(
 #'   \item{interactive_table}{An interactive table summarizing key metrics for detailed exploration.}
 #'
 #' @import contextual
-#' @importFrom dplyr group_by group_modify ungroup summarise mutate
-#' @importFrom purrr map2_dbl
-#' @importFrom stats glm predict qnorm rbinom rnorm
 #' @importFrom magrittr %>%
 #' @import data.table
-#' @importFrom stats var dnorm pnorm integrate
+#' @importFrom dplyr group_by group_modify ungroup summarise mutate select
+#' @importFrom purrr map2_dbl
+#' @importFrom stats glm predict qnorm rbinom rnorm var dnorm pnorm integrate
+#' @importFrom contextual ContextualLinearBandit ContextualEpsilonGreedyPolicy
 #' @export
 
 
