@@ -9,7 +9,6 @@ cram_bandit_sim(
   simulations,
   bandit,
   policy,
-  policy_name,
   alpha = 0.05,
   do_parallel = FALSE
 )
@@ -22,8 +21,6 @@ cram_bandit_sim(
 \item{bandit}{The bandit, generating contextual features and observed rewards}
 
 \item{policy}{The policy, choosing the arm at each timestep}
-
-\item{policy_name}{The name of the policy. We currently support "LinTS", "LinUCB" and "cEGreedy"}
 
 \item{alpha}{Significance level for confidence intervals for calculating the empirical coverage. Default is 0.05 (95\% confidence).}
 

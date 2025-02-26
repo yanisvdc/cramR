@@ -17,7 +17,6 @@ utils::globalVariables(c(
 #' @param simulations The number of simulations
 #' @param bandit The bandit, generating contextual features and observed rewards
 #' @param policy The policy, choosing the arm at each timestep
-#' @param policy_name The name of the policy. We currently support "LinTS", "LinUCB" and "cEGreedy"
 #' @param alpha Significance level for confidence intervals for calculating the empirical coverage. Default is 0.05 (95\% confidence).
 #' @param do_parallel Whether to parallelize the simulations. Default to FALSE.
 #'
@@ -38,12 +37,14 @@ utils::globalVariables(c(
 
 
 cram_bandit_sim <- function(horizon, simulations,
-                            bandit, policy, policy_name,
+                            bandit, policy,
                             alpha=0.05, do_parallel = FALSE) {
 
   horizon <- as.integer(horizon)
   # Add 1 as first sim of the contextual package has a writing error for theta
   simulations <- as.integer(simulations + 1)
+
+  policy_name <- policy$class_name
 
   agents <- list(Agent$new(policy, bandit, policy_name))
 
@@ -104,7 +105,7 @@ cram_bandit_sim <- function(horizon, simulations,
   # Apply function efficiently per (agent, sim) group
   res_subset_updated <- res_subset %>%
     group_by(agent, sim) %>%
-    group_modify(~ compute_probas(.x, policy_name)) %>%
+    group_modify(~ compute_probas(.x, policy, policy_name)) %>%
     ungroup()
 
   check <- res_subset_updated$probas

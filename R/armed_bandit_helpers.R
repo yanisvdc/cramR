@@ -168,7 +168,7 @@ library(dplyr)
 library(tidyr)
 
 # Function to compute probabilities for each row inside a group (agent, sim)
-compute_probas <- function(df, policy_name) {
+compute_probas <- function(df, policy, policy_name) {
   # Extract contexts for the entire (agent, sim) group (same for all t)
   contexts <- df$context  # Already a list
   ind_arm <- df$choice
@@ -180,15 +180,15 @@ compute_probas <- function(df, policy_name) {
   for (i in seq_len(nrow(df))) {
 
     # Compute probability using the appropriate function based on policy_name
-    if (policy_name == "cEGreedy") {
+    if (policy_name == "ContextualEpsilonGreedyPolicy") {
       A <- df$theta[[i]]$A  # Already a list of matrices
       b <- df$theta[[i]]$b  # Already a list of vectors
-      probas[[i]] <- get_proba_c_eps_greedy(eps = 0.1, A = A, b = b, contexts = contexts, ind_arm = ind_arm)
+      probas[[i]] <- get_proba_c_eps_greedy(eps = policy$epsilon, A = A, b = b, contexts = contexts, ind_arm = ind_arm)
 
-    } else if (policy_name == "LinTS") {
+    } else if (policy_name == "ContextualLinTSPolicy") {
       A_inv <- df$theta[[i]]$A_inv  # Already a list of matrices
       b <- df$theta[[i]]$b  # Already a list of vectors
-      probas[[i]] <- get_proba_thompson(A_inv = A_inv, b = b, contexts = contexts, ind_arm = ind_arm)
+      probas[[i]] <- get_proba_thompson(sigma = policy$sigma, A_inv = A_inv, b = b, contexts = contexts, ind_arm = ind_arm)
 
     } else {
       stop("Unsupported policy_name: Choose either 'epsilon-greedy' or 'thompson-sampling'")
