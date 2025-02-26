@@ -3,6 +3,7 @@
 export(averaged_cram)
 export(cram_bandit)
 export(cram_bandit_est)
+export(cram_bandit_sim)
 export(cram_bandit_var)
 export(cram_estimator)
 export(cram_expected_loss)

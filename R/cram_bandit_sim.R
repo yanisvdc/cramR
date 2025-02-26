@@ -34,6 +34,7 @@ utils::globalVariables(c(
 #' @importFrom magrittr %>%
 #' @import data.table
 #' @importFrom stats var dnorm pnorm integrate
+#' @export
 
 
 cram_bandit_sim <- function(horizon, simulations,
