@@ -56,9 +56,6 @@ cram_bandit_sim <- function(horizon, simulations,
 
   res <- history$data
 
-  checkpoint1 <- Sys.time()
-  print(paste("Contextual package time:", checkpoint1 - start_time))
-
   # Retrieve d (feature dimension) from any row, assuming d is constant across rows
   d_value <- res$d[1L]  # Using 1L for integer indexing optimization
 
@@ -113,9 +110,6 @@ cram_bandit_sim <- function(horizon, simulations,
   # Ensure data is sorted correctly by agent, sim, t
   setorder(res_subset, agent, sim, t)
 
-  checkpoint2 <- Sys.time()
-  print(paste("Cleaning time:", checkpoint2 - checkpoint1))
-
   # Apply function efficiently per (agent, sim) group
   # res_subset_updated <- res_subset %>%
   #   group_by(agent, sim) %>%
@@ -126,9 +120,6 @@ cram_bandit_sim <- function(horizon, simulations,
   res_subset_updated <- res_subset[, compute_probas(.SD, policy, policy_name), by = .(agent, sim)]
   # res_subset_updated <- res_subset[, compute_probas(.SD, policy, policy_name), by = .(agent, sim)]
 
-
-  checkpoint3 <- Sys.time()
-  print(paste("Calculate proba time:", checkpoint3 - checkpoint2))
   # return(list(a = res_subset_updated, b = other))
 
   # Process Data by Simulation
@@ -144,8 +135,6 @@ cram_bandit_sim <- function(horizon, simulations,
       variance_est = map2_dbl(arms, rewards, ~ cram_bandit_var(policy_matrix[[cur_group_id()]], .y, .x))  # Variance estimation
     )
 
-  checkpoint4 <- Sys.time()
-  print(paste("Calculate estimates time:", checkpoint4 - checkpoint3))
 
   # Compute True Estimate (Average across Sims)
   true_estimate <- mean(estimates$estimate)
@@ -160,9 +149,6 @@ cram_bandit_sim <- function(horizon, simulations,
   # Compute Prediction Error on Variance
   estimates <- estimates %>%
     mutate(variance_prediction_error = variance_est - true_variance)
-
-  checkpoint5 <- Sys.time()
-  print(paste("Calculate prediction errors time:", checkpoint5 - checkpoint4))
 
   # Exclude 20% of Simulations Randomly
   num_excluded <- ceiling(0.2 * nrow(estimates))  # 20% of total sims
@@ -179,9 +165,6 @@ cram_bandit_sim <- function(horizon, simulations,
   print(paste("Average Prediction Error:", avg_prediction_error))
   print(paste("Average Variance Prediction Error:", avg_variance_prediction_error))
 
-  checkpoint6 <- Sys.time()
-  print(paste("Print prediction errors time:", checkpoint6 - checkpoint5))
-
   # Compute 95% Confidence Intervals
   z_value <- qnorm(1 - alpha / 2)
   T_steps <- max(res_subset_updated$t)  # Get total timesteps
@@ -197,6 +180,5 @@ cram_bandit_sim <- function(horizon, simulations,
   empirical_coverage <- mean((true_estimate >= estimates$ci_lower) & (true_estimate <= estimates$ci_upper))
 
   print(paste("Empirical Coverage of 95% Confidence Interval:", empirical_coverage))
-  checkpoint7 <- Sys.time()
-  print(paste("Empirical coverage time:", checkpoint7 - checkpoint6))
+
 }
