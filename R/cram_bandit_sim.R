@@ -56,17 +56,23 @@ cram_bandit_sim <- function(horizon, simulations,
 
   res <- history$data
 
-  # Retrieve d (feature dimension) from any row
-  d_value <- res$d[1]  # Assuming d is constant across rows
+  checkpoint1 <- Sys.time()
+  print(paste("Contextual package time:", checkpoint1 - start_time))
+
+  # Retrieve d (feature dimension) from any row, assuming d is constant across rows
+  d_value <- res$d[1L]  # Using 1L for integer indexing optimization
 
   # Dynamically select the X.1 to X.d columns
-  X_columns <- paste0("X.", 1:d_value)
+  X_columns <- paste0("X.", seq_len(d_value))
 
   # Subset res, keeping only the relevant columns
   res_subset <- res[, c("agent", "sim", "t", "choice", "reward", "theta", X_columns), with = FALSE]
+  # check <- copy(res_subset)
+  # Convert X.1, ..., X.d into a single list-column `context`
+  res_subset[, context := asplit(as.matrix(.SD), 1), .SDcols = X_columns]
 
   # Convert X.1, ..., X.d into a single list-column `context`
-  res_subset[, context := lapply(1:.N, function(i) unlist(.SD[i, ], use.names = FALSE)), .SDcols = X_columns]
+  # res_subset[, context := lapply(1:.N, function(i) unlist(.SD[i, ], use.names = FALSE)), .SDcols = X_columns]
 
   # Remove original X.1, ..., X.d columns after storing in `context`
   res_subset[, (X_columns) := NULL]
@@ -81,31 +87,49 @@ cram_bandit_sim <- function(horizon, simulations,
 
   # Check for NULL to ensure the history table is clean
 
-  # Convert NULL values in theta to NA
-  res_subset[, theta_na := lapply(theta, function(x) if (is.null(x)) NA else x)]
+  # Count NULL values in theta per simulation (direct NULL checking)
+  sims_to_remove <- res_subset[, .(num_nulls = sum(vapply(theta, is.null, logical(1L)))), by = sim][num_nulls > 0, sim]
 
-  # Count the number of NA values in theta_na per simulation
-  null_counts <- res_subset[, .(num_nulls = sum(is.na(theta_na))), by = sim]
+  # Remove simulations where num_nulls >= 1 (optimized filtering)
+  if (length(sims_to_remove) > 0) {
+    res_subset <- res_subset[!sim %in% sims_to_remove]
+  }
 
-  # Identify simulations to drop (where num_nulls >= 1)
-  sims_to_remove <- null_counts[num_nulls >= 1, sim]
-
-  # Remove these simulations from res_subset in place
-  res_subset <- res_subset[!sim %in% sims_to_remove]
-
-  # Drop the temporary column
-  res_subset[, theta_na := NULL]
+  # # Convert NULL values in theta to NA
+  # res_subset[, theta_na := lapply(theta, function(x) if (is.null(x)) NA else x)]
+  #
+  # # Count the number of NA values in theta_na per simulation
+  # null_counts <- res_subset[, .(num_nulls = sum(is.na(theta_na))), by = sim]
+  #
+  # # Identify simulations to drop (where num_nulls >= 1)
+  # sims_to_remove <- null_counts[num_nulls >= 1, sim]
+  #
+  # # Remove these simulations from res_subset in place
+  # res_subset <- res_subset[!sim %in% sims_to_remove]
+  #
+  # # Drop the temporary column
+  # res_subset[, theta_na := NULL]
 
   # Ensure data is sorted correctly by agent, sim, t
   setorder(res_subset, agent, sim, t)
 
-  # Apply function efficiently per (agent, sim) group
-  res_subset_updated <- res_subset %>%
-    group_by(agent, sim) %>%
-    group_modify(~ compute_probas(.x, policy, policy_name)) %>%
-    ungroup()
+  checkpoint2 <- Sys.time()
+  print(paste("Cleaning time:", checkpoint2 - checkpoint1))
 
-  check <- res_subset_updated$probas
+  # Apply function efficiently per (agent, sim) group
+  # res_subset_updated <- res_subset %>%
+  #   group_by(agent, sim) %>%
+  #   group_modify(~ compute_probas(.x, policy, policy_name)) %>%
+  #   ungroup()
+
+  # other <- copy(res_subset)
+  res_subset_updated <- res_subset[, compute_probas(.SD, policy, policy_name), by = .(agent, sim)]
+  # res_subset_updated <- res_subset[, compute_probas(.SD, policy, policy_name), by = .(agent, sim)]
+
+
+  checkpoint3 <- Sys.time()
+  print(paste("Calculate proba time:", checkpoint3 - checkpoint2))
+  # return(list(a = res_subset_updated, b = other))
 
   # Process Data by Simulation
   estimates <- res_subset_updated %>%
@@ -119,6 +143,9 @@ cram_bandit_sim <- function(horizon, simulations,
       estimate = map2_dbl(arms, rewards, ~ cram_bandit_est(policy_matrix[[cur_group_id()]], .y, .x)),
       variance_est = map2_dbl(arms, rewards, ~ cram_bandit_var(policy_matrix[[cur_group_id()]], .y, .x))  # Variance estimation
     )
+
+  checkpoint4 <- Sys.time()
+  print(paste("Calculate estimates time:", checkpoint4 - checkpoint3))
 
   # Compute True Estimate (Average across Sims)
   true_estimate <- mean(estimates$estimate)
@@ -134,8 +161,10 @@ cram_bandit_sim <- function(horizon, simulations,
   estimates <- estimates %>%
     mutate(variance_prediction_error = variance_est - true_variance)
 
+  checkpoint5 <- Sys.time()
+  print(paste("Calculate prediction errors time:", checkpoint5 - checkpoint4))
+
   # Exclude 20% of Simulations Randomly
-  set.seed(123)  # Ensure reproducibility
   num_excluded <- ceiling(0.2 * nrow(estimates))  # 20% of total sims
   excluded_sims <- sample(nrow(estimates), size = num_excluded)
 
@@ -149,6 +178,9 @@ cram_bandit_sim <- function(horizon, simulations,
 
   print(paste("Average Prediction Error:", avg_prediction_error))
   print(paste("Average Variance Prediction Error:", avg_variance_prediction_error))
+
+  checkpoint6 <- Sys.time()
+  print(paste("Print prediction errors time:", checkpoint6 - checkpoint5))
 
   # Compute 95% Confidence Intervals
   z_value <- qnorm(1 - alpha / 2)
@@ -165,4 +197,6 @@ cram_bandit_sim <- function(horizon, simulations,
   empirical_coverage <- mean((true_estimate >= estimates$ci_lower) & (true_estimate <= estimates$ci_upper))
 
   print(paste("Empirical Coverage of 95% Confidence Interval:", empirical_coverage))
+  checkpoint7 <- Sys.time()
+  print(paste("Empirical coverage time:", checkpoint7 - checkpoint6))
 }
