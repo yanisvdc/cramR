@@ -13,12 +13,15 @@
 
 cram_bandit_est <- function(pi, reward, arm, batch=1) {
 
+  # batch is here the batch size or the vector of batch assignment
+
   dims_result <- dim(pi)
 
   if (is.numeric(batch) && length(batch) == 1) {
-    # `batch` is an integer, interpret it as `nb_batch`
-    nb_batch <- batch
-    batch_size <- n / nb_batch  # Guaranteed to be an integer since n is divisible by B
+    n <- dims_result[1]
+    # `batch` is an integer, interpret it as `batch_size`
+    batch_size <- batch  # Guaranteed to be an integer since n is divisible by B
+    nb_batch <- n / batch_size
 
     # Assign batch indices in order without shuffling
     indices <- 1:n
@@ -32,10 +35,11 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
     batch_assinement <- unlist(batch)
     batches <- split(1:n, batch_assinement)
     nb_batch <- length(batches)
+    batch_size <- length(batches[[1]])
 
   }
 
-  if (nb_batch == 1) {
+  if (batch_size == 1) {
 
     if (length(dims_result) == 3) {
       # Extract relevant dimensions
@@ -128,7 +132,7 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
       nb_arms <- dims_result[3]
       nb_timesteps <- dims_result[2]
 
-      sample_size <- nb_timesteps * nb_batch
+      sample_size <- nb_timesteps * batch_size
 
 
       ## POLICY SLICED: remove the arm dimension as Xj is associated to Aj
@@ -143,10 +147,10 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
       # drop = False to maintain 3D structure
 
       # pi <- pi[-c(1,2), -ncol(pi), , drop = FALSE]
-      pi <- pi[-(1:(2*nb_batch)), -ncol(pi), , drop = FALSE]
+      pi <- pi[-(1:(2*batch_size)), -ncol(pi), , drop = FALSE]
 
       # depth_indices <- arm[3:nb_timesteps]
-      depth_indices <- arm[2*nb_batch+1:sample_size]
+      depth_indices <- arm[2*batch_size+1:sample_size]
 
       pi <- extract_2d_from_3d(pi, depth_indices)
 
@@ -156,12 +160,12 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
       # 2D case
       nb_timesteps <- dims_result[2]
 
-      sample_size <- nb_timesteps * nb_batch
+      sample_size <- nb_timesteps * batch_size
 
 
       # Remove the first two rows and the last column
       # pi <- pi[-c(1,2), -ncol(pi), drop = FALSE]
-      pi <- pi[-(1:(2*nb_batch)), -ncol(pi), , drop = FALSE]
+      pi <- pi[-(1:(2*batch_size)), -ncol(pi), , drop = FALSE]
 
 
     }
@@ -187,7 +191,7 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
 
     # Create multipliers using vectorized operations
     # multipliers <- (1 / pi_diag) * reward[3:length(reward)]
-    multipliers <- (1 / pi_diag) * reward[2*nb_batch+1:length(reward)]
+    multipliers <- (1 / pi_diag) * reward[2*batch_size+1:length(reward)]
 
 
     # Apply row-wise multiplication using efficient matrix operation
@@ -197,8 +201,8 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
     # EXTRA STEP when batch size is not 1: average contexts in each batch
 
     # Sample data: mat is (T-2)*B rows x (T-2) columns
-    group <- rep(1:(nrow(mult_pi_diff) %/% nb_batch), each = nb_batch)
-    mult_pi_diff <- rowsum(mult_pi_diff, group) / nb_batch
+    group <- rep(1:(nrow(mult_pi_diff) %/% batch_size), each = batch_size)
+    mult_pi_diff <- rowsum(mult_pi_diff, group) / batch_size
 
 
     ## AVERAGE TRIANGLE INF COLUMN-WISE
@@ -219,7 +223,7 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
     pi_first_col <- pi_first_col * multipliers
 
     # add the term for j = 2, this is only the rewards for batch 2! The probabilities cancel out
-    r2 <- reward[nb_batch+1:2*nb_batch]
+    r2 <- reward[batch_size+1:2*batch_size]
     pi_first_col <- c(pi_first_col, r2)
 
     # V(pi_1) is the average
