@@ -30,6 +30,8 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
     # Split indices into batches
     batches <- split(indices, group_labels)
 
+    print(batch_size)
+
   } else {
 
     batch_assinement <- unlist(batch)
@@ -151,6 +153,10 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
 
       # depth_indices <- arm[3:nb_timesteps]
       depth_indices <- arm[2*batch_size+1:sample_size]
+
+      print(length(depth_indices))
+      print("test")
+      print(nrow(pi))
 
       pi <- extract_2d_from_3d(pi, depth_indices)
 
