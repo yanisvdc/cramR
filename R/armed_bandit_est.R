@@ -13,7 +13,7 @@
 
 cram_bandit_est <- function(pi, reward, arm, batch=1) {
 
-  # batch is here the batch size or the vector of batch assignment
+  # batch is here the batch size or the vector of batch assignment.
 
   dims_result <- dim(pi)
 
