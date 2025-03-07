@@ -30,8 +30,6 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
     # Split indices into batches
     batches <- split(indices, group_labels)
 
-    print(batch_size)
-
   } else {
 
     batch_assinement <- unlist(batch)
@@ -154,10 +152,6 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
       # depth_indices <- arm[3:nb_timesteps]
       depth_indices <- arm[(2*batch_size+1):sample_size]
 
-      print(length(depth_indices))
-      print("test")
-      print(nrow(pi))
-
       pi <- extract_2d_from_3d(pi, depth_indices)
 
     } else {
@@ -191,7 +185,7 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
     # Get diagonal elements from pi (i, i+1 positions)
     # pi_diag <- pi[cbind(1:(nrow(pi)), 2:(ncol(pi)))]  # Vectorized indexing
     row_indices <- 1:nrow(pi)  # All row indices
-    col_indices <- rep(2:ncol(pi), each = B)  # Repeats column indices B times
+    col_indices <- rep(2:ncol(pi), each = batch_size)  # Repeats column indices B times
 
     pi_diag <- pi[cbind(row_indices, col_indices)]
 
