@@ -152,7 +152,7 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
       pi <- pi[-(1:(2*batch_size)), -ncol(pi), , drop = FALSE]
 
       # depth_indices <- arm[3:nb_timesteps]
-      depth_indices <- arm[2*batch_size+1:sample_size]
+      depth_indices <- arm[(2*batch_size+1):sample_size]
 
       print(length(depth_indices))
       print("test")
@@ -197,7 +197,7 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
 
     # Create multipliers using vectorized operations
     # multipliers <- (1 / pi_diag) * reward[3:length(reward)]
-    multipliers <- (1 / pi_diag) * reward[2*batch_size+1:length(reward)]
+    multipliers <- (1 / pi_diag) * reward[(2*batch_size+1):length(reward)]
 
 
     # Apply row-wise multiplication using efficient matrix operation
@@ -229,7 +229,7 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
     pi_first_col <- pi_first_col * multipliers
 
     # add the term for j = 2, this is only the rewards for batch 2! The probabilities cancel out
-    r2 <- reward[batch_size+1:2*batch_size]
+    r2 <- reward[(batch_size+1):2*batch_size]
     pi_first_col <- c(pi_first_col, r2)
 
     # V(pi_1) is the average
