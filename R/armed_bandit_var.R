@@ -269,7 +269,7 @@ cram_bandit_var <- function(pi, reward, arm, batch=1) {
     })
 
     # print(column_variances)
-    total_variance <- sum(column_variances)
+    total_variance <- sum(column_variances) / batch_size
 
   }
 
