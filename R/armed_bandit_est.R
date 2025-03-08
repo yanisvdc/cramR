@@ -124,6 +124,9 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
 
   deltas <- colMeans(mult_pi_diff, na.rm = TRUE, dims = 1)  # `dims=1` ensures row-wise efficiency
 
+  print("Deltas:")
+  print(deltas)
+
 
   ## SUM DELTAS
 
@@ -142,6 +145,8 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
   # V(pi_1) is the average
   v_pi_1 <-  mean(pi_first_col)
 
+  print("V1:")
+  print(v_pi_1)
 
   ## FINAL ESTIMATE
 
