@@ -245,7 +245,7 @@ get_proba_c_eps_greedy_final <- function(eps = 0.1, A_list, b_list, expected_rew
 
 # GET PROBA UCB DISJOINT WITH EPSILON ---------------------------------------------------------
 
-get_proba_ucb_disjoint <- function(alpha=1.0, eps = 0.1, A_list, b_list, contexts, ind_arm) {
+get_proba_ucb_disjoint <- function(alpha=1.0, eps = 0.1, A_list, b_list, contexts, ind_arm, batch_size=1) {
   # A_list and b_list contain the list (across both sim and timesteps) of theta$A and theta$b
   # Thus, each element of A_list and b_list, is itself a list (across arms) of
   # matrices A (resp. vectors b)
