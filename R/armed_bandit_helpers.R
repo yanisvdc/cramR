@@ -79,27 +79,43 @@ extract_2d_from_3d <- function(array3d, depth_indices) {
 # library(tidyr)
 
 # Function to compute probabilities for each row inside a group (agent, sim)
-compute_probas <- function(df, policy, policy_name) {
+compute_probas <- function(df, policy, policy_name, batch_size) {
   # Extract contexts for the entire (agent, sim) group (same for all t)
   contexts <- df$context  # Already a list
   ind_arm <- df$choice
 
   theta_all <- df[, theta]   # List-column containing A and b
 
-  if (policy_name == "ContextualEpsilonGreedyPolicy") {
+  if (policy_name %in% c("ContextualEpsilonGreedyPolicy", "BatchContextualEpsilonGreedyPolicy")) {
     # Extract matrices A and vectors b
     A_list <- lapply(theta_all, `[[`, "A")
     b_list <- lapply(theta_all, `[[`, "b")
 
+    if (batch_size > 1) {
+      indices_to_keep <- seq(batch_size, length(A_list), by = batch_size)
+
+      # Subset both lists using the indices
+      A_list <- A_list[indices_to_keep]
+      b_list <- b_list[indices_to_keep]
+    }
+
     # Compute probabilities efficiently in batch
-    probas_matrix <- get_proba_c_eps_greedy(policy$epsilon, A_list, b_list, contexts, ind_arm)  # Shape: (T × T)
+    probas_matrix <- get_proba_c_eps_greedy(policy$epsilon, A_list, b_list, contexts, ind_arm, batch_size)  # Shape: (T × T)
 
   } else if (policy_name == "ContextualLinTSPolicy") {
     # Extract matrices A and vectors b
     A_list <- lapply(theta_all, `[[`, "A_inv")
     b_list <- lapply(theta_all, `[[`, "b")
 
-    probas_matrix <- get_proba_thompson(policy$sigma, A_list, b_list, contexts, ind_arm)  # Shape: (T × T)
+    if (batch_size > 1) {
+      indices_to_keep <- seq(batch_size, length(A_list), by = batch_size)
+
+      # Subset both lists using the indices
+      A_list <- A_list[indices_to_keep]
+      b_list <- b_list[indices_to_keep]
+    }
+
+    probas_matrix <- get_proba_thompson(policy$sigma, A_list, b_list, contexts, ind_arm, batch_size)  # Shape: (T × T)
 
   } else if (policy_name == "LinUCBDisjointPolicyEpsilon") {
 
@@ -107,20 +123,42 @@ compute_probas <- function(df, policy, policy_name) {
     A_list <- lapply(theta_all, `[[`, "A")
     b_list <- lapply(theta_all, `[[`, "b")
 
+    if (batch_size > 1) {
+      indices_to_keep <- seq(batch_size, length(A_list), by = batch_size)
+
+      # Subset both lists using the indices
+      A_list <- A_list[indices_to_keep]
+      b_list <- b_list[indices_to_keep]
+    }
+
     # Compute probabilities efficiently in batch
-    probas_matrix <- get_proba_ucb_disjoint(policy$alpha, policy$epsilon, A_list, b_list, contexts, ind_arm)  # Shape: (T × T)
+    probas_matrix <- get_proba_ucb_disjoint(policy$alpha, policy$epsilon, A_list, b_list, contexts, ind_arm, batch_size)  # Shape: (T × T)
 
   } else {
     stop("Unsupported policy_name: Choose either 'epsilon-greedy' or 'thompson-sampling'")
   }
 
   # Store each COLUMN of probas_matrix in a list-column
-  probas_list <- split(probas_matrix, col(probas_matrix))  # List of T vectors
+  probas_list <- split(probas_matrix, col(probas_matrix))  # List of nb_batch vectors
+
+  if (batch_size > 1) {
+    probas_list_expanded <- unlist(
+      lapply(probas_list, function(vec) {
+        # Generate B-1 NaN vectors of the same length as the original vector
+        nan_vectors <- replicate(batch_size - 1, rep(NaN, length(vec)), simplify = FALSE)
+        # Combine the NaN vectors with the original vector (total of B vectors per group)
+        c(nan_vectors, list(vec))
+      }),
+      recursive = FALSE  # False means Flatten the list of lists into a single list
+    )
+
+    return(cbind(df, probas = probas_list_expanded))
+  }
+
 
   # Return df with the new probas column
   return(cbind(df, probas = probas_list))
 }
-
 
 
 # GET PROBA EPSILON GREEDY -------------------------------------------------------------------------
