@@ -490,3 +490,77 @@ LinUCBDisjointPolicyEpsilon <- R6::R6Class(
     }
   )
 )
+
+
+# COMPUTE ESTIMAND ------------------------------------------------------------------
+
+compute_estimand <- function(sim_index, res_subset_updated, list_betas, eps = 0.1) {
+
+  # Get last timestep data for the current simulation
+  sim_data <- res_subset_updated %>% filter(sim == sim_index)
+  last_timestep <- max(sim_data$t)
+
+  last_row <- sim_data %>% filter(t == last_timestep)
+
+  if (nrow(last_row) == 0) {
+    stop(paste("No last timestep found for simulation", sim_index))
+  }
+
+  theta_info <- last_row$theta[[1]]  # Extract the actual theta list (removing outer list structure)
+
+  if (!is.list(theta_info) || is.null(theta_info$A) || is.null(theta_info$b)) {
+    stop(paste("Theta structure missing for simulation", sim_index))
+  }
+
+  A_list <- theta_info$A  # List of A matrices (one per arm)
+  b_list <- theta_info$b  # List of b vectors (one per arm)
+
+  # Ensure A_list and b_list are correctly extracted
+  if (!is.list(A_list) || !is.list(b_list)) {
+    stop(paste("A_list or b_list is not a list for simulation", sim_index))
+  }
+
+  # Get beta matrix for current simulation
+  beta_matrix <- list_betas[[sim_index]]  # Shape (features x arms)
+
+  if (!is.matrix(beta_matrix)) {
+    stop(paste("Beta matrix is not a matrix for simulation", sim_index))
+  }
+
+  # **Remove contexts from the current simulation**
+  other_contexts <- res_subset_updated %>%
+    filter(sim != sim_index) %>%
+    pull(context)  # List of context vectors from other simulations
+
+  if (length(other_contexts) == 0) {
+    stop(paste("No other contexts available for simulation", sim_index))
+  }
+
+  # Convert remaining contexts list to (B × d) matrix (rows = contexts, cols = features)
+  context_matrix <- do.call(rbind, other_contexts)  # Shape (B × d)
+
+  # **Take a random subset of 100 records (if available)**
+  num_samples <- min(100, nrow(context_matrix))  # Ensure we don’t sample more than available
+  context_matrix <- context_matrix[sample(nrow(context_matrix), num_samples, replace = FALSE), , drop = FALSE]  # Shape (100 × d)
+
+  # Compute expected rewards via matrix multiplication
+  # Expected rewards (B × K) = (B × d) * (d × K)
+  expected_rewards <- context_matrix %*% beta_matrix  # Shape (B x K)
+
+  # Compute policy probabilities using the provided function
+  policy_probs <- get_proba_c_eps_greedy_final(eps, A_list, b_list, expected_rewards)  # Should be (B x K)
+
+  # Ensure dimensions match before multiplication
+  if (!all(dim(policy_probs) == dim(expected_rewards))) {
+    stop(paste("Dimension mismatch in simulation", sim_index,
+               "Policy Probs:", paste(dim(policy_probs), collapse = " x "),
+               "Expected Rewards:", paste(dim(expected_rewards), collapse = " x ")))
+  }
+
+  # Compute final estimand
+  # B <- dim(expected_rewards)[1]
+  B <- nrow(expected_rewards)  # Now using subset size (100)
+  estimand <- (1 / B) * sum(policy_probs * expected_rewards)
+
+  return(estimand)
+}
