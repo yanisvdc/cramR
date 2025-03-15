@@ -316,7 +316,7 @@ get_proba_ucb_disjoint <- function(alpha=1.0, eps = 0.1, A_list, b_list, context
 # GET PROBA THOMPSON SAMPLING ---------------------------------------------------------------------
 
 
-get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm) {
+get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm, batch_size=1) {
 
   # ind_arm is the vector of indices of the arms that were chosen at each t
   if (!is.integer(ind_arm)) {
@@ -423,6 +423,7 @@ get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm) 
 
   return(result_matrix)
 }
+
 
 
 
