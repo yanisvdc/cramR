@@ -168,12 +168,16 @@ cram_bandit_var <- function(pi, reward, arm, batch=1) {
 
     } else {
 
+      pi <- pi[, colSums(is.na(pi)) == 0, drop = FALSE]
+
+      dims_result <- dim(pi)
+
       nb_timesteps <- dims_result[2]
 
       sample_size <- nb_timesteps * batch_size
 
       # pi <- pi[-1, -ncol(pi), drop = FALSE]
-      pi <- pi[-(1:batch_size), -ncol(pi), , drop = FALSE]
+      pi <- pi[-(1:batch_size), -ncol(pi), drop = FALSE]
 
     }
 

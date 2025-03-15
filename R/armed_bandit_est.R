@@ -40,7 +40,6 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
   }
 
 
-
   if (length(dims_result) == 3) {
     # Extract relevant dimensions
     nb_arms <- dims_result[3]
@@ -70,16 +69,18 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
 
   } else {
 
+    pi <- pi[, colSums(is.na(pi)) == 0, drop = FALSE]
+
+    dims_result <- dim(pi)
+
     # 2D case
     nb_timesteps <- dims_result[2]
 
     sample_size <- nb_timesteps * batch_size
 
-
     # Remove the first two rows and the last column
     # pi <- pi[-c(1,2), -ncol(pi), drop = FALSE]
-    pi <- pi[-(1:(2*batch_size)), -ncol(pi), , drop = FALSE]
-
+    pi <- pi[-(1:(2 * batch_size)), -ncol(pi), drop = FALSE]
 
   }
 
@@ -124,10 +125,6 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
 
   deltas <- colMeans(mult_pi_diff, na.rm = TRUE, dims = 1)  # `dims=1` ensures row-wise efficiency
 
-  print("Deltas:")
-  print(deltas)
-
-
   ## SUM DELTAS
 
   sum_deltas <- sum(deltas)
@@ -138,15 +135,14 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
   pi_first_col <- pi[, 1]
   pi_first_col <- pi_first_col * multipliers
 
+
   # add the term for j = 2, this is only the rewards for batch 2! The probabilities cancel out
-  r2 <- reward[(batch_size+1):2*batch_size]
+  r2 <- reward[(batch_size+1):(2*batch_size)]
+
   pi_first_col <- c(pi_first_col, r2)
 
   # V(pi_1) is the average
   v_pi_1 <-  mean(pi_first_col)
-
-  print("V1:")
-  print(v_pi_1)
 
   ## FINAL ESTIMATE
 
