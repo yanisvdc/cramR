@@ -43,6 +43,12 @@ cram_bandit_sim <- function(horizon, simulations,
 
   policy_name <- policy$class_name
 
+  if (is.null(policy$batch_size)) {
+    batch_size <- 1
+  } else {
+    batch_size <- policy$batch_size
+  }
+
   agents <- list(Agent$new(policy, bandit, policy_name))
 
   simulation     <- Simulator$new(agents, horizon, simulations,
@@ -55,6 +61,8 @@ cram_bandit_sim <- function(horizon, simulations,
   plot(history, type = "cumulative", rate = FALSE, legend_position = "topleft")
 
   res <- history$data
+
+  list_betas <<- list_betas[-1]  # Remove the first element
 
   # Retrieve d (feature dimension) from any row, assuming d is constant across rows
   d_value <- res$d[1L]  # Using 1L for integer indexing optimization
@@ -110,6 +118,9 @@ cram_bandit_sim <- function(horizon, simulations,
   # Ensure data is sorted correctly by agent, sim, t
   setorder(res_subset, agent, sim, t)
 
+  res_subset <- res_subset %>%
+    mutate(sim = sim - 1)
+
   # Apply function efficiently per (agent, sim) group
   # res_subset_updated <- res_subset %>%
   #   group_by(agent, sim) %>%
@@ -117,45 +128,67 @@ cram_bandit_sim <- function(horizon, simulations,
   #   ungroup()
 
   # other <- copy(res_subset)
-  res_subset_updated <- res_subset[, compute_probas(.SD, policy, policy_name), by = .(agent, sim)]
+  res_subset_updated <- res_subset[, compute_probas(.SD, policy, policy_name, batch_size = batch_size), by = .(agent, sim)]
   # res_subset_updated <- res_subset[, compute_probas(.SD, policy, policy_name), by = .(agent, sim)]
 
+
   # return(list(a = res_subset_updated, b = other))
+
 
   # Process Data by Simulation
   estimates <- res_subset_updated %>%
     group_by(sim) %>%
     summarise(
-      arms = list(choice),  # Vector of chosen arms
-      rewards = list(reward),  # Vector of rewards
+      arms = list(choice),
+      rewards = list(reward),
       policy_matrix = list(do.call(cbind, probas))  # Concatenate probability vectors into a matrix
     ) %>%
     mutate(
-      estimate = map2_dbl(arms, rewards, ~ cram_bandit_est(policy_matrix[[cur_group_id()]], .y, .x)),
-      variance_est = map2_dbl(arms, rewards, ~ cram_bandit_var(policy_matrix[[cur_group_id()]], .y, .x))  # Variance estimation
+      estimate = map2_dbl(arms, rewards, ~ cram_bandit_est(policy_matrix[[cur_group_id()]], .y, .x, batch=batch_size)),
+      variance_est = map2_dbl(arms, rewards, ~ cram_bandit_var(policy_matrix[[cur_group_id()]], .y, .x, batch=batch_size)),
+      estimand = map_dbl(sim, ~ compute_estimand(.x, res_subset_updated, list_betas, eps = 0.1))
     )
 
 
-  # Compute True Estimate (Average across Sims)
-  true_estimate <- mean(estimates$estimate)
+  # # Process Data by Simulation
+  # estimates <- res_subset_updated %>%
+  #   group_by(sim) %>%
+  #   summarise(
+  #     arms = list(choice),  # Vector of chosen arms
+  #     rewards = list(reward),  # Vector of rewards
+  #     policy_matrix = list(do.call(cbind, probas))  # Concatenate probability vectors into a matrix
+  #   ) %>%
+  #   mutate(
+  #     estimate = map2_dbl(arms, rewards, ~ cram_bandit_est(policy_matrix[[cur_group_id()]], .y, .x, batch=batch_size)),
+  #     variance_est = map2_dbl(arms, rewards, ~ cram_bandit_var(policy_matrix[[cur_group_id()]], .y, .x, batch=batch_size))  # Variance estimation
+  #   )
 
-  # Compute Prediction Errors
+  # Compute prediction error
   estimates <- estimates %>%
-    mutate(prediction_error = estimate - true_estimate)
+    mutate(prediction_error = estimate - estimand)
+
+  # Compute empirical bias (mean of prediction error)
+  empirical_bias <- mean(estimates$prediction_error)
+
+  estimates <- estimates %>%
+    mutate(est_rel_error = (estimate - estimand) / estimand)
 
   # Compute True Variance (Sample Variance of Prediction Errors)
   true_variance <- var(estimates$prediction_error)
 
+  print("True variance")
+  print(true_variance)
+
   # Compute Prediction Error on Variance
   estimates <- estimates %>%
-    mutate(variance_prediction_error = variance_est - true_variance)
+    mutate(variance_prediction_error = (variance_est - true_variance) / true_variance)
 
   # Exclude 20% of Simulations Randomly
   num_excluded <- ceiling(0.2 * nrow(estimates))  # 20% of total sims
   excluded_sims <- sample(nrow(estimates), size = num_excluded)
 
   # Select only the remaining 80% of simulations
-  filtered_errors <- estimates$prediction_error[-excluded_sims]
+  filtered_errors <- estimates$est_rel_error[-excluded_sims]
   filtered_variance_errors <- estimates$variance_prediction_error[-excluded_sims]
 
   # Compute and Report Final Average Prediction Errors
@@ -177,7 +210,8 @@ cram_bandit_sim <- function(horizon, simulations,
     )
 
   # Compute Empirical Coverage
-  empirical_coverage <- mean((true_estimate >= estimates$ci_lower) & (true_estimate <= estimates$ci_upper))
+  empirical_coverage <- mean((estimates$estimand >= estimates$ci_lower) &
+                               (estimates$estimand <= estimates$ci_upper))
 
   print(paste("Empirical Coverage of 95% Confidence Interval:", empirical_coverage))
 

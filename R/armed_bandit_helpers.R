@@ -425,74 +425,6 @@ get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm, 
 }
 
 
-
-
-
-# CUSTOM CONTEXTUAL LINEAR POLICIES -----------------------------------------------------------------
-
-
-# UCB DISJOINT WITH EPSILON
-LinUCBDisjointPolicyEpsilon <- R6::R6Class(
-  portable = FALSE,
-  class = FALSE,
-  inherit = Policy,
-  public = list(
-    alpha = NULL,
-    epsilon = NULL,
-    class_name = "LinUCBDisjointPolicyEpsilon",
-    initialize = function(alpha = 1.0, epsilon=0.1) {
-      super$initialize()
-      self$alpha <- alpha
-      self$epsilon <- epsilon
-    },
-    set_parameters = function(context_params) {
-      ul <- length(context_params$unique)
-      self$theta_to_arms <- list('A' = diag(1,ul,ul), 'b' = rep(0,ul))
-    },
-    get_action = function(t, context) {
-
-      if (runif(1) > self$epsilon) {
-
-        expected_rewards <- rep(0.0, context$k)
-
-        for (arm in 1:context$k) {
-
-          Xa         <- get_arm_context(context, arm, context$unique)
-          A          <- self$theta$A[[arm]]
-          b          <- self$theta$b[[arm]]
-
-          A_inv      <- inv(A)
-
-          theta_hat  <- A_inv %*% b
-
-          mu_hat     <- Xa %*% theta_hat
-          sigma_hat  <- sqrt(tcrossprod(Xa %*% A_inv, Xa))
-
-          expected_rewards[arm] <- mu_hat + self$alpha * sigma_hat
-        }
-        action$choice  <- which_max_tied(expected_rewards)
-
-      } else {
-
-        self$action$choice        <- sample.int(context$k, 1, replace = TRUE)
-      }
-
-      action
-    },
-    set_reward = function(t, context, action, reward) {
-      arm    <- action$choice
-      reward <- reward$reward
-      Xa     <- get_arm_context(context, arm, context$unique)
-
-      inc(self$theta$A[[arm]]) <- outer(Xa, Xa)
-      inc(self$theta$b[[arm]]) <- reward * Xa
-
-      self$theta
-    }
-  )
-)
-
-
 # COMPUTE ESTIMAND ------------------------------------------------------------------
 
 compute_estimand <- function(sim_index, res_subset_updated, list_betas, eps = 0.1) {
@@ -565,3 +497,127 @@ compute_estimand <- function(sim_index, res_subset_updated, list_betas, eps = 0.
 
   return(estimand)
 }
+
+
+# CUSTOM CONTEXTUAL LINEAR BANDIT -------------------------------------------------------------------
+# store the parameters betas of the observed reward generation model
+
+ContextualLinearBandit <- R6::R6Class(
+  "ContextualLinearBandit",
+  inherit = Bandit,
+  class = FALSE,
+  public = list(
+    rewards = NULL,
+    betas   = NULL,
+    sigma   = NULL,
+    binary  = NULL,
+    weights = NULL,
+    class_name = "ContextualLinearBandit",
+    initialize  = function(k, d, sigma = 0.1, binary_rewards = FALSE) {
+      self$k                                    <- k
+      self$d                                    <- d
+      self$sigma                                <- sigma
+      self$binary                               <- binary_rewards
+    },
+    post_initialization = function() {
+      self$betas                                <- matrix(runif(self$d*self$k, -1, 1), self$d, self$k)
+      self$betas                                <- self$betas / norm(self$betas, type = "2")
+      list_betas                                <<- c(list_betas, list(self$betas))
+
+    },
+    get_context = function(t) {
+
+      X                                         <- rnorm(self$d)
+      self$weights                              <- X %*% self$betas
+      reward_vector                             <- self$weights + rnorm(self$k, sd = self$sigma)
+
+      if (isTRUE(self$binary)) {
+        self$rewards                            <- rep(0,self$k)
+        self$rewards[which_max_tied(reward_vector)] <- 1
+      } else {
+        self$rewards                            <- reward_vector
+      }
+      context <- list(
+        k = self$k,
+        d = self$d,
+        X = X
+      )
+    },
+    get_reward = function(t, context_common, action) {
+      rewards        <- self$rewards
+      optimal_arm    <- which_max_tied(self$weights)
+      reward         <- list(
+        reward                   = rewards[action$choice],
+        optimal_arm              = optimal_arm,
+        optimal_reward           = rewards[optimal_arm]
+      )
+    }
+  )
+)
+
+# CUSTOM CONTEXTUAL LINEAR POLICIES -----------------------------------------------------------------
+
+
+# UCB DISJOINT WITH EPSILON
+LinUCBDisjointPolicyEpsilon <- R6::R6Class(
+  portable = FALSE,
+  class = FALSE,
+  inherit = Policy,
+  public = list(
+    alpha = NULL,
+    epsilon = NULL,
+    class_name = "LinUCBDisjointPolicyEpsilon",
+    initialize = function(alpha = 1.0, epsilon=0.1) {
+      super$initialize()
+      self$alpha <- alpha
+      self$epsilon <- epsilon
+    },
+    set_parameters = function(context_params) {
+      ul <- length(context_params$unique)
+      self$theta_to_arms <- list('A' = diag(1,ul,ul), 'b' = rep(0,ul))
+    },
+    get_action = function(t, context) {
+
+      if (runif(1) > self$epsilon) {
+
+        expected_rewards <- rep(0.0, context$k)
+
+        for (arm in 1:context$k) {
+
+          Xa         <- get_arm_context(context, arm, context$unique)
+          A          <- self$theta$A[[arm]]
+          b          <- self$theta$b[[arm]]
+
+          A_inv      <- inv(A)
+
+          theta_hat  <- A_inv %*% b
+
+          mu_hat     <- Xa %*% theta_hat
+          sigma_hat  <- sqrt(tcrossprod(Xa %*% A_inv, Xa))
+
+          expected_rewards[arm] <- mu_hat + self$alpha * sigma_hat
+        }
+        action$choice  <- which_max_tied(expected_rewards)
+
+      } else {
+
+        self$action$choice        <- sample.int(context$k, 1, replace = TRUE)
+      }
+
+      action
+    },
+    set_reward = function(t, context, action, reward) {
+      arm    <- action$choice
+      reward <- reward$reward
+      Xa     <- get_arm_context(context, arm, context$unique)
+
+      inc(self$theta$A[[arm]]) <- outer(Xa, Xa)
+      inc(self$theta$b[[arm]]) <- reward * Xa
+
+      self$theta
+    }
+  )
+)
+
+
+
