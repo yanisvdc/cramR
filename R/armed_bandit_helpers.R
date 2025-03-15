@@ -619,5 +619,189 @@ LinUCBDisjointPolicyEpsilon <- R6::R6Class(
   )
 )
 
+# BATCH VERSION OF CONTEXTUAL LINEAR POLICIES ----------------------------------------------------
 
+BatchContextualEpsilonGreedyPolicy <- R6::R6Class(
+  portable = FALSE,
+  class = FALSE,
+  inherit = Policy,
+  public = list(
+    epsilon = NULL,
+    batch_size = NULL,
+    A_cc = NULL,
+    b_cc = NULL,
+    class_name = "BatchContextualEpsilonGreedyPolicy",
+    initialize = function(epsilon = 0.1, batch_size=1) {
+      super$initialize()
+      self$epsilon <- epsilon
+      self$batch_size <- batch_size
+      self$A_cc <- A_cc
+      self$b_cc <- b_cc
+    },
+    set_parameters = function(context_params) {
+      d <- context_params$d
+      k <- context_params$k
+      self$theta_to_arms <- list('A' = diag(1,d,d), 'b' = rep(0,d))
+      self$A_cc <- replicate(k, diag(1, d, d), simplify = FALSE)
+      self$b_cc <- replicate(k, rep(0,d), simplify = FALSE)
+    },
+    get_action = function(t, context) {
+
+      if (runif(1) > self$epsilon) {
+        expected_rewards <- rep(0.0, context$k)
+        for (arm in 1:context$k) {
+          Xa         <- get_arm_context(context, arm)
+          A          <- self$theta$A[[arm]]
+          b          <- self$theta$b[[arm]]
+          A_inv      <- inv(A)
+          theta_hat  <- A_inv %*% b
+          expected_rewards[arm] <- Xa %*% theta_hat
+        }
+        action$choice  <- which_max_tied(expected_rewards)
+      } else {
+        self$action$choice        <- sample.int(context$k, 1, replace = TRUE)
+      }
+
+      action
+    },
+    set_reward = function(t, context, action, reward) {
+      arm    <- action$choice
+      reward <- reward$reward
+      Xa     <- get_arm_context(context, arm)
+
+      self$A_cc[[arm]] <- self$A_cc[[arm]] + outer(Xa, Xa)
+      self$b_cc[[arm]] <- self$b_cc[[arm]] + reward * Xa
+
+      if (t %% self$batch_size == 0) {
+        self$theta$A <- self$A_cc
+        self$theta$b <- self$b_cc
+      }
+
+      self$theta
+    }
+  )
+)
+
+
+BatchLinUCBDisjointPolicyEpsilon <- R6::R6Class(
+  portable = FALSE,
+  class = FALSE,
+  inherit = Policy,
+  public = list(
+    alpha = NULL,
+    epsilon = NULL,
+    batch_size = NULL,
+    A_cc = NULL,
+    b_cc = NULL,
+    class_name = "BatchLinUCBDisjointPolicyEpsilon",
+    initialize = function(alpha = 1.0, epsilon=0.1, batch_size = 1) {
+      super$initialize()
+      self$alpha <- alpha
+      self$epsilon <- epsilon
+      self$batch_size <- batch_size
+      self$A_cc <- A_cc
+      self$b_cc <- b_cc
+    },
+    set_parameters = function(context_params) {
+      ul <- length(context_params$unique)
+      k <- context_params$k
+      self$theta_to_arms <- list('A' = diag(1,ul,ul), 'b' = rep(0,ul))
+      self$A_cc <- replicate(k, diag(1, ul, ul), simplify = FALSE)
+      self$b_cc <- replicate(k, rep(0,ul), simplify = FALSE)
+    },
+    get_action = function(t, context) {
+      if (runif(1) > self$epsilon) {
+        expected_rewards <- rep(0.0, context$k)
+        for (arm in 1:context$k) {
+          Xa         <- get_arm_context(context, arm, context$unique)
+          A          <- self$theta$A[[arm]]
+          b          <- self$theta$b[[arm]]
+          A_inv      <- inv(A)
+          theta_hat  <- A_inv %*% b
+
+          mu_hat     <- Xa %*% theta_hat
+          sigma_hat  <- sqrt(tcrossprod(Xa %*% A_inv, Xa))
+
+          expected_rewards[arm] <- mu_hat + self$alpha * sigma_hat
+        }
+        action$choice  <- which_max_tied(expected_rewards)
+
+      } else {
+        self$action$choice        <- sample.int(context$k, 1, replace = TRUE)
+      }
+      action
+    },
+    set_reward = function(t, context, action, reward) {
+      arm    <- action$choice
+      reward <- reward$reward
+      Xa     <- get_arm_context(context, arm, context$unique)
+
+      self$A_cc[[arm]] <- self$A_cc[[arm]] + outer(Xa, Xa)
+      self$b_cc[[arm]] <- self$b_cc[[arm]] + reward * Xa
+
+      if (t %% self$batch_size == 0) {
+        self$theta$A <- self$A_cc
+        self$theta$b <- self$b_cc
+      }
+
+      self$theta
+    }
+  )
+)
+
+BatchContextualLinTSPolicy <- R6::R6Class(
+  portable = FALSE,
+  class = FALSE,
+  inherit = Policy,
+  public = list(
+    sigma = NULL,
+    batch_size = NULL,
+    A_cc = NULL,
+    b_cc = NULL,
+    class_name = "BatchContextualLinTSPolicy",
+    initialize = function(v = 0.2, batch_size=1) {
+      super$initialize()
+      self$sigma   <- v^2
+      self$batch_size <- batch_size
+      self$A_cc <- A_cc
+      self$b_cc <- b_cc
+    },
+    set_parameters = function(context_params) {
+      ul                 <- length(context_params$unique)
+      k <- context_params$k
+      self$theta_to_arms <- list('A_inv' = diag(1, ul, ul), 'b' = rep(0, ul))
+      self$A_cc <- replicate(k, diag(1, ul, ul), simplify = FALSE)
+      self$b_cc <- replicate(k, rep(0,ul), simplify = FALSE)
+    },
+    get_action = function(t, context) {
+      expected_rewards           <- rep(0.0, context$k)
+      for (arm in 1:context$k) {
+        Xa                       <- get_arm_context(context, arm, context$unique)
+        A_inv                    <- self$theta$A_inv[[arm]]
+        b                        <- self$theta$b[[arm]]
+        theta_hat                <- A_inv %*% b
+        sigma_hat                <- self$sigma * A_inv
+        theta_tilde              <- as.vector(contextual::mvrnorm(1, theta_hat, sigma_hat))
+        expected_rewards[arm]    <- Xa %*% theta_tilde
+      }
+      action$choice              <- which_max_tied(expected_rewards)
+      action
+    },
+    set_reward = function(t, context, action, reward) {
+      arm    <- action$choice
+      reward <- reward$reward
+      Xa    <- get_arm_context(context, arm, context$unique)
+
+      self$A_cc[[arm]] <- sherman_morrisson(self$A_cc[[arm]],Xa)
+      self$b_cc[[arm]] <- self$b_cc[[arm]] + reward * Xa
+
+      if (t %% self$batch_size == 0) {
+        self$theta$A_inv <- self$A_cc
+        self$theta$b <- self$b_cc
+      }
+
+      self$theta
+    }
+  )
+)
 
