@@ -217,6 +217,30 @@ get_proba_c_eps_greedy <- function(eps = 0.1, A_list, b_list, contexts, ind_arm,
   return(proba_results)  # Returns (T × nb_batch) matrix of probabilities, one context per row
 }
 
+get_proba_c_eps_greedy_final <- function(eps = 0.1, A_list, b_list, expected_rewards) {
+
+  K <- length(b_list)  # Number of arms
+  dims <- dim(expected_rewards)
+
+  B <- dims[1]
+
+  # Find max expected rewards for each row in every B
+  max_rewards <- apply(expected_rewards, 1, max)  # Shape: (B)
+
+  max_rewards_expanded <- array(max_rewards, dim = c(B, K))
+
+  #   # Identify ties (arms with max reward at each timestep)
+  ties <- expected_rewards == max_rewards_expanded  # Shape: (B × K)
+
+
+  # Count the number of best arms (how many ties per timestep)
+  num_best_arms <- apply(ties, 1, sum)  # Shape: (B)
+
+  # Compute final probabilities (B × K)
+  proba_results <- (1 - eps) * ties / num_best_arms + eps / K
+
+  return(proba_results)  # Returns (B × K) matrix of probabilities, one context per row
+}
 
 
 # GET PROBA UCB DISJOINT WITH EPSILON ---------------------------------------------------------
