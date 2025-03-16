@@ -291,29 +291,29 @@ get_proba_ucb_disjoint <- function(alpha=1.0, eps = 0.1, A_list, b_list, context
 
 # GET PROBA THOMPSON SAMPLING ---------------------------------------------------------------------
 
-
-get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm, batch_size=1) {
+get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm, batch_size) {
+  # A_list and b_list contain the list (for agent, sim group) of theta$A and theta$b
+  # Thus, each element of A_list and b_list, is itself a list (across arms) of
+  # matrices A (resp. vectors b)
 
   # ind_arm is the vector of indices of the arms that were chosen at each t
   if (!is.integer(ind_arm)) {
-    ind_arm <- as.integer(unlist(ind_arm))  # Convert from list/data.table format if necessary
+    ind_arm <- as.integer(unlist(ind_arm))
   }
 
   K <- length(b_list[[1]])  # Number of arms
   nb_timesteps <- length(contexts)
+  nb_batch <- nb_timesteps %/% batch_size
 
   # Convert contexts list to (T × d) matrix, put context vector in rows
   context_matrix <- do.call(rbind, contexts)
 
-  # Get a list of length T where each element represents a policy:
-  # a policy is K vectors theta = A^-1 b of resulting shape (d x 1), one per arm
-  result <- lapply(seq_len(nb_timesteps), function(t) {
+  # List of length nb_batch giving for each policy t, the array of probabilities under each context j
+  # of selecting Aj
+  result <- lapply(seq_len(nb_batch), function(t) {
 
     # Solve for theta_hat (d × K): each column corresponds to theta_hat for an arm
     theta_hat <- sapply(seq_len(K), function(k) A_list[[t]][[k]] %*% b_list[[t]][[k]], simplify = "matrix")
-
-    # print("Shape theta_hat")
-    # print(dim(theta_hat))
 
     mean <- context_matrix  %*% theta_hat # (T x K)
     variance_matrix <- sapply(seq_len(K), function (k) {
@@ -324,49 +324,20 @@ get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm, 
       # for a given policy, for a given arm, we have T sigmas: one per context
     }, simplify = "matrix") # (T x K)
 
-    # print("Shape mean")
-    # print(dim(mean))
-    #
-    # print("Shape variance matrix")
-    # print(dim(variance_matrix))
-
     proba_results <- numeric(nb_timesteps)
 
-    # # Precompute competition indices once for all timesteps
-    # comp_arms_list <- lapply(1:nb_timesteps, function(j) setdiff(1:K, ind_arm[j]))
-
     for (j in 1:nb_timesteps) {
-      # Xa <- matrix(contexts[[t]], nrow = 1)  # Ensure Xa is a 1 × d matrix
-      #
-      # mean_k <- Xa %*% theta_hat[[ind_arm[t]]]
-      # var_k  <-  Xa %*% sigma_hat[[ind_arm[t]]] %*% t(Xa)
 
       mean_k <- mean[j, ind_arm[j]]
       var_k  <-  variance_matrix[j, ind_arm[j]]
 
       competing_arms <- setdiff(1:K, ind_arm[j])
-      # competing_arms <- comp_arms_list[[j]]
-
-      # mean_values <- sapply(competing_arms, function(i) as.numeric(Xa %*% theta_hat[[i]]))
-      # var_values  <- sapply(competing_arms, function(i) max(as.numeric(Xa %*% sigma_hat[[i]] %*% t(Xa)), 1e-6))  # Avoid zero variance
 
       mean_values <- mean[j,competing_arms]
       var_values <- variance_matrix[j, competing_arms]
 
-      # print("Mean vals")
-      # print(mean_values)
-      #
-      # print("Var vals")
-      # print(var_values)
-      #
-      # print("competing arms")
-      # print(competing_arms)
-
-
       # Define the function for integration
       integrand <- function(x) {
-        # Compute the transformed mean and variance for the chosen arm
-
         log_p_xk <- dnorm(x, mean = mean_k, sd = sqrt(var_k), log = TRUE)  # Log-PDF
 
         for (i in seq_along(mean_values)) {
@@ -381,13 +352,9 @@ get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm, 
 
       # Adaptive numerical integration
       prob <- integrate(integrand, lower = lower_bound, upper = upper_bound, subdivisions = 1000, rel.tol = 1e-2)$value
-      # prob <- pracma::integral(integrand , -Inf , Inf )
 
       proba_results[j] <- pmax(0.05, pmin(prob, 0.95))
     }
-
-    # print("proba results")
-    # print(proba_results)
 
     return(proba_results)
   })
@@ -395,7 +362,6 @@ get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm, 
   # result is a list giving for each policy t, the array of probabilities under each context j
   # of selecting Aj
   result_matrix <- t(simplify2array(result)) # a row should be a context, policies in columns
-
 
   return(result_matrix)
 }
