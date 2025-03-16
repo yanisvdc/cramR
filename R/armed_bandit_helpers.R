@@ -138,13 +138,13 @@ compute_probas <- function(df, policy, policy_name, batch_size) {
 # GET PROBA EPSILON GREEDY -------------------------------------------------------------------------
 
 get_proba_c_eps_greedy <- function(eps = 0.1, A_list, b_list, contexts, ind_arm, batch_size) {
-  # A_list and b_list contain the list (across both sim and timesteps) of theta$A and theta$b
+  # A_list and b_list contain the list (for agent, sim group) of theta$A and theta$b
   # Thus, each element of A_list and b_list, is itself a list (across arms) of
   # matrices A (resp. vectors b)
 
   # ind_arm is the vector of indices of the arms that were chosen at each t
   if (!is.integer(ind_arm)) {
-    ind_arm <- as.integer(unlist(ind_arm))  # Convert from list/data.table format if necessary
+    ind_arm <- as.integer(unlist(ind_arm))
   }
 
   K <- length(b_list[[1]])  # Number of arms
@@ -154,38 +154,37 @@ get_proba_c_eps_greedy <- function(eps = 0.1, A_list, b_list, contexts, ind_arm,
   # Convert contexts list to (T × d) matrix, put context vector in rows
   context_matrix <- do.call(rbind, contexts)
 
-  # Get a list of length T where each element represents a policy:
-  # a policy is K vectors theta = A^-1 b of resulting shape (d x 1), one per arm
+  # List of length nb_batch of matrices (T, K): for each policy, expected reward across arms given all contexts
+  # a policy is represented by a (d, K): K vectors theta = A^-1 b of shape (d x 1)
+  # we then multiply by contexts to get a (T, d) x (d, K) = (T, K)
   expected_rewards <- lapply(seq_len(nb_batch), function(t) {
-    # Solve for theta_hat (d × K): each column corresponds to theta_hat for an arm
     theta_hat <- sapply(seq_len(K), function(k) solve(A_list[[t]][[k]], b_list[[t]][[k]]), simplify = "matrix")
     context_matrix  %*% theta_hat
-  })
+  }) # (T, K)
 
-  # Convert expected_rewards (list of T matrices) into a 3D array (T × K × nb_batch)
+  # Convert expected_rewards (list of nb_batch matrices) into a 3D array (T × K × nb_batch)
   # T x K x nb_batch = context x arm x policy
   expected_rewards_array <- simplify2array(expected_rewards)
 
   # Swap last dimension (nb_batch) with second dimension (K) → (T × nb_batch × K)
-  # T x nb_batch x K = context x policy x arm
   expected_rewards_array <- aperm(expected_rewards_array, c(1, 3, 2))
 
-  # Find max expected rewards for each row in every T × nb_batch matrix
+  # Find max expected rewards across K for each T, nb_batch combo
   max_rewards <- apply(expected_rewards_array, c(1, 2), max)  # Shape: (T × nb_batch)
 
   max_rewards_expanded <- array(max_rewards, dim = c(nb_timesteps, nb_batch, K))
 
-  #   # Identify ties (arms with max reward at each timestep)
+  # For each T, nb_batch combo, says if arm had max expected reward or not (1 or 0)
   ties <- expected_rewards_array == max_rewards_expanded  # Shape: (T × nb_batch × K)
 
-
-  # Count the number of best arms (how many ties per timestep)
+  # For each T, nb_batch combo, count the number of best arms
   num_best_arms <- apply(ties, c(1, 2), sum)  # Shape: (T × nb_batch)
 
   # Extract chosen arm's max reward status using extract_2d_from_3d()
+  # i.e. whether the arm chosen in the history had max expected reward or not
   chosen_best <- extract_2d_from_3d(ties, ind_arm)  # Shape: (T × nb_batch)
 
-  # Compute final probabilities (T × T)
+  # Compute final probabilities (T × nb_batch)
   proba_results <- (1 - eps) * chosen_best / num_best_arms + eps / K
 
   return(proba_results)  # Returns (T × nb_batch) matrix of probabilities, one context per row
