@@ -166,18 +166,18 @@ get_proba_c_eps_greedy <- function(eps = 0.1, A_list, b_list, contexts, ind_arm,
   # T x K x nb_batch = context x arm x policy
   expected_rewards_array <- simplify2array(expected_rewards)
 
-  # Swap last dimension (nb_batch) with second dimension (K) → (T × nb_batch × K)
+  # Swap last dimension (nb_batch) with second dimension (K) -> (T × nb_batch × K)
   expected_rewards_array <- aperm(expected_rewards_array, c(1, 3, 2))
 
-  # Find max expected rewards across K for each T, nb_batch combo
+  # Find max expected rewards across K for each (T, nb_batch) combo
   max_rewards <- apply(expected_rewards_array, c(1, 2), max)  # Shape: (T × nb_batch)
 
   max_rewards_expanded <- array(max_rewards, dim = c(nb_timesteps, nb_batch, K))
 
-  # For each T, nb_batch combo, says if arm had max expected reward or not (1 or 0)
+  # For each (T, nb_batch) combo, says if arm had max expected reward or not (1 or 0)
   ties <- expected_rewards_array == max_rewards_expanded  # Shape: (T × nb_batch × K)
 
-  # For each T, nb_batch combo, count the number of best arms
+  # For each (T, nb_batch) combo, count the number of best arms
   num_best_arms <- apply(ties, c(1, 2), sum)  # Shape: (T × nb_batch)
 
   # Extract chosen arm's max reward status using extract_2d_from_3d()
@@ -218,34 +218,37 @@ get_proba_c_eps_greedy_final <- function(eps = 0.1, A_list, b_list, expected_rew
 
 # GET PROBA UCB DISJOINT WITH EPSILON ---------------------------------------------------------
 
-get_proba_ucb_disjoint <- function(alpha=1.0, eps = 0.1, A_list, b_list, contexts, ind_arm, batch_size=1) {
-  # A_list and b_list contain the list (across both sim and timesteps) of theta$A and theta$b
+get_proba_ucb_disjoint <- function(alpha=1.0, eps = 0.1, A_list, b_list, contexts, ind_arm, batch_size) {
+  # A_list and b_list contain the list (for agent, sim group) of theta$A and theta$b
   # Thus, each element of A_list and b_list, is itself a list (across arms) of
   # matrices A (resp. vectors b)
 
   # ind_arm is the vector of indices of the arms that were chosen at each t
   if (!is.integer(ind_arm)) {
-    ind_arm <- as.integer(unlist(ind_arm))  # Convert from list/data.table format if necessary
+    ind_arm <- as.integer(unlist(ind_arm))
   }
 
   K <- length(b_list[[1]])  # Number of arms
   nb_timesteps <- length(contexts)
+  nb_batch <- nb_timesteps %/% batch_size
 
   # Convert contexts list to (T × d) matrix, put context vector in rows
   context_matrix <- do.call(rbind, contexts)
 
-  # Get a list of length T where each element represents a policy:
-  # a policy is K vectors theta = A^-1 b of resulting shape (d x 1), one per arm
-  mu <- lapply(seq_len(nb_timesteps), function(t) {
-    # Solve for theta_hat (d × K): each column corresponds to theta_hat for an arm
+  # List of length nb_batch of matrices (T, K): for each policy, expected reward across arms across all contexts
+  # a policy is represented by a (d, K): K vectors theta = A^-1 b of shape (d x 1)
+  # we then multiply by contexts to get a (T, d) x (d, K) = (T, K)
+  mu <- lapply(seq_len(nb_batch), function(t) {
     theta_hat <- sapply(seq_len(K), function(k) solve(A_list[[t]][[k]], b_list[[t]][[k]]), simplify = "matrix")
     context_matrix  %*% theta_hat # (T x K)
-  })
+  }) # (T, K)
 
-  variance <- lapply(seq_len(nb_timesteps), function(t) {
+  # List of length nb_batch of matrices (T, K): for each policy, standard deviation of expected reward
+  # across arms across all contexts
+  variance <- lapply(seq_len(nb_batch), function(t) {
     variance_matrix <- sapply(seq_len(K), function (k) {
       semi_var <- context_matrix %*% inv(A_list[[t]][[k]]) # (T x d)
-      # We have to do that not to end up with Xi * A_inv * t(Xj) for all combinations of i,j
+      # We have to do that NOT to end up with Xi * A_inv * t(Xj) for all combinations of i,j
       # We only want the combinations where i = j
       variance_terms <- rowSums(semi_var * context_matrix) # (vector of length T for each k)
       # for a given policy, for a given arm, we have T sigmas: one per context
@@ -253,34 +256,34 @@ get_proba_ucb_disjoint <- function(alpha=1.0, eps = 0.1, A_list, b_list, context
     }, simplify = "matrix") # (T x K)
   })
 
-  # Convert expected_rewards (list of T matrices) into a 3D array (T × K × T)
-  # T x K x T = context x arm x policy
+  # Convert mu and variance (list of nb_batch matrices) into 3D arrays (T × K × nb_batch)
+  # T x K x nb_batch = context x arm x policy
   mu_array <- simplify2array(mu)
   variance_array <- simplify2array(variance)
 
-  # Swap last dimension (T) with second dimension (K) → (T × T × K)
-  # T x T x K = context x policy x arm
+  # Swap last dimension (nb_batch) with second dimension (K) -> (T × nb_batch × K)
+  # T x nb_batch x K = context x policy x arm
   mu_array <- aperm(mu_array, c(1, 3, 2))
   variance_array <- aperm(variance_array, c(1, 3, 2))
 
   expected_rewards_array <- mu_array + alpha * variance_array
 
-  # Find max expected rewards for each row in every T × T matrix
-  max_rewards <- apply(expected_rewards_array, c(1, 2), max)  # Shape: (T × T)
+  # Find max expected rewards across K for each (T, nb_batch) combo
+  max_rewards <- apply(expected_rewards_array, c(1, 2), max)  # Shape: (T × nb_batch)
 
-  max_rewards_expanded <- array(max_rewards, dim = c(nb_timesteps, nb_timesteps, K))
+  max_rewards_expanded <- array(max_rewards, dim = c(nb_timesteps, nb_batch, K))
 
-  #   # Identify ties (arms with max reward at each timestep)
-  ties <- expected_rewards_array == max_rewards_expanded  # Shape: (T × T × K)
+  # For each (T, nb_batch) combo, says if arm had max expected reward or not (1 or 0)
+  ties <- expected_rewards_array == max_rewards_expanded  # Shape: (T × nb_batch × K)
 
-
-  # Count the number of best arms (how many ties per timestep)
-  num_best_arms <- apply(ties, c(1, 2), sum)  # Shape: (T × T)
+  # For each (T, nb_batch) combo, count the number of best arms
+  num_best_arms <- apply(ties, c(1, 2), sum)  # Shape: (T × nb_batch)
 
   # Extract chosen arm's max reward status using extract_2d_from_3d()
-  chosen_best <- extract_2d_from_3d(ties, ind_arm)  # Shape: (T × T)
+  # i.e. whether the arm chosen in the history had max expected reward or not
+  chosen_best <- extract_2d_from_3d(ties, ind_arm)  # Shape: (T × nb_batch)
 
-  # Compute final probabilities (T × T)
+  # Compute final probabilities (T × nb_batch)
   proba_results <- (1 - eps) * chosen_best / num_best_arms + eps / K
 
 }
