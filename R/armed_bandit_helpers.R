@@ -280,6 +280,47 @@ get_proba_ucb_disjoint <- function(alpha=1.0, eps = 0.1, A_list, b_list, context
   return(proba_results)
 }
 
+get_proba_ucb_disjoint_penultimate <- function(alpha=1.0, eps = 0.1, A_list, b_list, context_matrix) {
+
+  # context_matrix is of shape (B, d)
+  K <- length(b_list)  # Number of arms
+  dims <- dim(context_matrix)
+  B <- dims[1]
+
+  # Theta hat matrix of shape (d, K)
+  theta_hat <- sapply(seq_len(K), function(k) solve(A_list[[k]], b_list[[k]]), simplify = "matrix")
+
+  # Expected rewards matrix of shape (B, K)
+  mu <-  context_matrix  %*% theta_hat
+
+  variance_matrix <- sapply(seq_len(K), function (k) {
+    semi_var <- context_matrix %*% inv(A_list[[k]]) # (B x d)
+    # We have to do that NOT to end up with Xi * A_inv * t(Xj) for all combinations of i,j
+    # We only want the combinations where i = j
+    variance_terms <- rowSums(semi_var * context_matrix) # (vector of length B for each k)
+    # for a given policy, for a given arm, we have T sigmas: one per context
+    sqrt(variance_terms)
+  }, simplify = "matrix") # (B x K)
+
+  expected_rewards <- mu + alpha * variance_matrix
+
+  # Find max expected rewards for each row in every B
+  max_rewards <- apply(expected_rewards, 1, max)  # Shape: (B)
+
+  max_rewards_expanded <- array(max_rewards, dim = c(B, K))
+
+  # Identify ties (arms with max reward at each timestep)
+  ties <- expected_rewards == max_rewards_expanded  # Shape: (B × K)
+
+  # Count the number of best arms (how many ties per timestep)
+  num_best_arms <- apply(ties, 1, sum)  # Shape: (B)
+
+  # Compute final probabilities (B × K)
+  proba_results <- (1 - eps) * ties / num_best_arms + eps / K
+
+  return(proba_results)
+
+}
 
 # GET PROBA THOMPSON SAMPLING ---------------------------------------------------------------------
 
