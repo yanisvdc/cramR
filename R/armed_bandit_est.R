@@ -17,6 +17,10 @@ cram_bandit_est <- function(pi, reward, arm, batch=1) {
 
   dims_result <- dim(pi)
 
+  if (!is.matrix(pi)) {
+    stop("Error: `pi` must be a matrix, but it is of class ", class(pi))
+  }
+
   if (is.numeric(batch) && length(batch) == 1) {
     n <- dims_result[1]
     # `batch` is an integer, interpret it as `batch_size`
