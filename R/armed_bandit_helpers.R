@@ -112,25 +112,13 @@ compute_probas <- function(df, policy, policy_name, batch_size) {
   )
 
   # Store each column of probas_matrix in a list
-  # i.e. each element of the list corresponds to one proba param (and is a vector of proba across contexts)
-  # List of nb_batch vectors of length T
-  probas_list <- split(probas_matrix, col(probas_matrix))
+  # i.e. each element of the list corresponds to one context (and is a vector of proba across proba param)
+  # List of T vectors of length nb_batch
 
-  # Assign probabilities at batch-aligned rows
-  if (batch_size > 1) {
-    probas_col <- vector("list", nrow(df))  # Pre-allocate list column
-
-    # Identify batch-aligned indices
-    # sequence of indices from B to nrow with step batch size
-    batch_indices <- seq(batch_size, nrow(df), by = batch_size)
-
-    # Assign only at batch-aligned indices
-    probas_col[batch_indices] <- probas_list
-    return(cbind(df, probas = probas_col))
-  }
+  probas_list <- split(probas_matrix, row(probas_matrix))
 
   # Return df with probabilities for each row
-  return(cbind(df, probas = probas_list))
+  return(probas_list)
 }
 
 
