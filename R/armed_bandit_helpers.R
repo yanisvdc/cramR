@@ -277,6 +277,7 @@ get_proba_ucb_disjoint <- function(alpha=1.0, eps = 0.1, A_list, b_list, context
   # Compute final probabilities (T × nb_batch)
   proba_results <- (1 - eps) * chosen_best / num_best_arms + eps / K
 
+  return(proba_results)
 }
 
 
