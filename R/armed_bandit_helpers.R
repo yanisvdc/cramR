@@ -407,6 +407,85 @@ get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm, 
   return(result_matrix)
 }
 
+get_proba_thompson_penultimate <- function(sigma = 0.01, A_list, b_list, context_matrix) {
+
+  # context_matrix is of shape (B, d)
+  K <- length(b_list)  # Number of arms
+  dims <- dim(context_matrix)
+  B <- dims[1]
+
+  # For penultimate policy, gives the array of probabilities under each context j (1:B)
+  # of selecting arm k (1:K)
+
+  # Solve for theta_hat (d × K): each column corresponds to theta_hat for an arm
+  theta_hat <- sapply(seq_len(K), function(k) A_list[[k]] %*% b_list[[k]], simplify = "matrix")
+
+  mean <- context_matrix  %*% theta_hat # (B x K)
+  variance_matrix <- sapply(seq_len(K), function (k) {
+    semi_var <- context_matrix %*% (sigma * A_list[[k]]) # (B x d)
+    # We have to do that not to end up with Xi * A_inv * t(Xj) for all combinations of i,j
+    # We only want the combinations where i = j
+    variance <- rowSums(semi_var * context_matrix) # (vector of length B for each k)
+    # for a given policy, for a given arm, we have T sigmas: one per context
+  }, simplify = "matrix") # (B x K)
+
+
+  result <- vector("list", K)
+
+  for (k in 1:K) {
+
+    proba_results <- numeric(B)
+
+    for (j in 1:B) {
+
+      mean_k <- mean[j, k]
+      var_k  <-  variance_matrix[j, k]
+      #var_k <- max(var_k, 1e-6)
+
+      competing_arms <- setdiff(1:K, k)
+
+      mean_values <- mean[j,competing_arms]
+      var_values <- variance_matrix[j, competing_arms]
+      #var_values <- pmax(var_values, 1e-6)
+
+      # Define the function for integration
+      integrand <- function(x) {
+        log_p_xk <- dnorm(x, mean = mean_k, sd = sqrt(var_k), log = TRUE)  # Log-PDF
+
+        for (i in seq_along(mean_values)) {
+          log_p_xk <- log_p_xk + pnorm(x, mean = mean_values[i], sd = sqrt(var_values[i]), log.p = TRUE)
+        }
+
+        return(exp(log_p_xk))  # Convert back to probability space
+      }
+
+      # lower_bound <- mean_k - 3 * sqrt(var_k)
+      # upper_bound <- mean_k + 3 * sqrt(var_k)
+      all_means <- c(mean_k, mean_values)
+      all_vars <- c(var_k, var_values)
+      lower_bound <- min(all_means - 3 * sqrt(all_vars))
+      upper_bound <- max(all_means + 3 * sqrt(all_vars))
+
+
+      # Adaptive numerical integration
+      prob <- integrate(integrand, lower = lower_bound, upper = upper_bound, subdivisions = 10, abs.tol = 1e-2)$value
+
+      clip <- 1e-3
+
+      proba_results[j] <- pmax(clip, pmin(prob, 1-clip))
+    }
+
+    result[[k]] <- proba_results
+  }
+
+  # result is a list giving for each arm k, the array of probabilities under each context j
+  # of selecting arm k
+  result_matrix <- do.call(cbind, result)
+  # result_matrix <- simplify2array(result) # a row should be a context, arms in columns (B x K)
+
+  return(result_matrix)
+}
+
 
 # COMPUTE ESTIMAND ------------------------------------------------------------------
 
