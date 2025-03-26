@@ -363,11 +363,13 @@ get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm, 
 
       mean_k <- mean[j, ind_arm[j]]
       var_k  <-  variance_matrix[j, ind_arm[j]]
+      # var_k <- max(var_k, 1e-6)
 
       competing_arms <- setdiff(1:K, ind_arm[j])
 
       mean_values <- mean[j,competing_arms]
       var_values <- variance_matrix[j, competing_arms]
+      # var_values <- pmax(var_values, 1e-6)
 
       # Define the function for integration
       integrand <- function(x) {
@@ -380,13 +382,19 @@ get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm, 
         return(exp(log_p_xk))  # Convert back to probability space
       }
 
-      lower_bound <- mean_k - 3 * sqrt(var_k)
-      upper_bound <- mean_k + 3 * sqrt(var_k)
+      # lower_bound <- mean_k - 3 * sqrt(var_k)
+      # upper_bound <- mean_k + 3 * sqrt(var_k)
+      all_means <- c(mean_k, mean_values)
+      all_vars <- c(var_k, var_values)
+      lower_bound <- min(all_means - 3 * sqrt(all_vars))
+      upper_bound <- max(all_means + 3 * sqrt(all_vars))
 
       # Adaptive numerical integration
-      prob <- integrate(integrand, lower = lower_bound, upper = upper_bound, subdivisions = 1000, rel.tol = 1e-2)$value
+      prob <- integrate(integrand, lower = lower_bound, upper = upper_bound, subdivisions = 10, abs.tol = 1e-2)$value
 
-      proba_results[j] <- pmax(0.05, pmin(prob, 0.95))
+      clip <- 1e-3
+
+      proba_results[j] <- pmax(clip, pmin(prob, 1-clip))
     }
 
     return(proba_results)
@@ -394,7 +402,7 @@ get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm, 
 
   # result is a list giving for each policy t, the array of probabilities under each context j
   # of selecting Aj
-  result_matrix <- t(simplify2array(result)) # a row should be a context, policies in columns
+  result_matrix <- simplify2array(result) # a row should be a context, policies in columns
 
   return(result_matrix)
 }
