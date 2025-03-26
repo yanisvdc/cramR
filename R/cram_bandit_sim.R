@@ -35,13 +35,20 @@ utils::globalVariables(c(
 
 cram_bandit_sim <- function(horizon, simulations,
                             bandit, policy,
-                            alpha=0.05, do_parallel = FALSE) {
+                            alpha=0.05, do_parallel = FALSE, seed=42) {
+
+  # Force garbage collection before starting
+  gc(full = TRUE, verbose = FALSE)
+
+  # RUN SIMULATION ---------------------------------------------------------
 
   horizon <- as.integer(horizon)
   # Add 1 as first sim of the contextual package has a writing error for theta
   simulations <- as.integer(simulations + 1)
 
   policy_name <- policy$class_name
+
+  list_betas <<- list()
 
   if (is.null(policy$batch_size)) {
     batch_size <- 1
@@ -54,7 +61,7 @@ cram_bandit_sim <- function(horizon, simulations,
   simulation     <- Simulator$new(agents, horizon, simulations,
                                   do_parallel = do_parallel,
                                   save_theta = TRUE,
-                                  save_context = TRUE)
+                                  save_context = TRUE, set_seed = seed)
 
   history        <- simulation$run()
 
@@ -62,157 +69,148 @@ cram_bandit_sim <- function(horizon, simulations,
 
   res <- history$data
 
-  list_betas <<- list_betas[-1]  # Remove the first element
+  # PROCESS HISTORY TABLE -------------------------------------------------------
 
-  # Retrieve d (feature dimension) from any row, assuming d is constant across rows
-  d_value <- res$d[1L]  # Using 1L for integer indexing optimization
+  # Convert to data.table without copy
+  setDT(res)
 
-  # Dynamically select the X.1 to X.d columns
+  list_betas <<- list_betas[-1]  # Remove the first element as first sim has writing error
+  d_value <- res$d[1L]
+
+  # Context is given through d columns: X.1 to X.d
   X_columns <- paste0("X.", seq_len(d_value))
 
-  # Subset res, keeping only the relevant columns
-  res_subset <- res[, c("agent", "sim", "t", "choice", "reward", "theta", X_columns), with = FALSE]
-  # check <- copy(res_subset)
-  # Convert X.1, ..., X.d into a single list-column `context`
-  res_subset[, context := asplit(as.matrix(.SD), 1), .SDcols = X_columns]
+  res <- res[, c("agent", "sim", "t", "choice", "reward", "theta", X_columns), with = FALSE]
 
-  # Convert X.1, ..., X.d into a single list-column `context`
-  # res_subset[, context := lapply(1:.N, function(i) unlist(.SD[i, ], use.names = FALSE)), .SDcols = X_columns]
+  # Convert X.1, ..., X.d into a single list-column `context` and remove old columns
+  res[, context := asplit(as.matrix(.SD), 1), .SDcols = X_columns]
+  res[, (X_columns) := NULL]
 
-  # Remove original X.1, ..., X.d columns after storing in `context`
-  res_subset[, (X_columns) := NULL]
+  # Count NULL values in theta per simulation
+  sims_to_remove <- res[, .(num_nulls = sum(vapply(theta, is.null, logical(1L)))), by = sim][num_nulls > 0, sim]
 
-
-  # # Retrieve k (number of arms) dynamically from any row
-  # k_value <- res$k[1]
-  #
-  # # Convert context vectors into k × d matrices
-  # res_subset[, context := lapply(context, function(vec) matrix(rep(vec, each = k_value), nrow = k_value, byrow = TRUE))]
-
-
-  # Check for NULL to ensure the history table is clean
-
-  # Count NULL values in theta per simulation (direct NULL checking)
-  sims_to_remove <- res_subset[, .(num_nulls = sum(vapply(theta, is.null, logical(1L)))), by = sim][num_nulls > 0, sim]
-
-  # Remove simulations where num_nulls >= 1 (optimized filtering)
+  # Remove simulations where num_nulls >= 1
   if (length(sims_to_remove) > 0) {
-    res_subset <- res_subset[!sim %in% sims_to_remove]
+    res <- res[!sim %in% sims_to_remove]
   }
 
-  # # Convert NULL values in theta to NA
-  # res_subset[, theta_na := lapply(theta, function(x) if (is.null(x)) NA else x)]
-  #
-  # # Count the number of NA values in theta_na per simulation
-  # null_counts <- res_subset[, .(num_nulls = sum(is.na(theta_na))), by = sim]
-  #
-  # # Identify simulations to drop (where num_nulls >= 1)
-  # sims_to_remove <- null_counts[num_nulls >= 1, sim]
-  #
-  # # Remove these simulations from res_subset in place
-  # res_subset <- res_subset[!sim %in% sims_to_remove]
-  #
-  # # Drop the temporary column
-  # res_subset[, theta_na := NULL]
-
   # Ensure data is sorted correctly by agent, sim, t
-  setorder(res_subset, agent, sim, t)
+  setorder(res, agent, sim, t)
 
-  res_subset <- res_subset %>%
-    mutate(sim = sim - 1)
-
-  # Apply function efficiently per (agent, sim) group
-  # res_subset_updated <- res_subset %>%
-  #   group_by(agent, sim) %>%
-  #   group_modify(~ compute_probas(.x, policy, policy_name)) %>%
-  #   ungroup()
-
-  # other <- copy(res_subset)
-  res_subset_updated <- res_subset[, compute_probas(.SD, policy, policy_name, batch_size = batch_size), by = .(agent, sim)]
-  # res_subset_updated <- res_subset[, compute_probas(.SD, policy, policy_name), by = .(agent, sim)]
+  # As we remove first sim due to writing error, shift sim numbers by -1
+  # res <- res %>%
+  #   mutate(sim = sim - 1)
+  res[, sim := sim - 1L]
 
 
-  # return(list(a = res_subset_updated, b = other))
+  # CALCULATE PROBAS ---------------------------------------------------------------
 
+  # res <- res[, compute_probas(.SD, policy, policy_name, batch_size = batch_size), by = .(agent, sim)]
 
-  # Process Data by Simulation
-  estimates <- res_subset_updated %>%
-    group_by(sim) %>%
-    summarise(
-      arms = list(choice),
-      rewards = list(reward),
-      policy_matrix = list(do.call(cbind, probas))  # Concatenate probability vectors into a matrix
-    ) %>%
-    mutate(
-      estimate = map2_dbl(arms, rewards, ~ cram_bandit_est(policy_matrix[[cur_group_id()]], .y, .x, batch=batch_size)),
-      variance_est = map2_dbl(arms, rewards, ~ cram_bandit_var(policy_matrix[[cur_group_id()]], .y, .x, batch=batch_size)),
-      estimand = map_dbl(sim, ~ compute_estimand(.x, res_subset_updated, list_betas, eps = 0.1))
-    )
+  # res[, probas := compute_probas(.SD, policy, policy_name, batch_size = batch_size)$probas, by = .(agent, sim)]
 
+  # res[, probas := vector("list", .N)]  # Pre-allocate a list column with NULLs
+  # res[, probas := compute_probas(.SD, policy, policy_name, batch_size = batch_size), by = .(agent, sim)]
 
-  # # Process Data by Simulation
-  # estimates <- res_subset_updated %>%
-  #   group_by(sim) %>%
-  #   summarise(
-  #     arms = list(choice),  # Vector of chosen arms
-  #     rewards = list(reward),  # Vector of rewards
-  #     policy_matrix = list(do.call(cbind, probas))  # Concatenate probability vectors into a matrix
-  #   ) %>%
-  #   mutate(
-  #     estimate = map2_dbl(arms, rewards, ~ cram_bandit_est(policy_matrix[[cur_group_id()]], .y, .x, batch=batch_size)),
-  #     variance_est = map2_dbl(arms, rewards, ~ cram_bandit_var(policy_matrix[[cur_group_id()]], .y, .x, batch=batch_size))  # Variance estimation
-  #   )
+  # # Pre-allocate probas column as a list to avoid memory spikes
+  # res[, probas := vector("list", .N)]
+  #
+  # # Compute probabilities with NA instead of NULL
+  # res[, probas := compute_probas(.SD, policy, policy_name, batch_size = batch_size), by = .(agent, sim)]
+  #
+  # # Convert NA values back to NULL after assignment
+  # res[, probas := lapply(probas, function(x) if (is.na(x)) NULL else x)]
 
-  # Compute prediction error
-  estimates <- estimates %>%
-    mutate(prediction_error = estimate - estimand)
+  res[, probas := list(compute_probas(.SD, policy, policy_name, batch_size = batch_size)),
+      by = .(agent, sim)]
+
+  # # Memory-optimized replacement:
+  # res[, probas := {
+  #   # Compute probabilities for this group
+  #   tmp <- compute_probas(.SD, policy, policy_name, batch_size = batch_size)
+  #
+  #   # Return JUST the probas column content for this group
+  #   list(tmp$probas)
+  # }, by = .(agent, sim)]
+
+  print("Check compute probas")
+
+  # CALCULATE STATISTICS -----------------------------------------------------------
+
+  print(Sys.time())
+
+  # Compute estimates using data.table
+  estimates <- res[, {
+    # Extract arms (choices) and rewards as vectors
+    arms_vec <- choice
+    rewards_vec <- reward
+
+    # Build policy matrix: remove NULL probas and column-bind
+    policy_mat <- do.call(rbind, probas)
+
+    # Compute estimates and variance using policy matrix
+    est <- cram_bandit_est(policy_mat, rewards_vec, arms_vec, batch = batch_size)
+    var_est <- cram_bandit_var(policy_mat, rewards_vec, arms_vec, batch = batch_size)
+
+    # Compute estimand using the entire group's data
+    estimand_val <- compute_estimand(.SD, list_betas, policy, policy_name, batch_size, bandit)
+
+    # Return results as columns
+    .(estimate = est, variance_est = var_est, estimand = estimand_val)
+  }, by = sim]
+
+  print("Check estimates")
+
+  # Compute prediction error and other metrics using data.table
+  estimates[, prediction_error := estimate - estimand]
 
   # Compute empirical bias (mean of prediction error)
-  empirical_bias <- mean(estimates$prediction_error)
+  empirical_bias <- estimates[, mean(prediction_error)]
 
-  estimates <- estimates %>%
-    mutate(est_rel_error = (estimate - estimand) / estimand)
+  # Add relative error column
+  estimates[, est_rel_error := (estimate - estimand) / estimand]
 
   # Compute True Variance (Sample Variance of Prediction Errors)
-  true_variance <- var(estimates$prediction_error)
+  true_variance <- estimates[, var(prediction_error)]
 
   print("True variance")
   print(true_variance)
 
-  # Compute Prediction Error on Variance
-  estimates <- estimates %>%
-    mutate(variance_prediction_error = (variance_est - true_variance) / true_variance)
+  # Add variance prediction error column
+  estimates[, variance_prediction_error := (variance_est - true_variance) / true_variance]
 
   # Exclude 20% of Simulations Randomly
-  num_excluded <- ceiling(0.2 * nrow(estimates))  # 20% of total sims
+  num_excluded <- ceiling(0.2 * nrow(estimates))
   excluded_sims <- sample(nrow(estimates), size = num_excluded)
 
-  # Select only the remaining 80% of simulations
-  filtered_errors <- estimates$est_rel_error[-excluded_sims]
-  filtered_variance_errors <- estimates$variance_prediction_error[-excluded_sims]
+  # Filter errors using data.table's anti-join syntax
+  filtered_dt <- estimates[!excluded_sims]
 
-  # Compute and Report Final Average Prediction Errors
-  avg_prediction_error <- mean(filtered_errors)
-  avg_variance_prediction_error <- mean(filtered_variance_errors)
+  # Compute final average prediction errors
+  avg_prediction_error <- filtered_dt[, mean(est_rel_error)]
+  avg_variance_prediction_error <- filtered_dt[, mean(variance_prediction_error)]
 
   print(paste("Average Prediction Error:", avg_prediction_error))
   print(paste("Average Variance Prediction Error:", avg_variance_prediction_error))
 
   # Compute 95% Confidence Intervals
   z_value <- qnorm(1 - alpha / 2)
-  T_steps <- max(res_subset_updated$t)  # Get total timesteps
-  estimates <- estimates %>%
-    mutate(
-      # std_error = sqrt(variance_est) * sqrt(T_steps - 1),
-      std_error = sqrt(variance_est),
-      ci_lower = estimate - z_value * std_error,
-      ci_upper = estimate + z_value * std_error
-    )
+
+  estimates[, `:=`(
+    std_error = sqrt(variance_est),
+    ci_lower = estimate - z_value * sqrt(variance_est),
+    ci_upper = estimate + z_value * sqrt(variance_est)
+  )]
 
   # Compute Empirical Coverage
-  empirical_coverage <- mean((estimates$estimand >= estimates$ci_lower) &
-                               (estimates$estimand <= estimates$ci_upper))
+  empirical_coverage <- estimates[, mean(estimand >= ci_lower & estimand <= ci_upper)]
 
   print(paste("Empirical Coverage of 95% Confidence Interval:", empirical_coverage))
+  print(Sys.time())
+
+  # Final cleanup before return
+  gc(full = TRUE, verbose = FALSE)
+
+  return(estimates)
 
 }
