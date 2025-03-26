@@ -402,73 +402,63 @@ get_proba_thompson <- function(sigma = 0.01, A_list, b_list, contexts, ind_arm, 
 
 # COMPUTE ESTIMAND ------------------------------------------------------------------
 
-compute_estimand <- function(sim_index, res_subset_updated, list_betas, eps = 0.1) {
+compute_estimand <- function(sim_data, list_betas, policy, policy_name, batch_size, bandit) {
 
-  # Get last timestep data for the current simulation
-  sim_data <- res_subset_updated %>% filter(sim == sim_index)
+  # GET PARAMS OF PI_{T-1} (or PI_{T-batch_size} more generally) ------------------------
   last_timestep <- max(sim_data$t)
 
-  last_row <- sim_data %>% filter(t == last_timestep)
-
-  if (nrow(last_row) == 0) {
-    stop(paste("No last timestep found for simulation", sim_index))
-  }
+  last_row <- sim_data %>% filter(t == last_timestep - batch_size)
 
   theta_info <- last_row$theta[[1]]  # Extract the actual theta list (removing outer list structure)
 
-  if (!is.list(theta_info) || is.null(theta_info$A) || is.null(theta_info$b)) {
-    stop(paste("Theta structure missing for simulation", sim_index))
-  }
+  # Use A_inv if LinTSPolicy is in the string of policy_name
+  key_A <- ifelse(grepl("LinTSPolicy", policy_name), "A_inv", "A")
+  key_b <- "b"
 
-  A_list <- theta_info$A  # List of A matrices (one per arm)
-  b_list <- theta_info$b  # List of b vectors (one per arm)
+  A_list <- theta_info[[key_A]]
+  b_list <- theta_info[[key_b]]
 
-  # Ensure A_list and b_list are correctly extracted
-  if (!is.list(A_list) || !is.list(b_list)) {
-    stop(paste("A_list or b_list is not a list for simulation", sim_index))
-  }
+  # GET BETA MATRIX FOR CURRENT SIM --------------------------------------------------
 
-  # Get beta matrix for current simulation
+  # Safely extract simulation index
+  sim_index <- theta_info$sim - 1
+
   beta_matrix <- list_betas[[sim_index]]  # Shape (features x arms)
 
-  if (!is.matrix(beta_matrix)) {
-    stop(paste("Beta matrix is not a matrix for simulation", sim_index))
-  }
+  # GET INDEPENDENT CONTEXTS FROM OTHER SIMs ---------------------------------------
+  B <- 1000
+  d <- bandit$d
+  context_matrix <- matrix(rnorm(B * d), nrow = B, ncol = d)
 
-  # **Remove contexts from the current simulation**
-  other_contexts <- res_subset_updated %>%
-    filter(sim != sim_index) %>%
-    pull(context)  # List of context vectors from other simulations
+  # # # Take a random subset of 1000 records (if available)
+  # num_samples <- min(1000, nrow(context_matrix))  # Ensure we don’t sample more than available
+  # context_matrix <- context_matrix[sample(nrow(context_matrix), num_samples, replace = FALSE), , drop = FALSE]  # Shape (1000 × d)
 
-  if (length(other_contexts) == 0) {
-    stop(paste("No other contexts available for simulation", sim_index))
-  }
+  # Compute true linear rewards via matrix multiplication
+  # True linear rewards (B × K) = (B × d) * (d × K)
+  true_linear_rewards <- context_matrix %*% beta_matrix  # Shape (B x K)
 
-  # Convert remaining contexts list to (B × d) matrix (rows = contexts, cols = features)
-  context_matrix <- do.call(rbind, other_contexts)  # Shape (B × d)
+  # Compute the probability matrix based on the policy name
+  policy_probs <- switch(
+    policy_name,
+    "ContextualEpsilonGreedyPolicy" =,
+    "BatchContextualEpsilonGreedyPolicy" = get_proba_c_eps_greedy_penultimate(policy$epsilon, A_list, b_list, context_matrix),  # Should be (B x K)
 
-  # **Take a random subset of 100 records (if available)**
-  num_samples <- min(100, nrow(context_matrix))  # Ensure we don’t sample more than available
-  context_matrix <- context_matrix[sample(nrow(context_matrix), num_samples, replace = FALSE), , drop = FALSE]  # Shape (100 × d)
+    "ContextualLinTSPolicy" =,
+    "BatchContextualLinTSPolicy" = get_proba_thompson_penultimate(policy$sigma, A_list, b_list, context_matrix),
 
-  # Compute expected rewards via matrix multiplication
-  # Expected rewards (B × K) = (B × d) * (d × K)
-  expected_rewards <- context_matrix %*% beta_matrix  # Shape (B x K)
+    "LinUCBDisjointPolicyEpsilon" =,
+    "BatchLinUCBDisjointPolicyEpsilon" = get_proba_ucb_disjoint_penultimate(policy$alpha, policy$epsilon, A_list, b_list, context_matrix),
 
-  # Compute policy probabilities using the provided function
-  policy_probs <- get_proba_c_eps_greedy_final(eps, A_list, b_list, expected_rewards)  # Should be (B x K)
-
-  # Ensure dimensions match before multiplication
-  if (!all(dim(policy_probs) == dim(expected_rewards))) {
-    stop(paste("Dimension mismatch in simulation", sim_index,
-               "Policy Probs:", paste(dim(policy_probs), collapse = " x "),
-               "Expected Rewards:", paste(dim(expected_rewards), collapse = " x ")))
-  }
+    stop("Unsupported policy_name: Choose among ContextualEpsilonGreedyPolicy, BatchContextualEpsilonGreedyPolicy,
+         ContextualLinTSPolicy, BatchContextualLinTSPolicy, LinUCBDisjointPolicyEpsilon, BatchLinUCBDisjointPolicyEpsilon")
+  )
 
   # Compute final estimand
   # B <- dim(expected_rewards)[1]
-  B <- nrow(expected_rewards)  # Now using subset size (100)
-  estimand <- (1 / B) * sum(policy_probs * expected_rewards)
+  B <- nrow(true_linear_rewards)  # Now using subset size (1000)
+
+  estimand <- (1 / B) * sum(policy_probs * true_linear_rewards)
 
   return(estimand)
 }
