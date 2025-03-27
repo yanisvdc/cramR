@@ -5,6 +5,7 @@
 #' @param pi A 3-d array, for each row j, column t, depth a, gives pi_t(Xj, a)
 #' @param reward A vector of rewards
 #' @param arm A vector of arms chosen
+#' @param batch Batch size
 #' @return The crammed variance estimate for bandit.
 #' @export
 

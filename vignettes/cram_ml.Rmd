@@ -1,0 +1,128 @@
+---
+title: "Using cram_ml() for Simultaneous Machine Learning and Evaluation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using cram_ml() for Simultaneous Machine Learning and Evaluation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(cramR)
+library(caret)
+library(DT)
+```
+
+## What is `cram_ml()`?
+
+The `cram_ml()` function implements the CRAM method — **Causal Regularization via Approximate Models** — for **simultaneous model training and evaluation**, even when the data-generating process is unknown.
+
+It supports:
+
+- Supervised learning via formulas (e.g., `Y ~ .`)
+- Unsupervised learning (e.g., `kmeans`)
+- Batch-wise model training and evaluation
+- Standard or custom loss functions
+- Confidence intervals for expected loss
+
+---
+
+## Example: Linear Regression with Mean Squared Error (MSE)
+
+```{r}
+# Simulate dataset
+set.seed(42)
+X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
+Y_data <- rnorm(100)
+data_df <- data.frame(X_data, Y = Y_data)
+```
+
+```{r}
+# Define caret parameters for linear regression (no cross-validation)
+caret_params_lm <- list(
+  method = "lm",
+  trControl = trainControl(method = "none")
+)
+
+nb_batch <- 5
+```
+
+### Run the CRAM ML method
+
+```{r}
+result <- cram_ml(
+  data = data_df,
+  formula = Y ~ .,
+  batch = nb_batch,
+  loss_name = "mse",
+  caret_params = caret_params_lm
+)
+```
+
+---
+
+## Results
+
+### Summary Table
+
+```{r}
+result$raw_results
+```
+
+### Interactive Table
+
+```{r}
+result$interactive_table
+```
+
+---
+
+## Access the Final Model
+
+```{r}
+str(result$final_ml_model)
+```
+
+This is the final model trained on all batches and returned by `caret::train()`.
+
+---
+
+## Customization
+
+You can customize the CRAM ML pipeline with:
+
+- `custom_fit`: your own training function  
+- `custom_predict`: your own prediction function  
+- `custom_loss`: your own loss function  
+- `loss_name`: built-in options like `"mse"`, `"logloss"`, `"accuracy"`, `"euclidean_distance"`  
+
+---
+
+## Notes
+
+- `batch` can be either:
+  - an integer (for random batching), or  
+  - a vector of predefined batch indices  
+- Supports both **supervised** and **unsupervised** workflows  
+- Confidence intervals are computed using asymptotic theory and influence functions
+
+---
+
+## References
+
+This function builds on:
+
+- Batch-wise learning and evaluation  
+- Cross-validation logic extended for inference  
+- Influence-function-based variance estimation  
+
+See also:
+
+- `caret::train()`  
+- `stats::kmeans()`  
+- `DT::datatable()`
+

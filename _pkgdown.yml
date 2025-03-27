@@ -1,0 +1,148 @@
+# _pkgdown.yml
+url: https://yanisvdc.github.io/cramR
+
+template:
+  bootstrap: 5
+  bootswatch: lux
+  includes:
+    in_header: |
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+      <style>
+        :root {
+          --primary-gradient: linear-gradient(135deg, #2c3e50, #3498db);
+          --hover-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .navbar {
+          background-color: rgba(255, 255, 255, 0.95); /* Light background with slight transparency */
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Optional shadow for depth */
+        }
+
+        body {
+          padding-top: 80px; /* Prevents content from being cut under the navbar */
+        }
+
+        .navbar-brand img {
+          height: 40px;
+          transition: transform 0.3s ease;
+        }
+
+        .navbar-brand:hover img {
+          transform: scale(1.05);
+        }
+
+        .hero-banner {
+          background: var(--primary-gradient);
+          padding: 6rem 1rem;
+          color: white;
+          text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .feature-card {
+          background: white;
+          border-radius: 12px;
+          padding: 2rem;
+          margin: 1rem;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+          transform: translateY(-5px);
+          box-shadow: var(--hover-shadow);
+        }
+
+        /* Add hover effect to make the navbar more readable */
+        .navbar:hover {
+          background-color: rgba(255, 255, 255, 1); /* Fully visible on hover */
+        }
+
+        /* Add space below the navbar to prevent cutting off content */
+        main {
+          padding-top: 1rem;
+        }
+      </style>
+
+home:
+  title: CRAM
+  description: "Advanced Framework for Causal Policy Learning and Evaluation"
+  strip_header: false  # Ensures the header is not removed
+  links:
+    - icon: fa-brands fa-github
+      text: "View Source"
+      href: https://github.com/yanisvdc/cramR
+    - icon: fa-solid fa-file-lines
+      text: "Read Paper"
+      href: https://arxiv.org/abs/2403.07031
+
+navbar:
+  brand:
+    title: CRAM
+    image: figures/cram_logo.jpg  # Correct path
+    image_alt: CRAM Logo
+
+  components:
+    articles:
+      text: Articles
+      menu:
+        - text: "Getting Started"
+          href: articles/cram_policy.html
+        - text: "Cram ML"
+          href: articles/cram_ml.html
+        - text: "Cram Bandit"
+          href: articles/cram_bandit.html
+        - text: "Cram Bandit Helpers"
+          href: articles/cram_bandit_helpers.html
+        - text: "Cram Policy Learning"
+          href: articles/cram_learning.html
+        - text: "Cram ML Learning"
+          href: articles/cram_ml_learning.html
+        - text: "Cram Policy Simulation"
+          href: articles/cram_policy_simulation.html
+        - text: "Cram Bandit Simulation"
+          href: articles/cram_bandit_simulation.html
+
+    resources:
+      text: Resources
+      menu:
+        - text: "Function Reference"
+          href: reference/index.html
+        - text: "Release Notes"
+          href: news/index.html
+
+    github:
+      icon: fa-brands fa-github
+      href: https://github.com/yanisvdc/cramR
+      title: GitHub Repository
+      aria-label: "GitHub repository"
+
+    paper:
+      icon: fa-solid fa-file-pdf
+      href: https://arxiv.org/abs/2403.07031
+      title: Research Paper
+      aria-label: "Research paper"
+
+  structure:
+    left: [brand, articles, resources]
+    right: [github, paper]
+
+articles:
+  - title: "Getting Started"
+    subtitle: "Learn core concepts and basic usage"
+    contents:
+      - cram_policy
+      - cram_ml
+      - cram_policy_simulation
+
+  - title: "Bandit Evaluation"
+    subtitle: "Contextual bandit implementation"
+    contents:
+      - cram_bandit
+      - cram_bandit_simulation
+      - cram_bandit_helpers
+
+  - title: "Advanced Topics"
+    subtitle: "Implementation details"
+    contents:
+      - cram_learning
+      - cram_ml_learning

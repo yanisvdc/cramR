@@ -1,7 +1,8 @@
 utils::globalVariables(c(
   "context", "theta_na", "theta", "sim", "num_nulls", "agent",
   "choice", "reward", "probas", "arms", "rewards", "estimate",
-  "variance_est", "std_error"
+  "variance_est", "std_error", "list_betas", "prediction_error", "estimand", "est_rel_error",
+  "variance_prediction_error", "ci_lower", "ci_upper"
 ))
 
 
@@ -15,6 +16,7 @@ utils::globalVariables(c(
 #' @param policy The policy, choosing the arm at each timestep
 #' @param alpha Significance level for confidence intervals for calculating the empirical coverage. Default is 0.05 (95\% confidence).
 #' @param do_parallel Whether to parallelize the simulations. Default to FALSE.
+#' @param seed Seed for simulation
 #'
 #' @return A **list** containing:
 #'   \item{raw_results}{A data frame summarizing key metrics:
@@ -47,6 +49,8 @@ cram_bandit_sim <- function(horizon, simulations,
   simulations <- as.integer(simulations + 1)
 
   policy_name <- policy$class_name
+
+  list_betas <- NULL  # Prevent R CMD check NOTE on <<- assignment
 
   list_betas <<- list()
 

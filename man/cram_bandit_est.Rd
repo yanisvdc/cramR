@@ -4,7 +4,7 @@
 \alias{cram_bandit_est}
 \title{Cramming Policy Evaluation for Multi-Armed Bandit}
 \usage{
-cram_bandit_est(pi, reward, arm)
+cram_bandit_est(pi, reward, arm, batch = 1)
 }
 \arguments{
 \item{pi}{A 3-d array, for each row j, column t, depth a, gives pi_t(Xj, a)}
@@ -12,6 +12,9 @@ cram_bandit_est(pi, reward, arm)
 \item{reward}{A vector of rewards}
 
 \item{arm}{A vector of arms chosen}
+
+\item{batch}{A vector or integer. If a vector, gives the batch assignment for each context.
+If an integer, interpreted as the batch size and contexts are assigned to a batch in the order of the dataset.}
 }
 \value{
 The estimated policy value difference \eqn{\Delta(\pi_T; \pi_0)}.

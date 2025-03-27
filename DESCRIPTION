@@ -21,7 +21,7 @@ Description: Performs the CRAM method, a general and efficient approach to simul
     the learned ITR were to be deployed (policy value), along with the standard error, the confidence interval
     at the level alpha specified by the user, and the proportion of treated under this policy.
 License: MIT + file LICENSE
-URL: https://github.com/yanisvdc/cramR
+URL: https://github.com/yanisvdc/cramR, https://yanisvdc.github.io/cramR 
 BugReports: https://github.com/yanisvdc/cramR/issues
 Depends: R (>= 3.5.0)
 Imports:

@@ -1,0 +1,131 @@
+---
+title: "Using cram_simulation() for CRAM with Known DGP"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using cram_simulation() for CRAM with Known DGP}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(cramR)
+library(data.table)
+library(DT)
+```
+
+## 🎯 What is `cram_simulation()`?
+
+The `cram_simulation()` function performs **simultaneous policy learning and evaluation** under a **known data-generating process (DGP)**. It is useful for:
+
+- Benchmarking CRAM on simulated datasets
+- Measuring empirical **bias**, **variance**, and **confidence interval coverage**
+- Supporting both synthetic (`dgp_X`) and empirical (`X`) covariate generation
+
+---
+
+## 📦 Inputs Overview
+
+You must supply either:
+- `X`: a dataset to bootstrap from (empirical DGP)  
+**or**
+- `dgp_X`: a function that simulates covariates  
+
+You must also define:
+- `dgp_D(X)`: treatment assignment function  
+- `dgp_Y(D, X)`: outcome generation function  
+
+---
+
+## 📘 Example: Simulated Data with Binary, Discrete, and Continuous Covariates
+
+```{r}
+# Define data generation process (DGP) functions
+X_data <- data.table::data.table(
+  binary = rbinom(100, 1, 0.5),                 # Binary variable (0 or 1)
+  discrete = sample(1:5, 100, replace = TRUE),  # Discrete variable (1 to 5)
+  continuous = rnorm(100)                       # Continuous variable
+)
+
+dgp_D <- function(X) rbinom(nrow(X), 1, 0.5)
+
+dgp_Y <- function(D, X) {
+  theta <- ifelse(
+    X[, binary] == 1 & X[, discrete] <= 2,  # Group 1: High benefit
+    1,
+    ifelse(X[, binary] == 0 & X[, discrete] >= 4,  # Group 3: High adverse effect
+           -1,
+           0.1)  # Group 2: Neutral effect
+  )
+  Y <- D * (theta + rnorm(length(D), mean = 0, sd = 1)) +
+    (1 - D) * rnorm(length(D))  # Outcome for untreated
+  return(Y)
+}
+
+# Parameters
+nb_simulations <- 10
+nb_simulations_truth <- 2
+batch <- 5
+
+# Perform CRAM simulation
+result <- cram_simulation(
+  X = X_data,
+  dgp_D = dgp_D,
+  dgp_Y = dgp_Y,
+  batch = batch,
+  nb_simulations = nb_simulations,
+  nb_simulations_truth = nb_simulations_truth,
+  sample_size = 50
+)
+
+# Access results
+result$avg_delta_estimate
+result$delta_empirical_bias
+```
+
+---
+
+## 📊 Output Summary
+
+```{r}
+result$raw_results
+```
+
+```{r}
+result$interactive_table
+```
+
+Returns a list containing:
+
+- `raw_results`: A summary of key averaged metrics  
+- `interactive_table`: An interactive HTML widget for quick exploration  
+
+| Metric                             | Meaning                                      |
+|------------------------------------|----------------------------------------------|
+| Average Proportion Treated         | Share of samples treated by learned policy   |
+| Average Delta Estimate             | Mean treatment effect (Δ) estimate           |
+| Delta Empirical Bias               | Bias of Δ estimate against truth             |
+| Delta Empirical Coverage           | CI coverage of Δ estimate                    |
+| Average Policy Value Estimate      | Mean value of final policy                   |
+| Policy Value Empirical Bias        | Bias against true policy value               |
+| Policy Value Empirical Coverage    | CI coverage of policy value                  |
+
+---
+
+## 💡 Notes
+
+- Uses **batch splitting** for honest policy learning
+- Variance estimates use **influence-function-based asymptotics**
+- Simulations are grouped by `sim_id` and averaged
+- You can plug in `custom_fit` and `custom_predict` if needed
+
+---
+
+## 📚 See Also
+
+- `cram_policy()` — for CRAM on real experimental/observational data  
+- `cram_bandit_sim()` — for contextual bandits  
+- `cram_ml()` — for general supervised or unsupervised ML  

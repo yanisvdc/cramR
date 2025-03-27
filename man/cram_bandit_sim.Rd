@@ -10,7 +10,8 @@ cram_bandit_sim(
   bandit,
   policy,
   alpha = 0.05,
-  do_parallel = FALSE
+  do_parallel = FALSE,
+  seed = 42
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ cram_bandit_sim(
 \item{alpha}{Significance level for confidence intervals for calculating the empirical coverage. Default is 0.05 (95\% confidence).}
 
 \item{do_parallel}{Whether to parallelize the simulations. Default to FALSE.}
+
+\item{seed}{Seed for simulation}
 }
 \value{
 A **list** containing:

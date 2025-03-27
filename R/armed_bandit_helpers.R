@@ -1,3 +1,6 @@
+#' @importFrom dplyr filter
+#' @importFrom magrittr %>%
+
 # EXTRACT 2D FROm 3D ------------------------------------------------------------------------
 
 extract_2d_from_3d <- function(array3d, depth_indices) {

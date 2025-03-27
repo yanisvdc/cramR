@@ -1,0 +1,168 @@
+---
+title: "Using cram_bandit_sim() with Contextual Bandit Policies"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using cram_bandit_sim() with Contextual Bandit Policies}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(cramR)
+library(contextual)
+library(data.table)
+```
+
+## 🎯 What is `cram_bandit_sim()`?
+
+The function `cram_bandit_sim()` evaluates contextual bandit algorithms using the **CRAM method**. It is built on top of the [`contextual`](https://github.com/Nth-iteration-labs/contextual) package, with several extensions for batch-aware evaluation and high-precision probability tracking.
+
+---
+
+## 🧩 How it works
+
+CRAM for contextual bandits relies on **accurately estimating the action probabilities** \( \pi_t(X_t, a_t) \). These are essential for computing unbiased on-policy estimators:
+
+\[
+\hat{V}_\pi = \frac{1}{T} \sum_{t=1}^T \frac{r_t \cdot \mathbb{1}_{a_t = \pi_t(X_t)}}{\pi_t(X_t, a_t)}
+\]
+
+To do this, we:
+
+1. Use custom subclasses of `contextual::Policy` and `contextual::Bandit`
+2. Store and update model parameters (`A`, `b`, etc.)
+3. Reconstruct the probability that the selected arm was chosen
+
+---
+
+## 🧠 Custom Bandit: `ContextualLinearBandit`
+
+We extend the standard linear bandit to **explicitly expose the underlying beta matrix** used in reward generation. This allows us to compute the **true expected rewards** and compare against estimated values.
+
+```r
+bandit <- ContextualLinearBandit$new(k = 3, d = 5)
+```
+
+---
+
+## 🏗️ Batch-Aware Policies
+
+To allow CRAM's learning-evaluation cycles, we implement **batch versions** of common policies:
+
+| Policy Type     | Class Name                               |
+|------------------|------------------------------------------|
+| Epsilon-Greedy   | `BatchContextualEpsilonGreedyPolicy`     |
+| LinUCB           | `BatchLinUCBDisjointPolicyEpsilon`       |
+| Thompson Sampling| `BatchContextualLinTSPolicy`             |
+
+Each batch policy only updates its internal parameters **every `batch_size` steps**, enabling stable, evaluable policies.
+
+---
+
+## 🔢 How Probabilities Are Computed
+
+We use custom logic to reconstruct the selection probabilities \( \pi_t(X_t, a_t) \) for **each algorithm** from its internal model state:
+
+### ✅ Epsilon-Greedy
+
+With exploration probability `ε`, the probability of selecting a greedy arm is:
+
+\[
+P(a_t | X_t) = \left(1 - \epsilon\right) \cdot \frac{1}{\#\text{greedy arms}} + \frac{\epsilon}{K}
+\]
+
+We detect which arms are greedy by computing \( \theta_k = A_k^{-1} b_k \) and evaluating expected rewards.
+
+```r
+get_proba_c_eps_greedy(eps, A_list, b_list, contexts, chosen_arms)
+```
+
+---
+
+### ✅ LinUCB Disjoint
+
+LinUCB selects arms by adding an **exploration bonus** based on uncertainty:
+
+\[
+P(a_t | X_t) = \left(1 - \epsilon \right) \cdot \frac{1}{\#\text{best arms}} + \frac{\epsilon}{K}
+\]
+
+This accounts for confidence intervals using \( \mu_k + \alpha \cdot \sigma_k \). CRAM tracks this precisely using:
+
+```r
+get_proba_ucb_disjoint(alpha, eps, A_list, b_list, contexts, chosen_arms)
+```
+
+---
+
+### ✅ Thompson Sampling
+
+This is more subtle: we integrate over the probability that the chosen arm **outperforms all others** given posterior uncertainty:
+
+\[
+P(a_t | X_t) = \mathbb{P}\left[\theta_{a_t}^T X_t > \theta_k^T X_t \quad \forall k \neq a_t\right]
+\]
+
+We perform **numerical integration** over these multivariate Gaussians using:
+
+```r
+get_proba_thompson(sigma, A_list, b_list, contexts, chosen_arms)
+```
+
+This is computationally expensive but precise.
+
+---
+
+## 🧪 Estimand Calculation
+
+Once policies are reconstructed, we compute their **true expected value** using independent contexts and the known reward function:
+
+```r
+compute_estimand(data_group, list_betas, policy, policy_name, batch_size, bandit)
+```
+
+This is essential to evaluate **bias** and **coverage** of the CRAM estimators.
+
+---
+
+## 🔥 Optimizations
+
+- Probabilities are **vectorized** across timesteps and batches
+- We use **Sherman-Morrison** updates for fast matrix inverses
+- The function `extract_2d_from_3d()` performs efficient 3D slicing to isolate selected arm probabilities
+- Confidence intervals are calculated using **asymptotic variance estimates**
+
+---
+
+## 📦 Example
+
+```r
+# Set up bandit and policy
+bandit <- ContextualLinearBandit$new(k = 3, d = 5)
+policy <- BatchLinUCBDisjointPolicyEpsilon$new(alpha = 1.0, epsilon = 0.1, batch_size = 10)
+
+# Run CRAM Bandit simulation
+results <- cram_bandit_sim(
+  horizon = 100,
+  simulations = 5,
+  bandit = bandit,
+  policy = policy,
+  alpha = 0.05
+)
+
+head(results)
+```
+
+---
+
+## 📚 See Also
+
+- [`contextual`](https://github.com/Nth-iteration-labs/contextual): Bandit simulation framework
+- `cram_bandit()` — to compute value/CI for one policy trajectory
+- `compute_probas()` — probability matrix reconstruction engine
+
+---

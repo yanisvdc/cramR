@@ -4,7 +4,7 @@
 \alias{cram_bandit_var}
 \title{Cram Bandit Variance}
 \usage{
-cram_bandit_var(pi, reward, arm)
+cram_bandit_var(pi, reward, arm, batch = 1)
 }
 \arguments{
 \item{pi}{A 3-d array, for each row j, column t, depth a, gives pi_t(Xj, a)}
@@ -12,6 +12,8 @@ cram_bandit_var(pi, reward, arm)
 \item{reward}{A vector of rewards}
 
 \item{arm}{A vector of arms chosen}
+
+\item{batch}{Batch size}
 }
 \value{
 The crammed variance estimate for bandit.

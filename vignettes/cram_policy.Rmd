@@ -1,0 +1,94 @@
+---
+title: "Using cram_policy() for Policy Learning and Evaluation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using cram_policy() for Policy Learning and Evaluation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(cramR)
+library(DT)
+```
+
+## What is `cram_policy()`?
+
+The `cram_policy()` function enables **simultaneous policy learning and evaluation** in settings where **treatment assignment and outcome generation are unknown** — for example, in **observational** or **experimental** data.
+
+It supports:
+
+- Multiple model types (`"causal_forest"`, `"s_learner"`, `"m_learner"`)  
+- Different learners (e.g., `"ridge"`, `"fnn"`)  
+- Optional parallel processing  
+- Custom model fitting and prediction functions  
+- Confidence interval computation for treatment effect (Δ) and policy value (ψ)  
+
+---
+
+## Example: CRAM with Simulated Data
+
+```{r}
+set.seed(123)
+X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)
+D_data <- as.integer(sample(c(0, 1), 100, replace = TRUE))
+Y_data <- rnorm(100)
+nb_batch <- 5
+```
+
+### Run the CRAM method
+
+```{r}
+result <- cram_policy(X = X_data,
+                      D = D_data,
+                      Y = Y_data,
+                      batch = nb_batch)
+```
+
+---
+
+## Results
+
+```{r}
+result$raw_results
+```
+
+```{r}
+result$interactive_table
+```
+
+---
+
+## Access the Final Policy Model
+
+```{r}
+str(result$final_policy_model)
+```
+
+---
+
+## Notes
+
+- `batch` can be an integer (for random batching) or a custom vector of batch assignments.  
+- To parallelize across batches, set `parallelize_batch = TRUE`.  
+- You can use your own models via `custom_fit` and `custom_predict`.  
+
+---
+
+## References
+
+This function builds on concepts from:
+
+- Causal inference and policy learning  
+- Batch-splitting for evaluation  
+- Influence-function-based variance estimation  
+
+See also:
+
+- `grf::causal_forest()`  
+- `glmnet::cv.glmnet()`  
+- `keras::keras_model_sequential()`  

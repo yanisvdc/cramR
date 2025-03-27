@@ -1,0 +1,131 @@
+---
+title: "Using cram_bandit_sim() for On-Policy Simulation and Evaluation"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using cram_bandit_sim() for On-Policy Simulation and Evaluation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(cramR)
+library(data.table)
+library(DT)
+```
+
+## What is `cram_bandit_sim()`?
+
+The `cram_bandit_sim()` function runs **on-policy simulation** for contextual bandit algorithms using the CRAM method. It evaluates the statistical properties of policy value estimates such as:
+
+- **Prediction error**  
+- **Variance estimation error**  
+- **Empirical coverage of confidence intervals**
+
+This is useful for benchmarking bandit policies under controlled, simulated environments.
+
+---
+
+## Requirements
+
+You need to provide:
+
+- `bandit`: a contextual bandit environment object (e.g. `ContextualLinearBandit`)  
+- `policy`: a policy object (e.g. `BatchContextualLinTSPolicy`)  
+- `horizon`: number of time steps  
+- `simulations`: number of repeated simulations  
+- Optional: `alpha`, `seed`, `do_parallel`
+
+---
+
+## Example: CRAM Simulation with LinTS Policy
+
+```{r, eval=FALSE}
+# Setup
+library(contextual)
+
+# Define a bandit
+bandit <- ContextualLinearBandit$new(k = 3, d = 5, sigma = 0.1)
+
+# Define a policy
+policy <- BatchContextualLinTSPolicy$new(v = 0.2, batch_size = 5)
+
+# Run simulation
+result <- cram_bandit_sim(
+  horizon = 100,
+  simulations = 10,
+  bandit = bandit,
+  policy = policy,
+  alpha = 0.05,
+  do_parallel = FALSE,
+  seed = 123
+)
+```
+
+---
+
+## What Does It Return?
+
+The output is a `data.table` with one row per simulation, and includes:
+
+- `estimate`: estimated policy value  
+- `variance_est`: estimated variance  
+- `estimand`: true policy value (computed from held-out context data)  
+- `prediction_error`: `estimate - estimand`  
+- `est_rel_error`: relative error on estimate  
+- `variance_prediction_error`: relative error on variance  
+- `ci_lower`, `ci_upper`: bounds of the confidence interval  
+- `std_error`: standard error  
+- Plus summary metrics like average prediction error and empirical coverage
+
+---
+
+## Example Output Preview
+
+```{r, eval=FALSE}
+head(result)
+```
+
+Expected columns:
+
+- `sim`, `estimate`, `variance_est`, `estimand`,  
+- `prediction_error`, `est_rel_error`,  
+- `variance_prediction_error`, `std_error`,  
+- `ci_lower`, `ci_upper`
+
+---
+
+## Notes
+
+- `list_betas` is updated internally to track the true parameters per simulation  
+- The first simulation is discarded by design (due to writing issues in `contextual`)  
+- Approximately 20% of simulations are excluded from final error summaries (robustness against outliers)
+
+---
+
+## Recommended Use Cases
+
+- Validate bandit policies under repeated experiments  
+- Compare bias and variance of different policy types  
+- Analyze empirical coverage of confidence intervals  
+- Stress-test policies under different batch sizes, sigma levels, or dimensions
+
+---
+
+## References
+
+This simulation builds on:
+
+- Contextual bandits (`contextual` package)  
+- On-policy CRAM estimation  
+- Influence-function-based CI construction
+
+See also:
+
+- `cram_policy()` for off-policy CRAM  
+- `cram_bandit()` for single-run evaluation  
+- `BatchContextualLinTSPolicy`, `LinUCBDisjointPolicyEpsilon`, etc.
+
