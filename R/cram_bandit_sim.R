@@ -50,7 +50,7 @@ cram_bandit_sim <- function(horizon, simulations,
 
   policy_name <- policy$class_name
 
-  list_betas <- NULL  # Prevent R CMD check NOTE on <<- assignment
+  # list_betas <<- NULL  # Prevent R CMD check NOTE on <<- assignment
 
   list_betas <<- list()
 
