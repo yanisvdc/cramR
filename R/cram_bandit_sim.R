@@ -143,6 +143,9 @@ cram_bandit_sim <- function(horizon, simulations,
 
   print(Sys.time())
 
+  print("Betas")
+  print(list_betas)
+
   # Compute estimates using data.table
   estimates <- res[, {
     # Extract arms (choices) and rewards as vectors
