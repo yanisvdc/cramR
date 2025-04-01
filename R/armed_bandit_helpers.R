@@ -554,6 +554,23 @@ compute_estimand <- function(sim_data, list_betas, policy, policy_name, batch_si
 }
 
 
+# BETAS PARAMS OF REWARD MODEL ---------------------------------------------------------------------
+
+get_betas <- function(simulations, d, k) {
+  # d: number of features
+  # k: number of arms
+
+  list_betas <- lapply(1:(simulations+1), function(i) {
+    betas_matrix <- matrix(runif(d * k, -1, 1), d, k)
+    betas_matrix <- betas_matrix / norm(betas_matrix, type = "2")
+    return(betas_matrix)
+  })
+
+  return(list_betas)
+
+}
+
+
 # CUSTOM CONTEXTUAL LINEAR BANDIT -------------------------------------------------------------------
 # store the parameters betas of the observed reward generation model
 

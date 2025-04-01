@@ -100,49 +100,15 @@ cram_bandit_sim <- function(horizon, simulations,
   setorder(res, agent, sim, t)
 
   # As we remove first sim due to writing error, shift sim numbers by -1
-  # res <- res %>%
-  #   mutate(sim = sim - 1)
   res[, sim := sim - 1L]
 
 
   # CALCULATE PROBAS ---------------------------------------------------------------
 
-  # res <- res[, compute_probas(.SD, policy, policy_name, batch_size = batch_size), by = .(agent, sim)]
-
-  # res[, probas := compute_probas(.SD, policy, policy_name, batch_size = batch_size)$probas, by = .(agent, sim)]
-
-  # res[, probas := vector("list", .N)]  # Pre-allocate a list column with NULLs
-  # res[, probas := compute_probas(.SD, policy, policy_name, batch_size = batch_size), by = .(agent, sim)]
-
-  # # Pre-allocate probas column as a list to avoid memory spikes
-  # res[, probas := vector("list", .N)]
-  #
-  # # Compute probabilities with NA instead of NULL
-  # res[, probas := compute_probas(.SD, policy, policy_name, batch_size = batch_size), by = .(agent, sim)]
-  #
-  # # Convert NA values back to NULL after assignment
-  # res[, probas := lapply(probas, function(x) if (is.na(x)) NULL else x)]
-
   res[, probas := list(compute_probas(.SD, policy, policy_name, batch_size = batch_size)),
       by = .(agent, sim)]
 
-  # # Memory-optimized replacement:
-  # res[, probas := {
-  #   # Compute probabilities for this group
-  #   tmp <- compute_probas(.SD, policy, policy_name, batch_size = batch_size)
-  #
-  #   # Return JUST the probas column content for this group
-  #   list(tmp$probas)
-  # }, by = .(agent, sim)]
-
-  print("Check compute probas")
-
   # CALCULATE STATISTICS -----------------------------------------------------------
-
-  print(Sys.time())
-
-  print("Betas")
-  print(list_betas)
 
   # Compute estimates using data.table
   estimates <- res[, {
@@ -164,8 +130,6 @@ cram_bandit_sim <- function(horizon, simulations,
     .(estimate = est, variance_est = var_est, estimand = estimand_val)
   }, by = sim]
 
-  print("Check estimates")
-
   # Compute prediction error and other metrics using data.table
   estimates[, prediction_error := estimate - estimand]
 
@@ -175,28 +139,15 @@ cram_bandit_sim <- function(horizon, simulations,
   # Add relative error column
   estimates[, est_rel_error := (estimate - estimand) / estimand]
 
+  rel_empirical_bias <- estimates[, mean(est_rel_error)]
+
+  relative_rmse <- sqrt(mean(est_rel_error^2))
+
   # Compute True Variance (Sample Variance of Prediction Errors)
   true_variance <- estimates[, var(prediction_error)]
 
-  print("True variance")
-  print(true_variance)
-
   # Add variance prediction error column
   estimates[, variance_prediction_error := (variance_est - true_variance) / true_variance]
-
-  # Exclude 20% of Simulations Randomly
-  num_excluded <- ceiling(0.2 * nrow(estimates))
-  excluded_sims <- sample(nrow(estimates), size = num_excluded)
-
-  # Filter errors using data.table's anti-join syntax
-  filtered_dt <- estimates[!excluded_sims]
-
-  # Compute final average prediction errors
-  avg_prediction_error <- filtered_dt[, mean(est_rel_error)]
-  avg_variance_prediction_error <- filtered_dt[, mean(variance_prediction_error)]
-
-  print(paste("Average Prediction Error:", avg_prediction_error))
-  print(paste("Average Variance Prediction Error:", avg_variance_prediction_error))
 
   # Compute 95% Confidence Intervals
   z_value <- qnorm(1 - alpha / 2)
@@ -210,12 +161,41 @@ cram_bandit_sim <- function(horizon, simulations,
   # Compute Empirical Coverage
   empirical_coverage <- estimates[, mean(estimand >= ci_lower & estimand <= ci_upper)]
 
-  print(paste("Empirical Coverage of 95% Confidence Interval:", empirical_coverage))
-  print(Sys.time())
-
   # Final cleanup before return
   gc(full = TRUE, verbose = FALSE)
 
-  return(estimates)
+  # SUMMARY TABLES ---------------------------------------------------------------
+  summary_table <- data.frame(
+    Metric = c("Empirical Bias on Policy Value",
+               "Average relative error on Policy Value",
+               "RMSE of errors on Policy Value",
+               "Empirical Coverage of Confidence Intervals"),
+    Value = round(c(empirical_bias, rel_empirical_bias, relative_rmse, empirical_coverage), 5)
+  )
+
+  interactive_table <- DT::datatable(
+    summary_table,
+    options = list(pageLength = 5),
+    caption = "Cram Bandit Simulation: Policy Evaluation Metrics"
+  )
+
+  # PLOT -------------------------------------------------------------------------
+  bias_plot <- ggplot(estimates, aes(x = sim, y = 100 * est_rel_error)) +
+    geom_point(shape = 1, color = "blue", size = 2, stroke = 1) +
+    geom_hline(yintercept = 0, linetype = "dashed", size = 1) +
+    labs(
+      x = "Simulation setup ID",
+      y = "Bias as percentage of policy value",
+      title = "Bias per Simulation Setup (Relative Error in %)"
+    ) +
+    theme_minimal(base_size = 13)
+
+  # RETURN FULL RESULTS ----------------------------------------------------------
+  return(list(
+    estimates = estimates,
+    summary_table = summary_table,
+    interactive_table = interactive_table,
+    bias_plot = bias_plot
+  ))
 
 }
