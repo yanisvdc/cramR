@@ -50,10 +50,6 @@ cram_bandit_sim <- function(horizon, simulations,
 
   policy_name <- policy$class_name
 
-  # list_betas <<- NULL  # Prevent R CMD check NOTE on <<- assignment
-
-  list_betas <<- list()
-
   if (is.null(policy$batch_size)) {
     batch_size <- 1
   } else {
@@ -73,12 +69,14 @@ cram_bandit_sim <- function(horizon, simulations,
 
   res <- history$data
 
+  list_betas <- bandit$list_betas
+
   # PROCESS HISTORY TABLE -------------------------------------------------------
 
   # Convert to data.table without copy
   setDT(res)
 
-  list_betas <<- list_betas[-1]  # Remove the first element as first sim has writing error
+  list_betas <- list_betas[-1]  # Remove the first element as first sim has writing error
   d_value <- res$d[1L]
 
   # Context is given through d columns: X.1 to X.d
