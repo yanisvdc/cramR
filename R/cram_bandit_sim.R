@@ -58,7 +58,7 @@ cram_bandit_sim <- function(horizon, simulations,
 
   agents <- list(Agent$new(policy, bandit, policy_name))
 
-  simulation     <- Simulator$new(agents, horizon, simulations,
+  simulation     <- cramR:::Simulator$new(agents, horizon, simulations,
                                   do_parallel = do_parallel,
                                   save_theta = TRUE,
                                   save_context = TRUE, set_seed = seed)
