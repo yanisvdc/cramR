@@ -139,9 +139,11 @@ cram_bandit_sim <- function(horizon, simulations,
   # Add relative error column
   estimates[, est_rel_error := (estimate - estimand) / estimand]
 
+  # Rel BIAS
   rel_empirical_bias <- estimates[, mean(est_rel_error)]
 
-  relative_rmse <- sqrt(mean(est_rel_error^2))
+  # RMSE
+  relative_rmse <- estimates[, sqrt(mean(est_rel_error^2))]
 
   # Compute True Variance (Sample Variance of Prediction Errors)
   true_variance <- estimates[, var(prediction_error)]
