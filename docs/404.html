@@ -12,6 +12,7 @@
 <link href="https://yanisvdc.github.io/cramR/deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="https://yanisvdc.github.io/cramR/deps/headroom-0.11.0/headroom.min.js"></script><script src="https://yanisvdc.github.io/cramR/deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="https://yanisvdc.github.io/cramR/deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="https://yanisvdc.github.io/cramR/deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="https://yanisvdc.github.io/cramR/deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="https://yanisvdc.github.io/cramR/deps/search-1.0.0/fuse.min.js"></script><script src="https://yanisvdc.github.io/cramR/deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="https://yanisvdc.github.io/cramR/pkgdown.js"></script><meta property="og:title" content="Page not found (404)">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- Load Inter font --><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet">
 <style>
   :root {
     --primary-gradient: linear-gradient(135deg, #2c3e50, #3498db);
@@ -24,7 +25,29 @@
   }
 
   body {
-    padding-top: 80px; /* Prevents content from being cut under the navbar */
+    padding-top: 80px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+  }
+
+  code, pre, kbd {
+    font-family: 'JetBrains Mono', monospace;
+    background-color: #f5f5f5;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-size: 90%;
+  }
+
+  pre {
+    overflow-x: auto;
+  }
+
+  pre code {
+    padding: 1em;
+    display: block;
   }
 
   .navbar-brand img {
@@ -89,6 +112,7 @@
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
 <li><a class="dropdown-item" href="https://yanisvdc.github.io/cramR/articles/cram_policy.html">Getting Started</a></li>
+    <li><a class="dropdown-item" href="https://yanisvdc.github.io/cramR/articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="https://yanisvdc.github.io/cramR/articles/cram_ml.html">Cram ML</a></li>
     <li><a class="dropdown-item" href="https://yanisvdc.github.io/cramR/articles/cram_bandit.html">Cram Bandit</a></li>
     <li><a class="dropdown-item" href="https://yanisvdc.github.io/cramR/articles/cram_bandit_helpers.html">Cram Bandit Helpers</a></li>

@@ -1,0 +1,195 @@
+
+---
+title: "Quick Start with CRAM"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Quick Start with CRAM}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+options(pkgdown.max_print = Inf, width = 1000)
+library(cramR)
+library(data.table)
+library(glmnet)
+library(caret)
+```
+
+## Introduction
+
+The **CRAM** package provides a unified framework for:
+
+- Learning and evaluating individualized treatment policies  
+- Batch-wise evaluation using machine learning models  
+- On-policy evaluation for contextual bandits
+
+This vignette walks through the **three core modules**:
+
+1. `cram_policy()` – for batch policy learning and evaluation  
+2. `cram_ml()` – for ML model evaluation with flexible loss functions  
+3. `cram_bandit()` – for on-policy evaluation in bandit settings
+
+---
+
+## 1. CRAM Policy Learning
+
+```{r}
+set.seed(123)
+n <- 1000
+data <- generate_data(n)
+X <- data$X
+D <- data$D
+Y <- data$Y
+
+experiment_results <- cram_policy(
+  X, D, Y,
+  batch = 20,
+  model_type = "causal_forest",
+  alpha = 0.05
+)
+print(experiment_results)
+```
+
+### Custom Model
+
+```{r}
+custom_fit <- function(X, Y, D, n_folds = 5) {
+  treated_indices <- which(D == 1)
+  control_indices <- which(D == 0)
+  X_treated <- X[treated_indices, ]
+  Y_treated <- Y[treated_indices]
+  X_control <- X[control_indices, ]
+  Y_control <- Y[control_indices]
+  model_treated <- cv.glmnet(as.matrix(X_treated), Y_treated, alpha = 0, nfolds = n_folds)
+  model_control <- cv.glmnet(as.matrix(X_control), Y_control, alpha = 0, nfolds = n_folds)
+  tau_control <- Y_treated - predict(model_control, as.matrix(X_treated), s = "lambda.min")
+  tau_treated <- predict(model_treated, as.matrix(X_control), s = "lambda.min") - Y_control
+  X_combined <- rbind(X_treated, X_control)
+  tau_combined <- c(tau_control, tau_treated)
+  weights <- c(rep(1, length(tau_control)), rep(1, length(tau_treated)))
+  final_model <- cv.glmnet(as.matrix(X_combined), tau_combined, alpha = 0, weights = weights, nfolds = n_folds)
+  return(final_model)
+}
+
+custom_predict <- function(model, X_new, D_new) {
+  cate <- predict(model, as.matrix(X_new), s = "lambda.min")
+  as.numeric(cate)
+}
+
+experiment_results <- cram_policy(
+  X, D, Y,
+  batch = 20,
+  custom_fit = custom_fit,
+  custom_predict = custom_predict,
+  alpha = 0.05
+)
+print(experiment_results)
+```
+
+---
+
+## 2. CRAM ML Evaluation
+
+```{r}
+set.seed(42)
+X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
+Y_data <- rnorm(100)
+data_df <- data.frame(X_data, Y = Y_data)
+
+caret_params_lm <- list(
+  method = "lm",
+  trControl = trainControl(method = "none")
+)
+
+result <- cram_ml(
+  data = data_df,
+  formula = Y ~ .,
+  batch = 5,
+  loss_name = "mse",
+  caret_params = caret_params_lm
+)
+print(result)
+```
+
+### Custom Model
+
+```{r}
+custom_fit <- function(data) {
+  lm(Y ~ x1 + x2 + x3, data = data)
+}
+
+custom_predict <- function(model, data) {
+  predictors_only <- data[, setdiff(names(data), "Y"), drop = FALSE]
+  predict(model, newdata = predictors_only)
+}
+
+custom_loss <- function(predictions, data) {
+  actuals <- data$Y
+  mse_loss <- (predictions - actuals)^2
+  return(mse_loss)
+}
+
+result <- cram_ml(
+  data = data_df,
+  formula = Y ~ .,
+  batch = 5,
+  custom_fit = custom_fit,
+  custom_predict = custom_predict,
+  custom_loss = custom_loss
+)
+print(result)
+```
+
+---
+
+## 3. CRAM Bandit Evaluation
+
+```{r}
+set.seed(42)
+T <- 100
+K <- 4
+pi <- array(runif(T * T * K, 0.1, 1), dim = c(T, T, K))
+for (t in 1:T) {
+  for (j in 1:T) {
+    pi[j, t, ] <- pi[j, t, ] / sum(pi[j, t, ])
+  }
+}
+arm <- sample(1:K, T, replace = TRUE)
+reward <- rnorm(T, mean = 1, sd = 0.5)
+cram_results <- cram_bandit(pi, arm, reward)
+print(cram_results)
+```
+
+### Bandit Simulation
+
+```{r}
+horizon     <- 500L
+simulations <- 100L
+k <- 4
+d <- 3
+list_betas <- cramR:::get_betas(simulations, d, k)
+bandit     <- cramR:::ContextualLinearBandit$new(k = k, d = d, list_betas = list_betas, sigma = 0.3)
+policy     <- cramR:::BatchContextualEpsilonGreedyPolicy$new(epsilon = 0.1, batch_size = 5)
+
+sim <- cram_bandit_sim(
+  horizon, simulations,
+  bandit, policy,
+  alpha = 0.05, do_parallel = FALSE
+)
+print(sim)
+```
+
+---
+
+## Summary
+
+- **cram_policy**: Learn and evaluate decision rules from batch data.
+- **cram_ml**: Evaluate ML models with customizable losses.
+- **cram_bandit**: Evaluate contextual bandits using on-policy evaluation.
+
+This flexible, unified framework supports both standard modeling and complex experimentation.
