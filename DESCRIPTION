@@ -3,11 +3,11 @@ Type: Package
 Title: The Cram Method for Efficient Simultaneous Learning and Evaluation
 Version: 0.1.0
 Authors@R: c(
-    person("Yanis", "Vandecasteele", , "yanisvdc.ensae@gmail.com", role = "cre"),
+    person("Yanis", "Vandecasteele", , "yanisvdc.ensae@gmail.com", role = "cre, aut"),
     person("Michael Lingzhi", "Li", , "mili@hbs.edu", role = "aut"),
     person("Kosuke", "Imai", , "imai@harvard.edu", role = "aut"),
     person("Zeyang", "Jia", , "zeyangjia@fas.harvard.edu", role = "aut"),
-    person("Longlin", "Wang", , "longlin_wang@g.harvard.edu", role = "ctb")
+    person("Longlin", "Wang", , "longlin_wang@g.harvard.edu", role = "aut")
   )
 Maintainer: Yanis Vandecasteele <yanisvdc.ensae@gmail.com>
 Description: Performs the CRAM method, a general and efficient approach to simultaneous learning 

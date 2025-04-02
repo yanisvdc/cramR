@@ -74,6 +74,7 @@ The `cram_policy()` function in **cramR** implements the CRAM framework for bina
 ## Example: Running CRAM Policy on simulated data
 
 ```{r}
+library(data.table)
 # Function to generate sample data with heterogeneous treatment effects:
 # - Positive effect group
 # - Neutral effect group
@@ -156,7 +157,7 @@ model_params <- NULL
 alpha <- 0.05  
 
 # Run the CRAM policy method
-experiment_results <- cram_policy(
+result <- cram_policy(
   X, D, Y,
   batch = batch,
   model_type = model_type,
@@ -168,7 +169,7 @@ experiment_results <- cram_policy(
 )
 
 # Display the results
-print(experiment_results)
+print(result)
 
 ```
 
@@ -182,10 +183,18 @@ result$raw_results
 result$interactive_table
 ```
 
-The table displays:
-- **Batch-wise policy updates**  
-- Estimated improvements (\(\hat{\Delta}\)) per step  
-- Final policy value estimates  
+
+The output of `cram_policy()` includes:
+
+- `raw_results`: A data frame summarizing key metrics:
+  - `Delta Estimate`, `Delta Standard Error`, and corresponding confidence interval bounds  
+  - `Policy Value Estimate`, `Policy Value Standard Error`, and confidence interval bounds  
+  - `Proportion Treated` under the final policy
+
+- `interactive_table`: An interactive table view of the same results for exploration
+
+- `final_policy_model`: The final fitted policy model based on the specified `model_type`, `learner_type`, or `custom_fit`
+
 
 ## Accessing the Final Learned Policy
 
@@ -217,10 +226,11 @@ Compared to classic evaluation methods:
 | Method            | Learning | Evaluation        | Data Use         |
 |-------------------|----------|-------------------|------------------|
 | Sample Splitting  | Partial  | Partial           | ❌ Inefficient    |
-| Cross-Validation  | Partial  | Average Performance of different models | ⚠️ Partial for each model  |
+| Cross-Validation  | Partial  | Average performance over different models | ⚠️ Partial for each model  |
 | **CRAM**          | ✅ Full  | ✅ Final model evaluated directly | ✅ Fully reused for both learning and evaluation |
 
 In practice, CRAM:
+
 - Reduces variance of policy evaluation  
 - Produces tighter confidence intervals  
 - Accommodates online learners and large-scale models  

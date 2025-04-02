@@ -143,10 +143,7 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div align="center">
-<img src="reference/figures/cram_logo.jpg" alt="CRAM Logo" width="300" style="margin-bottom: 1.5rem;"><div class="page-header"><h1 style="font-size: 2.5rem; margin-top: 0;">
-CRAM
-</h1></div>
-<p style="font-size: 1.25rem; max-width: 800px; margin: 0 auto;">
+<img src="reference/figures/cram_logo.png" alt="CRAM Logo" width="450" style="margin-bottom: 1.5rem;"><p style="font-size: 1.25rem; max-width: 800px; margin: 0 auto;">
 The Cram Method for Efficient Simultaneous Learning and Evaluation
 </p>
 </div>
@@ -155,16 +152,18 @@ The Cram Method for Efficient Simultaneous Learning and Evaluation
 <div class="section level2">
 <h2 id="id_-what-is-cram">📚 What is CRAM?<a class="anchor" aria-label="anchor" href="#id_-what-is-cram"></a>
 </h2>
-<p>CRAM provides a statistically rigorous framework that combines <strong>causal inference</strong>, <strong>contextual bandits</strong>, and <strong>machine learning</strong> for optimal policy learning and evaluation.</p>
+<p>The <strong>CRAM method</strong> is a powerful approach for <strong>simultaneously learning and evaluating decision rules</strong>, such as individualized treatment rules (ITRs), from data.</p>
+<p>Unlike traditional approaches like <strong>sample splitting</strong> or <strong>cross-validation</strong>, which waste part of the data on evaluation only, <strong>CRAM reuses all available data</strong> efficiently.</p>
+<p>A key distinction from <strong>cross-validation</strong> is that CRAM evaluates the final learned model, rather than averaging performance across multiple models trained on different data splits.</p>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="id_-key-features">🎯 Key Features<a class="anchor" aria-label="anchor" href="#id_-key-features"></a>
 </h2>
 <ul>
-<li>📊 <strong>Policy Learning:</strong> Develop optimized policies using causal models and contextual bandit approaches.</li>
-<li>✅ <strong>Robust Evaluation:</strong> Advanced variance estimation using influence function methodology.</li>
-<li>🎰 <strong>Bandit Framework:</strong> Simulate and optimize policies in dynamic environments.</li>
+<li><p>🧠 <strong>Causal Policy Learning (<code>cram_policy</code>)</strong>: Learn and evaluate individualized binary treatment rules using flexible model choices, including causal forests and custom learners — all while efficiently reusing the entire dataset.</p></li>
+<li><p>📈 <strong>Machine Learning Evaluation (<code>cram_ml</code>)</strong>: Assess ML models performance using CRAM. Supports flexible model training (via <code>caret</code> or user-defined functions) and custom loss functions.</p></li>
+<li><p>🎰 <strong>Bandit Evaluation (<code>cram_bandit</code>)</strong>: Perform on-policy evaluation of contextual bandit algorithms using CRAM. Supports both real data and simulation environments with built-in policies.</p></li>
 </ul>
 <hr>
 </div>
@@ -262,10 +261,10 @@ The Cram Method for Efficient Simultaneous Learning and Evaluation
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Yanis Vandecasteele <br><small class="roles"> Maintainer </small>  </li>
 <li>Michael Lingzhi Li <br><small class="roles"> Author </small>  </li>
 <li>Kosuke Imai <br><small class="roles"> Author </small>  </li>
 <li>Zeyang Jia <br><small class="roles"> Author </small>  </li>
+<li>Longlin Wang <br><small class="roles"> Author </small>  </li>
 <li><a href="authors.html">More about authors...</a></li>
 </ul>
 </div>
@@ -284,7 +283,7 @@ The Cram Method for Efficient Simultaneous Learning and Evaluation
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Yanis Vandecasteele, Michael Lingzhi Li, Kosuke Imai, Zeyang Jia.</p>
+  <p>Developed by Michael Lingzhi Li, Kosuke Imai, Zeyang Jia, Longlin Wang.</p>
 </div>
 
 <div class="pkgdown-footer-right">
