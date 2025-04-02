@@ -2,8 +2,9 @@ Package: cramR
 Type: Package
 Title: The Cram Method for Efficient Simultaneous Learning and Evaluation
 Version: 0.1.0
+Date: 2025-04-02
 Authors@R: c(
-    person("Yanis", "Vandecasteele", , "yanisvdc.ensae@gmail.com", role = "cre, aut"),
+    person("Yanis", "Vandecasteele", , "yanisvdc.ensae@gmail.com", role = c("cre", "aut")),
     person("Michael Lingzhi", "Li", , "mili@hbs.edu", role = "aut"),
     person("Kosuke", "Imai", , "imai@harvard.edu", role = "aut"),
     person("Zeyang", "Jia", , "zeyangjia@fas.harvard.edu", role = "aut"),
