@@ -182,22 +182,21 @@ cram_bandit_sim <- function(horizon, simulations,
   )
 
   # PLOT -------------------------------------------------------------------------
-  bias_plot <- ggplot(estimates, aes(x = sim, y = 100 * est_rel_error)) +
-    geom_point(shape = 1, color = "blue", size = 2, stroke = 1) +
-    geom_hline(yintercept = 0, linetype = "dashed", size = 1) +
-    labs(
-      x = "Simulation setup ID",
-      y = "Bias as percentage of policy value",
-      title = "Bias per Simulation Setup (Relative Error in %)"
-    ) +
-    theme_minimal(base_size = 13)
+  # bias_plot <- ggplot(estimates, aes(x = sim, y = 100 * est_rel_error)) +
+  #   geom_point(shape = 1, color = "blue", size = 2, stroke = 1) +
+  #   geom_hline(yintercept = 0, linetype = "dashed", size = 1) +
+  #   labs(
+  #     x = "Simulation setup ID",
+  #     y = "Bias as percentage of policy value",
+  #     title = "Bias per Simulation Setup (Relative Error in %)"
+  #   ) +
+  #   theme_minimal(base_size = 13)
 
   # RETURN FULL RESULTS ----------------------------------------------------------
   return(list(
     estimates = estimates,
     summary_table = summary_table,
-    interactive_table = interactive_table,
-    bias_plot = bias_plot
+    interactive_table = interactive_table
   ))
 
 }
