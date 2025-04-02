@@ -22,6 +22,9 @@ The **CRAM method** is a powerful approach for **simultaneously learning and eva
 
 Unlike traditional approaches like **sample splitting** or **cross-validation**, which waste part of the data on evaluation only, **CRAM reuses all available data** efficiently.
 
+A key distinction from **cross-validation** is that CRAM evaluates the final learned model, rather than averaging performance across multiple models trained on different data splits.
+
+
 CRAM:
 
 - Sequentially trains and evaluates models on *batches* of data  
@@ -61,29 +64,112 @@ Where:
 
 The `cram_policy()` function in **cramR** implements the CRAM framework for binary treatment policy learning.
 
-Key features:
+### 🔑 Key Features of `cram_policy()`
 
-- **Model-agnostic**: Use your favorite learners (`causal_forest`, `s_learner`, `m_learner`, or custom)  
-- **Flexible**: Accepts user-defined model fitting and prediction  
-- **Fast**: Parallelizes across batches  
+- **Model-Agnostic Flexibility**: Supports a variety of learning strategies, including `causal_forest`, `s_learner`, and `m_learner`, as well as fully customizable learners via user-defined fit and predict functions.
 
-## Example: Running CRAM on Simulated Data
+- **Efficient by Design**: Built on top of `data.table` for fast, memory-efficient computation, with optional support for parallel batch training to scale across larger datasets.
+ 
+
+## Example: Running CRAM Policy on simulated data
 
 ```{r}
+# Function to generate sample data with heterogeneous treatment effects:
+# - Positive effect group
+# - Neutral effect group
+# - Adverse effect group
+generate_data <- function(n) {
+  X <- data.table(
+    binary = rbinom(n, 1, 0.5),                 # Binary variable
+    discrete = sample(1:5, n, replace = TRUE),  # Discrete variable
+    continuous = rnorm(n)                       # Continuous variable
+  )
+
+  # Binary treatment assignment (50% treated)
+  D <- rbinom(n, 1, 0.5)
+
+  # Define heterogeneous treatment effects based on X
+  treatment_effect <- ifelse(
+    X[, binary] == 1 & X[, discrete] <= 2,        # Group 1: Positive effect
+    1,
+    ifelse(X[, binary] == 0 & X[, discrete] >= 4, # Group 3: Adverse effect
+           -1,
+           0.1)                                   # Group 2: Neutral effect
+  )
+
+  # Outcome depends on treatment effect + noise
+  Y <- D * (treatment_effect + rnorm(n, mean = 0, sd = 1)) +
+    (1 - D) * rnorm(n)
+
+  return(list(X = X, D = D, Y = Y))
+}
+
+# Generate a sample dataset
 set.seed(123)
-X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)
-D_data <- as.integer(sample(c(0, 1), 100, replace = TRUE))
-Y_data <- rnorm(100)
-nb_batch <- 5
+n <- 1000
+data <- generate_data(n)
+X <- data$X
+D <- data$D
+Y <- data$Y
+
 ```
 
+
 ```{r}
-result <- cram_policy(
-  X = X_data,
-  D = D_data,
-  Y = Y_data,
-  batch = nb_batch
+# Number of batches to split the data into
+batch <- 20  
+
+# Model type for estimating treatment effects
+# Options: "causal_forest", "s_learner", "m_learner"
+model_type <- "causal_forest"  
+
+# Learner type used inside s/m-learners
+# NULL is required for causal_forest; use "ridge" or "fnn" for s/m learners
+learner_type <- NULL  
+
+# Baseline policy to compare against (list of 0/1 for each individual)
+# Common options:
+# - All-control baseline: as.list(rep(0, nrow(X)))
+# - Randomized baseline: as.list(sample(c(0, 1), nrow(X), replace = TRUE))
+baseline_policy <- as.list(rep(0, nrow(X)))  
+
+# Whether to parallelize across batches (TRUE for faster but memory-heavy runs)
+parallelize_batch <- FALSE  
+
+# Model-specific parameters
+# Examples:
+# - causal_forest: list(num.trees = 100)
+# - ridge: list(alpha = 1)
+# - fnn (Feedforward Neural Network): see below
+model_params <- NULL  
+
+# Advanced example for fnn (not used here):
+# default_model_params <- list(
+#   input_layer = list(units = 64, activation = 'relu', input_shape = input_shape),
+#   layers = list(list(units = 32, activation = 'relu')),
+#   output_layer = list(units = 1, activation = 'linear'),
+#   compile_args = list(optimizer = 'adam', loss = 'mse'),
+#   fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
+# )
+
+# Significance level for confidence intervals (default = 95%)
+alpha <- 0.05  
+
+# Run the CRAM policy method
+experiment_results <- cram_policy(
+  X, D, Y,
+  batch = batch,
+  model_type = model_type,
+  learner_type = learner_type,
+  baseline_policy = baseline_policy,
+  parallelize_batch = parallelize_batch,
+  model_params = model_params,
+  alpha = alpha
 )
+
+# Display the results
+print(experiment_results)
+
 ```
 
 ## Interpreting Results
@@ -131,8 +217,8 @@ Compared to classic evaluation methods:
 | Method            | Learning | Evaluation        | Data Use         |
 |-------------------|----------|-------------------|------------------|
 | Sample Splitting  | Partial  | Partial           | ❌ Inefficient    |
-| Cross-Validation  | Partial  | Average Performance | ❌ Expensive    |
-| **CRAM**          | ✅ Full  | ✅ Rule-Specific  | ✅ Efficient      |
+| Cross-Validation  | Partial  | Average Performance of different models | ⚠️ Partial for each model  |
+| **CRAM**          | ✅ Full  | ✅ Final model evaluated directly | ✅ Fully reused for both learning and evaluation |
 
 In practice, CRAM:
 - Reduces variance of policy evaluation  

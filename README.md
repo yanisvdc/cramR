@@ -23,14 +23,21 @@
 
 ## 📚 What is CRAM?
 
-CRAM provides a statistically rigorous framework that combines **causal inference**, **contextual bandits**, and **machine learning** for optimal policy learning and evaluation.
+The **CRAM method** is a powerful approach for **simultaneously learning and evaluating decision rules**, such as individualized treatment rules (ITRs), from data.
 
+Unlike traditional approaches like **sample splitting** or **cross-validation**, which waste part of the data on evaluation only, **CRAM reuses all available data** efficiently. 
+
+A key distinction from **cross-validation** is that CRAM evaluates the final learned model, rather than averaging performance across multiple models trained on different data splits.
 ---
 
 ## 🎯 Key Features
-- 📊 **Policy Learning:** Develop optimized policies using causal models and contextual bandit approaches.
-- ✅ **Robust Evaluation:** Advanced variance estimation using influence function methodology.
-- 🎰 **Bandit Framework:** Simulate and optimize policies in dynamic environments.
+
+- 🧠 **Causal Policy Learning (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using flexible model choices, including causal forests and custom learners — all while efficiently reusing the entire dataset.
+
+- 📈 **Machine Learning Evaluation (`cram_ml`)**: Assess ML models performance using CRAM. Supports flexible model training (via `caret` or user-defined functions) and custom loss functions.
+
+- 🎰 **Bandit Evaluation (`cram_bandit`)**: Perform on-policy evaluation of contextual bandit algorithms using CRAM. Supports both real data and simulation environments with built-in policies.
+
 
 ---
 
