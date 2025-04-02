@@ -28,6 +28,7 @@ The **CRAM method** is a powerful approach for **simultaneously learning and eva
 Unlike traditional approaches like **sample splitting** or **cross-validation**, which waste part of the data on evaluation only, **CRAM reuses all available data** efficiently. 
 
 A key distinction from **cross-validation** is that CRAM evaluates the final learned model, rather than averaging performance across multiple models trained on different data splits.
+
 ---
 
 ## 🎯 Key Features
