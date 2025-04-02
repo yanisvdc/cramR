@@ -7,12 +7,18 @@
   </p>
 </div>
 
-<p align="center">
-  [![View on GitHub](https://img.shields.io/badge/View%20on-GitHub-black?logo=github)](https://github.com/yanisvdc/cramR)
-  [![Report a Bug](https://img.shields.io/badge/Report%20a%20Bug-red?logo=bugatti)](https://github.com/yanisvdc/cramR/issues)
-  [![Read Paper](https://img.shields.io/badge/Read%20Paper-blue?logo=bookstack)](https://arxiv.org/abs/2403.07031)
-</p>
 
+<p align="center">
+  <a href="https://github.com/yanisvdc/cramR">
+    <img src="https://img.shields.io/badge/View%20on-GitHub-black?logo=github" alt="View on GitHub">
+  </a>
+  <a href="https://github.com/yanisvdc/cramR/issues">
+    <img src="https://img.shields.io/badge/Report%20a%20Bug-red?logo=bugatti" alt="Report a Bug">
+  </a>
+  <a href="https://arxiv.org/abs/2403.07031">
+    <img src="https://img.shields.io/badge/Read%20Paper-blue?logo=bookstack" alt="Read Paper">
+  </a>
+</p>
 
 ---
 
