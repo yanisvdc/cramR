@@ -24,21 +24,53 @@ library(caret)
 
 The **CRAM** package provides a unified framework for:
 
-- Learning and evaluating individualized treatment policies  
-- Batch-wise evaluation using machine learning models  
-- On-policy evaluation for contextual bandits
+- 🧠 **Cram Policy (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using flexible model choices, including causal forests and custom learners — all while efficiently reusing the entire dataset.
 
-This vignette walks through the **three core modules**:
+- 📈 **Cram ML (`cram_ml`)**: Assess ML models performance using CRAM. Supports flexible model training (via `caret` or user-defined functions) and custom loss functions.
 
-1. `cram_policy()` – for batch policy learning and evaluation  
-2. `cram_ml()` – for ML model evaluation with flexible loss functions  
-3. `cram_bandit()` – for on-policy evaluation in bandit settings
+- 🎰 **Cram Bandit (`cram_bandit`)**: Perform on-policy evaluation of contextual bandit algorithms using CRAM. Supports both real data and simulation environments with built-in policies.
+
+This vignette walks through these **three core modules**.
 
 ---
 
-## 1. CRAM Policy Learning
+## 1. CRAM Policy
+
+We begin by simulating a dataset consisting of covariates `X`, a binary treatment assignment `D`, and a continuous outcome `Y`, which we will use to demonstrate the `cram_policy()` function.
 
 ```{r}
+library(data.table)
+# Function to generate sample data with heterogeneous treatment effects:
+# - Positive effect group
+# - Neutral effect group
+# - Adverse effect group
+generate_data <- function(n) {
+  X <- data.table(
+    binary = rbinom(n, 1, 0.5),                 # Binary variable
+    discrete = sample(1:5, n, replace = TRUE),  # Discrete variable
+    continuous = rnorm(n)                       # Continuous variable
+  )
+
+  # Binary treatment assignment (50% treated)
+  D <- rbinom(n, 1, 0.5)
+
+  # Define heterogeneous treatment effects based on X
+  treatment_effect <- ifelse(
+    X[, binary] == 1 & X[, discrete] <= 2,        # Group 1: Positive effect
+    1,
+    ifelse(X[, binary] == 0 & X[, discrete] >= 4, # Group 3: Adverse effect
+           -1,
+           0.1)                                   # Group 2: Neutral effect
+  )
+
+  # Outcome depends on treatment effect + noise
+  Y <- D * (treatment_effect + rnorm(n, mean = 0, sd = 1)) +
+    (1 - D) * rnorm(n)
+
+  return(list(X = X, D = D, Y = Y))
+}
+
+# Generate a sample dataset
 set.seed(123)
 n <- 1000
 data <- generate_data(n)
@@ -46,16 +78,79 @@ X <- data$X
 D <- data$D
 Y <- data$Y
 
-experiment_results <- cram_policy(
+```
+
+
+```{r}
+# Number of batches to split the data into
+batch <- 20  
+
+# Model type for estimating treatment effects
+# Options: "causal_forest", "s_learner", "m_learner", NULL (to use custom model)
+model_type <- "causal_forest"  
+
+# Learner type used inside s/m-learners
+# NULL is required for causal_forest; use "ridge" or "fnn" for s/m learners
+learner_type <- NULL  
+
+# Baseline policy to compare against (list of 0/1 for each individual)
+# Common options:
+# - All-control baseline: as.list(rep(0, nrow(X)))
+# - Randomized baseline: as.list(sample(c(0, 1), nrow(X), replace = TRUE))
+baseline_policy <- as.list(rep(0, nrow(X)))  
+
+# Whether to parallelize across batches (TRUE for faster but memory-heavy runs)
+parallelize_batch <- FALSE  
+
+# Model-specific parameters
+# Examples:
+# - causal_forest: list(num.trees = 100)
+# - ridge: list(alpha = 1)
+# - fnn (Feedforward Neural Network): see below
+model_params <- NULL  
+
+# Advanced example for fnn (not used here):
+# default_model_params <- list(
+#   input_layer = list(units = 64, activation = 'relu', input_shape = input_shape),
+#   layers = list(list(units = 32, activation = 'relu')),
+#   output_layer = list(units = 1, activation = 'linear'),
+#   compile_args = list(optimizer = 'adam', loss = 'mse'),
+#   fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
+# )
+
+# Significance level for confidence intervals (default = 95%)
+alpha <- 0.05  
+
+# Run the CRAM policy method
+result <- cram_policy(
   X, D, Y,
-  batch = 20,
-  model_type = "causal_forest",
-  alpha = 0.05
+  batch = batch,
+  model_type = model_type,
+  learner_type = learner_type,
+  baseline_policy = baseline_policy,
+  parallelize_batch = parallelize_batch,
+  model_params = model_params,
+  alpha = alpha
 )
-print(experiment_results)
+
+# Display the results
+print(result)
+
 ```
 
 ### Custom Model
+
+To use your own model for policy learning, you can supply two user-defined functions:
+
+#### 1. `custom_fit(X, Y, D, ...)`  
+This function takes the training data: covariates `X`, outcomes `Y`, and binary treatment indicators `D`, and returns a fitted model object.  
+You may also define and use additional parameters (e.g., number of folds, regularization settings, etc.) within the function body.
+
+- `X`: a matrix or data frame of features 
+- `Y`: a numeric outcome vector  
+- `D`: a binary vector indicating treatment assignment (0 or 1)
+
+**Example**: Custom X-learner with Ridge regression and 5-fold cross-validation
 
 ```{r}
 custom_fit <- function(X, Y, D, n_folds = 5) {
@@ -75,12 +170,32 @@ custom_fit <- function(X, Y, D, n_folds = 5) {
   final_model <- cv.glmnet(as.matrix(X_combined), tau_combined, alpha = 0, weights = weights, nfolds = n_folds)
   return(final_model)
 }
+```
 
+
+#### 2. `custom_predict(model, X_new, D_new)`
+
+This function uses the fitted model to generate a **binary treatment decision** for each individual in `X_new`.
+
+It should return a vector of 0s and 1s, indicating whether to assign treatment (`1`) or not (`0`).  
+You may also incorporate a custom threshold or post-processing logic within the function.
+
+**Example**: Apply the decision rule — treat if the estimated CATE is greater than 0
+```{r}
 custom_predict <- function(model, X_new, D_new) {
   cate <- predict(model, as.matrix(X_new), s = "lambda.min")
-  as.numeric(cate)
-}
 
+  # Apply decision rule: treat if CATE > 0
+  as.integer(cate > 0)
+}
+```
+
+
+#### 3. Use `cram_policy()` with `custom_fit()` and `custom_predict()`
+
+Once both `custom_fit()` and `custom_predict()` are defined, you can integrate them into the CRAM framework by passing them to `cram_policy()` as shown below:
+
+```{r}
 experiment_results <- cram_policy(
   X, D, Y,
   batch = 20,
@@ -90,7 +205,6 @@ experiment_results <- cram_policy(
 )
 print(experiment_results)
 ```
-
 ---
 
 ## 2. CRAM ML Evaluation

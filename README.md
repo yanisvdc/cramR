@@ -39,11 +39,11 @@ A key distinction from **cross-validation** is that CRAM evaluates the **final l
 
 ## 🎯 Key Features
 
-- 🧠 **Causal Policy Learning (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using flexible model choices, including causal forests and custom learners — all while efficiently reusing the entire dataset.
+- 🧠 **Cram Policy (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using flexible model choices, including causal forests and custom learners — all while efficiently reusing the entire dataset.
 
-- 📈 **Machine Learning Evaluation (`cram_ml`)**: Assess ML models performance using CRAM. Supports flexible model training (via `caret` or user-defined functions) and custom loss functions.
+- 📈 **Cram ML (`cram_ml`)**: Assess ML models performance using CRAM. Supports flexible model training (via `caret` or user-defined functions) and custom loss functions.
 
-- 🎰 **Bandit Evaluation (`cram_bandit`)**: Perform on-policy evaluation of contextual bandit algorithms using CRAM. Supports both real data and simulation environments with built-in policies.
+- 🎰 **Cram Bandit (`cram_bandit`)**: Perform on-policy evaluation of contextual bandit algorithms using CRAM. Supports both real data and simulation environments with built-in policies.
 
 
 ---
