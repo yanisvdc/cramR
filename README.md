@@ -23,11 +23,17 @@
 
 ## 📚 What is CRAM?
 
-The **CRAM method** is a powerful approach for **simultaneously learning and evaluating decision rules**, such as individualized treatment rules (ITRs), from data.
+The **CRAM method** is a powerful approach for **simultaneously learning and evaluating decision rules**—such as individualized treatment rules (ITRs)—from data. It is particularly relevant in high-stakes applications where decisions must be both personalized and justified.
 
-Unlike traditional approaches like **sample splitting** or **cross-validation**, which waste part of the data on evaluation only, **CRAM reuses all available data** efficiently. 
+Common examples include:
 
-A key distinction from **cross-validation** is that CRAM evaluates the final learned model, rather than averaging performance across multiple models trained on different data splits.
+- **Healthcare**: determining who should receive treatment based on individual characteristics  
+- **Advertising and pricing**: setting optimal prices to maximize revenue  
+- **Policy interventions**: deciding which individuals or regions should receive targeted support to improve outcomes
+
+Unlike traditional approaches like **sample splitting** or **cross-validation**, which reserve a portion of the data purely for evaluation, **CRAM reuses all available data** efficiently during both training and evaluation.
+
+A key distinction from **cross-validation** is that CRAM evaluates the **final learned model** directly, rather than averaging the performance of multiple models trained on different data subsets—resulting in sharper inference and better alignment with real-world deployment.
 
 ---
 
