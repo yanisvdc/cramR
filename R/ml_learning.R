@@ -17,7 +17,7 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "data_cumul", "."))
 #' @param parallelize_batch Logical. Whether to parallelize batch processing. Defaults to `FALSE`.
 #'  - If `TRUE`, batch models are trained in parallel.
 #'  - If `FALSE`, training is performed sequentially using `data.table` for efficiency.
-#' @param loss_name The name of the loss function to be used (e.g., `"mse"`, `"logloss"`).
+#' @param loss_name The name of the loss function to be used (e.g., `"se"`, `"logloss"`).
 #' @param caret_params A **list** of parameters to pass to the `caret::train()` function.
 #'   - Required: `method` (e.g., `"glm"`, `"rf"`, `"kmeans"`).
 #'   - If `method = "kmeans"`, the function will automatically return **cluster assignments**.
@@ -56,7 +56,7 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "data_cumul", "."))
 #'   data = data_df,
 #'   formula = Y ~ .,  # Linear regression model
 #'   batch = nb_batch,
-#'   loss_name = 'mse',
+#'   loss_name = 'se',
 #'   caret_params = caret_params_lm
 #' )
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}

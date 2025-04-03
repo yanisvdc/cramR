@@ -28,7 +28,7 @@ ml_learning(
 - If `TRUE`, batch models are trained in parallel.
 - If `FALSE`, training is performed sequentially using `data.table` for efficiency.}
 
-\item{loss_name}{The name of the loss function to be used (e.g., `"mse"`, `"logloss"`).}
+\item{loss_name}{The name of the loss function to be used (e.g., `"se"`, `"logloss"`).}
 
 \item{caret_params}{A **list** of parameters to pass to the `caret::train()` function.
 - Required: `method` (e.g., `"glm"`, `"rf"`, `"kmeans"`).
@@ -77,7 +77,7 @@ result_lm <- ml_learning(
   data = data_df,
   formula = Y ~ .,  # Linear regression model
   batch = nb_batch,
-  loss_name = 'mse',
+  loss_name = 'se',
   caret_params = caret_params_lm
 )
 }

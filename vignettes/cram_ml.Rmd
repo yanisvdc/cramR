@@ -19,15 +19,16 @@ library(DT)
 
 ## What is `cram_ml()`?
 
-The `cram_ml()` function implements the CRAM method — **Causal Regularization via Approximate Models** — for **simultaneous model training and evaluation**, even when the data-generating process is unknown.
+The `cram_ml()` function provides a flexible and efficient way to evaluate **machine learning models** using the CRAM framework.
 
-It supports:
+It allows you to:
 
-- Supervised learning via formulas (e.g., `Y ~ .`)
-- Unsupervised learning (e.g., `kmeans`)
-- Batch-wise model training and evaluation
-- Standard or custom loss functions
-- Confidence intervals for expected loss
+- Reuse the full dataset to train and evaluate your final model
+- Specify your own loss function (e.g., `"mse"`, `"accuracy"`, etc.)
+- Use either **caret-compatible learners** or fully **custom model training and prediction functions**
+
+This makes CRAM ML suitable for regression, classification, or any supervised learning setup where you want reliable evaluation of a model built on **all available data**.
+
 
 ---
 
@@ -58,7 +59,7 @@ result <- cram_ml(
   data = data_df,
   formula = Y ~ .,
   batch = nb_batch,
-  loss_name = "mse",
+  loss_name = "se",
   caret_params = caret_params_lm
 )
 ```
@@ -98,7 +99,7 @@ You can customize the CRAM ML pipeline with:
 - `custom_fit`: your own training function  
 - `custom_predict`: your own prediction function  
 - `custom_loss`: your own loss function  
-- `loss_name`: built-in options like `"mse"`, `"logloss"`, `"accuracy"`, `"euclidean_distance"`  
+- `loss_name`: built-in options like `"se"`, `"logloss"`, `"accuracy"`, `"euclidean_distance"`  
 
 ---
 

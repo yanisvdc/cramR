@@ -31,7 +31,6 @@ utils::globalVariables(c(
 #' @importFrom dplyr group_by group_modify ungroup summarise mutate select
 #' @importFrom purrr map2_dbl
 #' @importFrom stats glm predict qnorm rbinom rnorm var dnorm pnorm integrate
-#' @importFrom contextual ContextualLinearBandit ContextualEpsilonGreedyPolicy
 #' @export
 
 
@@ -58,7 +57,7 @@ cram_bandit_sim <- function(horizon, simulations,
 
   agents <- list(Agent$new(policy, bandit, policy_name))
 
-  simulation     <- cramR:::Simulator$new(agents, horizon, simulations,
+  simulation     <- Simulator$new(agents, horizon, simulations,
                                   do_parallel = do_parallel,
                                   save_theta = TRUE,
                                   save_context = TRUE, set_seed = seed)

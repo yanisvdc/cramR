@@ -162,18 +162,21 @@
 <div class="section level2">
 <h2 id="what-is-cram_ml">What is <code>cram_ml()</code>?<a class="anchor" aria-label="anchor" href="#what-is-cram_ml"></a>
 </h2>
-<p>The <code><a href="../reference/cram_ml.html">cram_ml()</a></code> function implements the CRAM method —
-<strong>Causal Regularization via Approximate Models</strong> — for
-<strong>simultaneous model training and evaluation</strong>, even when
-the data-generating process is unknown.</p>
-<p>It supports:</p>
+<p>The <code><a href="../reference/cram_ml.html">cram_ml()</a></code> function provides a flexible and efficient
+way to evaluate <strong>machine learning models</strong> using the CRAM
+framework.</p>
+<p>It allows you to:</p>
 <ul>
-<li>Supervised learning via formulas (e.g., <code>Y ~ .</code>)</li>
-<li>Unsupervised learning (e.g., <code>kmeans</code>)</li>
-<li>Batch-wise model training and evaluation</li>
-<li>Standard or custom loss functions</li>
-<li>Confidence intervals for expected loss</li>
+<li>Reuse the full dataset to train and evaluate your final model</li>
+<li>Specify your own loss function (e.g., <code>"mse"</code>,
+<code>"accuracy"</code>, etc.)</li>
+<li>Use either <strong>caret-compatible learners</strong> or fully
+<strong>custom model training and prediction functions</strong>
+</li>
 </ul>
+<p>This makes CRAM ML suitable for regression, classification, or any
+supervised learning setup where you want reliable evaluation of a model
+built on <strong>all available data</strong>.</p>
 <hr>
 </div>
 <div class="section level2">
@@ -201,7 +204,7 @@ the data-generating process is unknown.</p>
 <span>  data <span class="op">=</span> <span class="va">data_df</span>,</span>
 <span>  formula <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">.</span>,</span>
 <span>  batch <span class="op">=</span> <span class="va">nb_batch</span>,</span>
-<span>  loss_name <span class="op">=</span> <span class="st">"mse"</span>,</span>
+<span>  loss_name <span class="op">=</span> <span class="st">"se"</span>,</span>
 <span>  caret_params <span class="op">=</span> <span class="va">caret_params_lm</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <hr>
@@ -342,7 +345,7 @@ the data-generating process is unknown.</p>
 <span><span class="co">#&gt;   .. .. ..- attr(*, "order")= int [1:3] 1 1 1</span></span>
 <span><span class="co">#&gt;   .. .. ..- attr(*, "intercept")= int 1</span></span>
 <span><span class="co">#&gt;   .. .. ..- attr(*, "response")= int 1</span></span>
-<span><span class="co">#&gt;   .. .. ..- attr(*, ".Environment")=&lt;environment: 0x000002c9ffbebe38&gt; </span></span>
+<span><span class="co">#&gt;   .. .. ..- attr(*, ".Environment")=&lt;environment: 0x00000251f49cf028&gt; </span></span>
 <span><span class="co">#&gt;   .. .. ..- attr(*, "predvars")= language list(.outcome, x1, x2, x3)</span></span>
 <span><span class="co">#&gt;   .. .. ..- attr(*, "dataClasses")= Named chr [1:4] "numeric" "numeric" "numeric" "numeric"</span></span>
 <span><span class="co">#&gt;   .. .. .. ..- attr(*, "names")= chr [1:4] ".outcome" "x1" "x2" "x3"</span></span>
@@ -361,7 +364,7 @@ the data-generating process is unknown.</p>
 <span><span class="co">#&gt;   .. .. .. ..- attr(*, "order")= int [1:3] 1 1 1</span></span>
 <span><span class="co">#&gt;   .. .. .. ..- attr(*, "intercept")= int 1</span></span>
 <span><span class="co">#&gt;   .. .. .. ..- attr(*, "response")= int 1</span></span>
-<span><span class="co">#&gt;   .. .. .. ..- attr(*, ".Environment")=&lt;environment: 0x000002c9ffbebe38&gt; </span></span>
+<span><span class="co">#&gt;   .. .. .. ..- attr(*, ".Environment")=&lt;environment: 0x00000251f49cf028&gt; </span></span>
 <span><span class="co">#&gt;   .. .. .. ..- attr(*, "predvars")= language list(.outcome, x1, x2, x3)</span></span>
 <span><span class="co">#&gt;   .. .. .. ..- attr(*, "dataClasses")= Named chr [1:4] "numeric" "numeric" "numeric" "numeric"</span></span>
 <span><span class="co">#&gt;   .. .. .. .. ..- attr(*, "names")= chr [1:4] ".outcome" "x1" "x2" "x3"</span></span>
@@ -388,7 +391,7 @@ the data-generating process is unknown.</p>
 <span><span class="co">#&gt;  $ maximize    : logi FALSE</span></span>
 <span><span class="co">#&gt;  $ yLimits     : num [1:2] -1.89 2.63</span></span>
 <span><span class="co">#&gt;  $ times       :List of 3</span></span>
-<span><span class="co">#&gt;   ..$ everything: 'proc_time' Named num [1:5] 0.14 0 0.14 NA NA</span></span>
+<span><span class="co">#&gt;   ..$ everything: 'proc_time' Named num [1:5] 0.14 0 0.15 NA NA</span></span>
 <span><span class="co">#&gt;   .. ..- attr(*, "names")= chr [1:5] "user.self" "sys.self" "elapsed" "user.child" ...</span></span>
 <span><span class="co">#&gt;   ..$ final     : 'proc_time' Named num [1:5] 0 0 0 NA NA</span></span>
 <span><span class="co">#&gt;   .. ..- attr(*, "names")= chr [1:5] "user.self" "sys.self" "elapsed" "user.child" ...</span></span>
@@ -430,7 +433,7 @@ the data-generating process is unknown.</p>
 <code>custom_loss</code>: your own loss function<br>
 </li>
 <li>
-<code>loss_name</code>: built-in options like <code>"mse"</code>,
+<code>loss_name</code>: built-in options like <code>"se"</code>,
 <code>"logloss"</code>, <code>"accuracy"</code>,
 <code>"euclidean_distance"</code>
 </li>

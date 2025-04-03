@@ -1,5 +1,6 @@
 #' @importFrom dplyr filter
 #' @importFrom magrittr %>%
+#' @importFrom stats runif
 
 # EXTRACT 2D FROm 3D ------------------------------------------------------------------------
 

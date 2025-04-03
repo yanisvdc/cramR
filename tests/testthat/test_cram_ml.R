@@ -5,15 +5,7 @@ test_that("Mean Squared Error (MSE) works", {
   y_true <- c(1, 2, 3)
   y_pred <- c(1.5, 2.5, 3.5)
   expected <- (y_pred - y_true)^2
-  actual <- compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "mse")
-  expect_equal(actual, expected)
-})
-
-test_that("Root Mean Squared Error (RMSE) works", {
-  y_true <- c(1, 2, 3)
-  y_pred <- c(1.5, 2.5, 3.5)
-  expected <- sqrt((y_pred - y_true)^2)
-  actual <- compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "rmse")
+  actual <- compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "se")
   expect_equal(actual, expected)
 })
 
@@ -21,7 +13,7 @@ test_that("Mean Absolute Error (MAE) works", {
   y_true <- c(1, 2, 3)
   y_pred <- c(1.5, 2.5, 3.5)
   expected <- abs(y_pred - y_true)
-  actual <- compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "mae")
+  actual <- compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "ae")
   expect_equal(actual, expected)
 })
 
@@ -71,7 +63,7 @@ test_that("Supervised loss with length mismatch errors", {
   y_true <- c(1, 2)
   y_pred <- c(1, 2, 3)
   expect_error(
-    compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "mse"),
+    compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "se"),
     "same length"
   )
 })

@@ -80,9 +80,9 @@ Y <- data$Y
 
 ```
 
-### Package Model
+### Built-in Model
 
-In this example, we demonstrate how to use the **built-in models** and we walk through the key parameters that control how `cram_policy()` behaves, including the choice of model, learner type, baseline policy, and batching strategy. 
+In this example, we demonstrate how to use the **built-in modeling options** provided by the `cramR` package. We walk through the key parameters that control how `cram_policy()` behaves, including the choice of model, learner type, baseline policy, and batching strategy. 
 
 These parameters allow flexibility in configuring the learning process depending on your use case and computational resources. 
 
@@ -212,14 +212,47 @@ print(experiment_results)
 ```
 ---
 
-## 2. CRAM ML Evaluation
+## 2. CRAM ML 
+
+### Built-in Model 
+
+This section illustrates how to use `cram_ml()` with built-in modeling options available through the `cramR` package. The function integrates with the `caret` framework, allowing users to specify a learning algorithm, a loss function, and a batching strategy to evaluate model performance. 
+
+Beyond `caret`, `cram_ml()` also supports fully custom model training, prediction, and loss functions, making it suitable for virtually any machine learning task — including regression, classification, or clustering.
+
+To illustrate the use of `cram_ml()`, we begin by generating a synthetic dataset for a regression task. The data consists of three independent covariates and a continuous outcome.
 
 ```{r}
 set.seed(42)
 X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
 Y_data <- rnorm(100)
 data_df <- data.frame(X_data, Y = Y_data)
+```
 
+The `cram_ml()` function offers extensive flexibility through its `loss_name` and `caret_params` arguments.
+
+The `loss_name` argument specifies the performance metric used to evaluate the model at each batch. Available options include:
+
+- `"se"` – Squared Error (for regression)  
+- `"ae"` – Absolute Error  
+- `"logloss"` – Logarithmic Loss (for probabilistic classification)  
+- `"accuracy"` – Classification Accuracy  
+- `"euclidean_distance"` – Squared Euclidean Distance (for clustering tasks)
+
+The `caret_params` list defines how the model should be trained using the [`caret`](https://topepo.github.io/caret/model-training-and-tuning.html) package. It can include **any argument supported by `caret::train()`**, allowing full control over model specification and tuning. Common components include:
+
+- `method`: the machine learning algorithm (e.g., `"lm"` for linear regression, `"rf"` for random forest, `"xgbTree"` for XGBoost, `"svmLinear"` for support vector machines)
+- `trControl`: the resampling strategy (e.g., `trainControl(method = "cv", number = 5)` for 5-fold cross-validation, or `"none"` for training without resampling)
+- `tuneGrid`: a grid of hyperparameters for tuning (e.g., `expand.grid(mtry = c(2, 3, 4))`)
+- `metric`: the model selection metric used during tuning (e.g., `"RMSE"` or `"Accuracy"`)
+- `preProcess`: optional preprocessing steps (e.g., centering, scaling)
+- `importance`: logical flag to compute variable importance (useful for tree-based models)
+
+Refer to the full documentation at [caret model training and tuning](https://topepo.github.io/caret/model-training-and-tuning.html) for the complete list of supported arguments and options.
+
+Together, these arguments allow users to apply `cram_ml()` using a wide variety of built-in machine learning models and losses. If users need to go beyond these built-in choices, we also provide in the next section a friendly workflow on how to specify custom models and losses with `cram_ml()`.
+
+```{r}
 caret_params_lm <- list(
   method = "lm",
   trControl = trainControl(method = "none")
@@ -229,7 +262,7 @@ result <- cram_ml(
   data = data_df,
   formula = Y ~ .,
   batch = 5,
-  loss_name = "mse",
+  loss_name = "se",
   caret_params = caret_params_lm
 )
 print(result)
@@ -237,22 +270,68 @@ print(result)
 
 ### Custom Model
 
+In addition to using built-in learners via `caret`, `cram_ml()` also supports **fully custom model workflows**. You can specify your own:
+
+- Model fitting function (`custom_fit`)
+- Prediction function (`custom_predict`)
+- Loss function (`custom_loss`)
+
+This offers maximum flexibility, allowing CRAM to evaluate any learning model with any performance criterion, including regression, classification, or even unsupervised losses such as clustering distance.
+
+---
+
+#### 1. `custom_fit(data, ...)`
+
+This function takes a data frame and returns a fitted model. You may define additional arguments such as hyperparameters or training settings.
+
+- `data`: A data frame that includes both predictors and the outcome variable `Y`.
+
+**Example**: A basic linear model fit on three predictors:
+
 ```{r}
 custom_fit <- function(data) {
   lm(Y ~ x1 + x2 + x3, data = data)
 }
+```
 
+#### 2. `custom_predict(model, data)`
+
+This function generates predictions from the fitted model on new data. It returns a numeric vector of predicted outcomes.
+
+- `model`: The fitted model returned by `custom_fit()`
+- `data`: A data frame of new observations (typically including all original predictors)
+
+**Example**: Extract predictors and apply a standard `predict()` call:
+
+```{r}
 custom_predict <- function(model, data) {
   predictors_only <- data[, setdiff(names(data), "Y"), drop = FALSE]
   predict(model, newdata = predictors_only)
 }
+```
 
+#### 3. `custom_loss(predictions, data)`
+
+This function defines the loss metric used to evaluate model predictions. It should return a numeric vector of **individual losses**, one per observation. These are internally aggregated by `cram_ml()` to compute the overall performance.
+
+- `predictions`: A numeric vector of predicted values from the model
+- `data`: The data frame containing the true outcome values (`Y`)
+
+**Example**: Define a custom loss function using **Squared Error (SE)**
+
+```{r}
 custom_loss <- function(predictions, data) {
   actuals <- data$Y
-  mse_loss <- (predictions - actuals)^2
-  return(mse_loss)
+  se_loss <- (predictions - actuals)^2
+  return(se_loss)
 }
+```
 
+#### 4. Use `cram_ml()` with Custom Functions
+
+Once you have defined your custom training, prediction, and loss functions, you can pass them directly to `cram_ml()` as shown below, note that `caret_params` and `loss_name` that were used for built-in functionalities are now `NULL`:
+
+```{r}
 result <- cram_ml(
   data = data_df,
   formula = Y ~ .,
@@ -262,6 +341,7 @@ result <- cram_ml(
   custom_loss = custom_loss
 )
 print(result)
+
 ```
 
 ---

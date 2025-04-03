@@ -1,20 +1,15 @@
 get_loss_function <- function(loss_name) {
   loss_functions <- list(
 
-    # Mean Squared Error (MSE) - Per individual (Regression)
+    # Squared Error (SE) - Per individual (Regression)
     # y_pred: Numeric vector of predictions
     # y_true: Numeric vector of true values
-    "mse" = function(y_pred, y_true) {
+    "se" = function(y_pred, y_true) {
       (y_pred - y_true) ^ 2
     },
 
-    # Root Mean Squared Error (RMSE) - Per individual (Regression)
-    "rmse" = function(y_pred, y_true) {
-      sqrt((y_pred - y_true) ^ 2)
-    },
-
-    # Mean Absolute Error (MAE) - Per individual (Regression)
-    "mae" = function(y_pred, y_true) {
+    # Absolute Error (AE) - Per individual (Regression)
+    "ae" = function(y_pred, y_true) {
       abs(y_pred - y_true)
     },
 

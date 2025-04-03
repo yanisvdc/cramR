@@ -46,7 +46,7 @@ It’s a flexible utility that powers `cram_ml()` for general-purpose ML workflo
 | `data`           | A data frame or matrix with predictors (and optionally a target column)    |
 | `formula`        | Supervised learning formula (e.g., `Y ~ .`). Use `NULL` for unsupervised.  |
 | `batch`          | Integer (number of batches) or custom vector of batch assignments          |
-| `loss_name`      | Built-in loss type: `"mse"`, `"accuracy"`, `"logloss"`, etc.               |
+| `loss_name`      | Built-in loss type: `"se"`, `"accuracy"`, `"logloss"`, etc.               |
 | `caret_params`   | Model settings for `caret::train()` (must include `method`)                |
 | `custom_fit`     | Optional custom training function                                           |
 | `custom_predict` | Optional custom prediction function                                         |
@@ -83,7 +83,7 @@ result_lm <- ml_learning(
   data = data_df,
   formula = Y ~ .,
   batch = nb_batch,
-  loss_name = "mse",
+  loss_name = "se",
   caret_params = caret_params_lm
 )
 ```

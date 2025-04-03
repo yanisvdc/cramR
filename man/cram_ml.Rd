@@ -37,8 +37,8 @@ Use NULL for unsupervised methods like clustering.}
 \item{parallelize_batch}{Logical indicating whether to parallelize batch
 processing (default = FALSE).}
 
-\item{loss_name}{Name of loss metric (supported: "mse", "logloss",
-"accuracy", "euclidean_distance", "pca_projection_error").}
+\item{loss_name}{Name of loss metric (supported: "se", "logloss",
+"accuracy", "euclidean_distance").}
 
 \item{custom_fit}{Optional custom model training function.}
 
@@ -97,7 +97,7 @@ result <- cram_ml(
   data = data_df,
   formula = Y ~ .,  # Linear regression model
   batch = nb_batch,
-  loss_name = 'mse',
+  loss_name = 'se',
   caret_params = caret_params_lm
 )
 }
