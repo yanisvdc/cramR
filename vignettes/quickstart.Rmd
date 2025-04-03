@@ -80,6 +80,11 @@ Y <- data$Y
 
 ```
 
+### Package Model
+
+In this example, we demonstrate how to use the **built-in models** and we walk through the key parameters that control how `cram_policy()` behaves, including the choice of model, learner type, baseline policy, and batching strategy. 
+
+These parameters allow flexibility in configuring the learning process depending on your use case and computational resources. 
 
 ```{r}
 # Number of batches to split the data into

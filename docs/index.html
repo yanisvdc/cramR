@@ -152,18 +152,29 @@ The Cram Method for Efficient Simultaneous Learning and Evaluation
 <div class="section level2">
 <h2 id="id_-what-is-cram">📚 What is CRAM?<a class="anchor" aria-label="anchor" href="#id_-what-is-cram"></a>
 </h2>
-<p>The <strong>CRAM method</strong> is a powerful approach for <strong>simultaneously learning and evaluating decision rules</strong>, such as individualized treatment rules (ITRs), from data.</p>
-<p>Unlike traditional approaches like <strong>sample splitting</strong> or <strong>cross-validation</strong>, which waste part of the data on evaluation only, <strong>CRAM reuses all available data</strong> efficiently.</p>
-<p>A key distinction from <strong>cross-validation</strong> is that CRAM evaluates the final learned model, rather than averaging performance across multiple models trained on different data splits.</p>
+<p>The <strong>CRAM method</strong> is a powerful approach for <strong>simultaneously learning and evaluating decision rules</strong>—such as individualized treatment rules (ITRs)—from data. It is particularly relevant in high-stakes applications where decisions must be both personalized and justified.</p>
+<p>Common examples include:</p>
+<ul>
+<li>
+<strong>Healthcare</strong>: determining who should receive treatment based on individual characteristics<br>
+</li>
+<li>
+<strong>Advertising and pricing</strong>: setting optimal prices to maximize revenue<br>
+</li>
+<li>
+<strong>Policy interventions</strong>: deciding which individuals or regions should receive targeted support to improve outcomes</li>
+</ul>
+<p>Unlike traditional approaches like <strong>sample splitting</strong> or <strong>cross-validation</strong>, which reserve a portion of the data purely for evaluation, <strong>CRAM reuses all available data</strong> efficiently during both training and evaluation.</p>
+<p>A key distinction from <strong>cross-validation</strong> is that CRAM evaluates the <strong>final learned model</strong> directly, rather than averaging the performance of multiple models trained on different data subsets—resulting in sharper inference and better alignment with real-world deployment.</p>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="id_-key-features">🎯 Key Features<a class="anchor" aria-label="anchor" href="#id_-key-features"></a>
 </h2>
 <ul>
-<li><p>🧠 <strong>Causal Policy Learning (<code>cram_policy</code>)</strong>: Learn and evaluate individualized binary treatment rules using flexible model choices, including causal forests and custom learners — all while efficiently reusing the entire dataset.</p></li>
-<li><p>📈 <strong>Machine Learning Evaluation (<code>cram_ml</code>)</strong>: Assess ML models performance using CRAM. Supports flexible model training (via <code>caret</code> or user-defined functions) and custom loss functions.</p></li>
-<li><p>🎰 <strong>Bandit Evaluation (<code>cram_bandit</code>)</strong>: Perform on-policy evaluation of contextual bandit algorithms using CRAM. Supports both real data and simulation environments with built-in policies.</p></li>
+<li><p>🧠 <strong>Cram Policy (<code>cram_policy</code>)</strong>: Learn and evaluate individualized binary treatment rules using flexible model choices, including causal forests and custom learners — all while efficiently reusing the entire dataset.</p></li>
+<li><p>📈 <strong>Cram ML (<code>cram_ml</code>)</strong>: Assess ML models performance using CRAM. Supports flexible model training (via <code>caret</code> or user-defined functions) and custom loss functions.</p></li>
+<li><p>🎰 <strong>Cram Bandit (<code>cram_bandit</code>)</strong>: Perform on-policy evaluation of contextual bandit algorithms using CRAM. Supports both real data and simulation environments with built-in policies.</p></li>
 </ul>
 <hr>
 </div>
