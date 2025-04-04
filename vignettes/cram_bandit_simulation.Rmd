@@ -65,6 +65,25 @@ result <- cram_bandit_sim(
 )
 ```
 
+### Bandit Simulation
+
+```{r}
+horizon     <- 500L
+simulations <- 100L
+k <- 4
+d <- 3
+list_betas <- cramR:::get_betas(simulations, d, k)
+bandit     <- cramR:::ContextualLinearBandit$new(k = k, d = d, list_betas = list_betas, sigma = 0.3)
+policy     <- cramR:::BatchContextualEpsilonGreedyPolicy$new(epsilon = 0.1, batch_size = 5)
+
+sim <- cram_bandit_sim(
+  horizon, simulations,
+  bandit, policy,
+  alpha = 0.05, do_parallel = FALSE
+)
+print(sim)
+```
+
 ---
 
 ## What Does It Return?

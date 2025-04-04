@@ -42,8 +42,6 @@ Below is the core idea of the CRAM method visualized:
 
 This procedure ensures each update is backed by performance testing, enabling **both learning and evaluation in one pass** over the data.
 
-## CRAM Estimation in Practice
-
 ![ ](cram_visual_3.png)
 
 
@@ -196,8 +194,6 @@ The output of `cram_policy()` includes:
 - `final_policy_model`: The final fitted policy model based on the specified `model_type`, `learner_type`, or `custom_fit`
 
 
-## Accessing the Final Learned Policy
-
 ```{r}
 class(result$final_policy_model)
 summary(result$final_policy_model)
@@ -206,14 +202,14 @@ summary(result$final_policy_model)
 
 You can inspect or apply the learned model to new data.
 
-## Visual Summary
+## Visual Summary and Notes
 
 ![ ](cram_visual_2.png)
 
 
 This visualization summarizes how multiple evaluations across iterations contribute to the full CRAM estimate.
 
-## Notes and Tips
+Notes:
 
 - **Batching**: You can pass a number (e.g., `batch = 5`) or a custom vector to control how data is split.  
 - **Parallelization**: Enable with `parallelize_batch = TRUE`.  

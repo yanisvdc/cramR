@@ -6,6 +6,7 @@
 #' @param pi for each row j, column t, depth a, gives pi_t(Xj, a)
 #' @param arm arms selected at each time step
 #' @param reward rewards at each time step
+#' @param batch Batch size
 #' @param alpha Confidence level for intervals (default = 0.05).
 #'
 #' @return A list containing:
@@ -28,16 +29,16 @@
 
 
 # Combined experiment function
-cram_bandit <- function(pi, arm, reward, alpha=0.05) {
+cram_bandit <- function(pi, arm, reward, batch=1, alpha=0.05) {
 
   nb_timesteps <- length(arm)
 
   ## POLICY VALUE   --------------------------------------------------------------------------
   # estimate
-  policy_val_estimate <- cram_bandit_est(pi, reward, arm)
+  policy_val_estimate <- cram_bandit_est(pi, reward, arm, batch=batch)
 
   # variance
-  policy_val_variance <- cram_bandit_var(pi, reward, arm)
+  policy_val_variance <- cram_bandit_var(pi, reward, arm, batch=batch)
   policy_val_sd <- sqrt(policy_val_variance)
   policy_val_standard_error <- policy_val_sd / sqrt(nb_timesteps - 1)
 

@@ -110,7 +110,7 @@ navbar:
     articles:
       text: Articles
       menu:
-        - text: "Getting Started"
+        - text: "Introduction & Cram Policy"
           href: articles/cram_policy.html
         - text: "Quick Start"
           href: articles/quickstart.html

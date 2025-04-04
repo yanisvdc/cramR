@@ -359,9 +359,39 @@ print(result)
 
 ---
 
-## 3. CRAM Bandit Evaluation
+## 3. CRAM Bandit
+
+This section illustrates how to use the `cram_bandit()` function to **evaluate the final learned policy of a contextual bandit algorithm using the same data collected by the algorithm itself**. 
+
+To demonstrate the method, we assume a contextual bandit sequence has been run and has produced:
+
+- a sequence of learned policies (encoded as arrays of probabilities `π_t(x, a)`),
+- the arms actually chosen (`arm`),
+- the corresponding rewards observed (`reward`).
+
+The `cram_bandit()` function requires a policy probability array `pi`, which captures how the learned policies assign probability mass across actions over time.
+
+This array can be specified in one of two formats:
+
+1. **3D Array**: An array of shape `(n, T, K)`, where:
+
+   - `T` is the number of time steps (i.e., policy updates),
+   - `K` is the number of available arms,
+   - `n = T × batch`, where `batch` is the number of actions taken between each policy update.
+
+Each element `pi[j, t, k]` represents the probability that the policy at time `t` assigns arm `k` to context `x_j`.
+
+2. **2D Array**: An array of shape `(n, T)`:
+
+   - Each entry represents the probability assigned by the policy at time `t` to the arm that was actually chosen under context `x_j`.
+
+This compact form omits the full distribution over arms and assumes you are only tracking the realized action probabilities.
+
+> 🛠️ If you need to compute this probability array from a trained policy or historical data, the `cramR` package provides helper utilities in the `cramR:::` namespace (see “Bandit Helpers” vignette). Note that the exact method may depend on how your bandit logs and models are structured.
 
 ```{r}
+# Assume pi is a 3D array: observations x time x arms
+# Assume arm and reward are vectors of length = nrow(pi)
 set.seed(42)
 T <- 100
 K <- 4
@@ -373,28 +403,20 @@ for (t in 1:T) {
 }
 arm <- sample(1:K, T, replace = TRUE)
 reward <- rnorm(T, mean = 1, sd = 0.5)
-cram_results <- cram_bandit(pi, arm, reward)
-print(cram_results)
+cram_results <- cram_bandit(pi, arm, reward, batch=1)
+
+# View summary of the evaluation
+print(cram_results$raw_results)
+
+# View interactive summary table
+cram_results$interactive_table
 ```
 
-### Bandit Simulation
+The returned object includes both a raw numerical summary and an interactive table showing:
 
-```{r}
-horizon     <- 500L
-simulations <- 100L
-k <- 4
-d <- 3
-list_betas <- cramR:::get_betas(simulations, d, k)
-bandit     <- cramR:::ContextualLinearBandit$new(k = k, d = d, list_betas = list_betas, sigma = 0.3)
-policy     <- cramR:::BatchContextualEpsilonGreedyPolicy$new(epsilon = 0.1, batch_size = 5)
-
-sim <- cram_bandit_sim(
-  horizon, simulations,
-  bandit, policy,
-  alpha = 0.05, do_parallel = FALSE
-)
-print(sim)
-```
+- the estimated policy value,
+- its standard error,
+- and the 95% confidence interval bounds.
 
 ---
 

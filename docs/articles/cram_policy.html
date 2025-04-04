@@ -111,7 +111,7 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/cram_policy.html">Getting Started</a></li>
+<li><a class="dropdown-item" href="../articles/cram_policy.html">Introduction &amp; Cram Policy</a></li>
     <li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
     <li><a class="dropdown-item" href="../articles/cram_ml.html">Cram ML</a></li>
     <li><a class="dropdown-item" href="../articles/cram_bandit.html">Cram Bandit</a></li>
@@ -198,10 +198,6 @@ getting better while constantly self-evaluating.</p>
 <p>This procedure ensures each update is backed by performance testing,
 enabling <strong>both learning and evaluation in one pass</strong> over
 the data.</p>
-</div>
-<div class="section level2">
-<h2 id="cram-estimation-in-practice">CRAM Estimation in Practice<a class="anchor" aria-label="anchor" href="#cram-estimation-in-practice"></a>
-</h2>
 <div class="float">
 <img src="cram_visual_3.png" alt=" "><div class="figcaption"> </div>
 </div>
@@ -403,10 +399,6 @@ same results for exploration</p></li>
 based on the specified <code>model_type</code>,
 <code>learner_type</code>, or <code>custom_fit</code></p></li>
 </ul>
-</div>
-<div class="section level2">
-<h2 id="accessing-the-final-learned-policy">Accessing the Final Learned Policy<a class="anchor" aria-label="anchor" href="#accessing-the-final-learned-policy"></a>
-</h2>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">final_policy_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "causal_forest" "grf"</span></span>
@@ -443,17 +435,14 @@ based on the specified <code>model_type</code>,
 <p>You can inspect or apply the learned model to new data.</p>
 </div>
 <div class="section level2">
-<h2 id="visual-summary">Visual Summary<a class="anchor" aria-label="anchor" href="#visual-summary"></a>
+<h2 id="visual-summary-and-notes">Visual Summary and Notes<a class="anchor" aria-label="anchor" href="#visual-summary-and-notes"></a>
 </h2>
 <div class="float">
 <img src="cram_visual_2.png" alt=" "><div class="figcaption"> </div>
 </div>
 <p>This visualization summarizes how multiple evaluations across
 iterations contribute to the full CRAM estimate.</p>
-</div>
-<div class="section level2">
-<h2 id="notes-and-tips">Notes and Tips<a class="anchor" aria-label="anchor" href="#notes-and-tips"></a>
-</h2>
+<p>Notes:</p>
 <ul>
 <li>
 <strong>Batching</strong>: You can pass a number (e.g.,
