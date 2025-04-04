@@ -1,6 +1,6 @@
 
 <div align="center">
-  <img src="man/figures/cram_logo.png" alt="CRAM Logo" width="450" style="margin-bottom: 1.5rem;" />
+  <img src="man/figures/cram_logo.png" alt="CRAM Logo" width="350" style="margin-bottom: 1.5rem;" />
   <p style="font-size: 1.25rem; max-width: 800px; margin: 0 auto;">
     The Cram Method for Efficient Simultaneous Learning and Evaluation
   </p>

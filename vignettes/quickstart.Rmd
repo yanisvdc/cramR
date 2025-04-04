@@ -133,7 +133,7 @@ The `model_params` argument allows you to customize hyperparameters for the mode
   )
   ```
   
-You can override any of these defaults by passing a custom list to model_params, tailored to your use case.
+You can override any of these defaults by passing a custom list to model_params including any parameter name defined in the underlying package, namely `grf::causal_forest()`, `glmnet::cv.glmnet()` or `keras`.
 
 ```{r}
 # Significance level for confidence intervals (default = 95%)
