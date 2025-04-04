@@ -24,11 +24,11 @@ library(caret)
 
 The **CRAM** package provides a unified framework for:
 
-- 🧠 **Cram Policy (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using flexible model choices, including causal forests and custom learners — all while efficiently reusing the entire dataset.
+- 🧠 **Cram Policy (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using CRAM. Offers flexible model choices, including causal forests and custom learners.
 
-- 📈 **Cram ML (`cram_ml`)**: Assess ML models performance using CRAM. Supports flexible model training (via `caret` or user-defined functions) and custom loss functions.
+- 📈 **Cram ML (`cram_ml`)**: Learn and evaluate ML models using CRAM. Supports flexible model training (via `caret` or user-defined functions) and custom loss functions.
 
-- 🎰 **Cram Bandit (`cram_bandit`)**: Perform on-policy evaluation of contextual bandit algorithms using CRAM. Supports both real data and simulation environments with built-in policies.
+- 🎰 **Cram Bandit (`cram_bandit`)**: Learn and perform on-policy evaluation of contextual bandit algorithms using CRAM. Supports both real data and simulation environments with built-in policies.
 
 This vignette walks through these **three core modules**.
 
@@ -100,29 +100,42 @@ learner_type <- NULL
 
 # Baseline policy to compare against (list of 0/1 for each individual)
 # Common options:
-# - All-control baseline: as.list(rep(0, nrow(X)))
+# - All-control baseline: as.list(rep(0, nrow(X))) or NULL
 # - Randomized baseline: as.list(sample(c(0, 1), nrow(X), replace = TRUE))
 baseline_policy <- as.list(rep(0, nrow(X)))  
 
 # Whether to parallelize across batches (TRUE for faster but memory-heavy runs)
 parallelize_batch <- FALSE  
 
-# Model-specific parameters
-# Examples:
-# - causal_forest: list(num.trees = 100)
-# - ridge: list(alpha = 1)
-# - fnn (Feedforward Neural Network): see below
+# Model params 
 model_params <- NULL  
+```
 
-# Advanced example for fnn (not used here):
-# default_model_params <- list(
-#   input_layer = list(units = 64, activation = 'relu', input_shape = input_shape),
-#   layers = list(list(units = 32, activation = 'relu')),
-#   output_layer = list(units = 1, activation = 'linear'),
-#   compile_args = list(optimizer = 'adam', loss = 'mse'),
-#   fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
-# )
+The `model_params` argument allows you to customize hyperparameters for the model used in policy learning. If left as `NULL`, `cram_policy()` will fall back to sensible defaults depending on the model and learner type:
 
+- For `model_type = "causal_forest"`:  
+  The method defaults to `grf::causal_forest()` with `num.trees = 100`.
+
+- For `model_type = "s_learner"` or `"m_learner"` with `learner_type = "ridge"`:  
+  It defaults to `glmnet::cv.glmnet()` with `alpha = 1`, corresponding to Ridge regression.
+
+- For `learner_type = "fnn"` (Feedforward Neural Network):  
+  A default Keras model is built with the following architecture:
+  ```r
+  list(
+    input_layer = list(units = 64, activation = 'relu', input_shape = input_shape),
+    layers = list(
+      list(units = 32, activation = 'relu')
+    ),
+    output_layer = list(units = 1, activation = 'linear'),
+    compile_args = list(optimizer = 'adam', loss = 'mse'),
+    fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
+  )
+  ```
+  
+You can override any of these defaults by passing a custom list to model_params, tailored to your use case.
+
+```{r}
 # Significance level for confidence intervals (default = 95%)
 alpha <- 0.05  
 
