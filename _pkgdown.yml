@@ -103,7 +103,7 @@ home:
 navbar:
   brand:
     title: CRAM
-    image: figures/cram_logo.png  # Correct path
+    image: man/figures/cram_logo.png  # Correct path
     image_alt: CRAM Logo
 
   components:
