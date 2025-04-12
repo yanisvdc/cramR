@@ -23,7 +23,7 @@
 
 ## 📚 What is CRAM?
 
-The **CRAM method** is a powerful approach for **simultaneously learning and evaluating decision rules**—such as individualized treatment rules (ITRs)—from data. It is particularly relevant in high-stakes applications where decisions must be both personalized and justified.
+The **CRAM method** is a powerful approach for **simultaneously learning and evaluating decision rules**—such as individualized treatment rules (ITRs)—from data. It is particularly relevant in high-stakes applications where decisions must be both personalized and statistically reliable.
 
 Common examples include:
 
@@ -31,25 +31,25 @@ Common examples include:
 - **Advertising and pricing**: setting optimal prices to maximize revenue  
 - **Policy interventions**: deciding which individuals or regions should receive targeted support to improve outcomes
 
-Unlike traditional approaches like **sample splitting** or **cross-validation**, which reserve a portion of the data purely for evaluation, **CRAM reuses all available data** efficiently during both training and evaluation.
+Unlike traditional approaches like **sample splitting** or **cross-validation**, which reserve a portion of the data purely for evaluation, **Cram reuses all available data** efficiently during both training and evaluation.
 
-A key distinction from **cross-validation** is that CRAM evaluates the **final learned model** directly, rather than averaging the performance of multiple models trained on different data subsets—resulting in sharper inference and better alignment with real-world deployment.
+A key distinction from **cross-validation** is that Cram evaluates the **final learned model** directly, rather than averaging the performance of multiple models trained on different data subsets—resulting in sharper inference and better alignment with real-world deployment.
 
 ---
 
 ## 🎯 Key Features
 
-- 🧠 **Cram Policy (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using CRAM. Offers flexible model choices, including causal forests and custom learners.
+- 🧠 **Cram Policy (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using Cram. Offers flexible model choices, including causal forests and custom learners.
 
-- 📈 **Cram ML (`cram_ml`)**: Learn and evaluate ML models using CRAM. Supports flexible model training (via `caret` or user-defined functions) and custom loss functions.
+- 📈 **Cram ML (`cram_ml`)**: Learn and evaluate ML models using Cram. Supports flexible model training (via `caret` or user-defined functions) and custom loss functions.
 
-- 🎰 **Cram Bandit (`cram_bandit`)**: Learn and perform on-policy evaluation of contextual bandit algorithms using CRAM. Supports both real data and simulation environments with built-in policies.
+- 🎰 **Cram Bandit (`cram_bandit`)**: Learn and perform on-policy evaluation of contextual bandit algorithms using Cram. Supports both real data and simulation environments with built-in policies.
 
 
 ---
 
 ## 📚 Documentation
-- [Getting Started](articles/cram_policy.html)
+- [Introduction & Cram Policy](articles/cram_policy.html)
 - [Function Reference](reference/index.html)
 - [What's New](news/index.html)
 
@@ -71,7 +71,7 @@ devtools::install_github("yanisvdc/cramR")
 ## 📄 Citation & 🤝 Contributing
 
 ### 📚 Citation
-If you use CRAM in your research, please cite the following paper:
+If you use Cram in your research, please cite the following paper:
 
 ```bibtex
 @article{jia2024cram,

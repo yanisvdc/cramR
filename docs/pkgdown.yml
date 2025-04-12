@@ -1,5 +1,5 @@
 pandoc: '3.2'
-pkgdown: 2.1.0
+pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   cram_bandit: cram_bandit.html
@@ -11,7 +11,7 @@ articles:
   cram_policy: cram_policy.html
   cram_policy_simulation: cram_policy_simulation.html
   quickstart: quickstart.html
-last_built: 2025-04-04T03:29Z
+last_built: 2025-04-12T21:35Z
 urls:
   reference: https://yanisvdc.github.io/cramR/reference
   article: https://yanisvdc.github.io/cramR/articles

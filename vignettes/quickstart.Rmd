@@ -377,7 +377,7 @@ This array can be specified in one of two formats:
 
    - `T` is the number of time steps (i.e., policy updates),
    - `K` is the number of available arms,
-   - `n = T × batch`, where `batch` is the number of actions taken between each policy update.
+   - `n = T × batch`, where `batch` is the batch size i.e. the number of actions taken between each policy update.
 
 Each element `pi[j, t, k]` represents the probability that the policy at time `t` assigns arm `k` to context `x_j`.
 
