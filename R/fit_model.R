@@ -85,8 +85,8 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
                 Converting `X` to a data.frame.")
         X <- as.data.frame(X)
       }
-      X_df$D <- D # Add treatment indicator for S-learner
-      X_df$Y <- Y # caret uses a formula so we need to add Y to the data
+      X$D <- D # Add treatment indicator for S-learner
+      X$Y <- Y # caret uses a formula so we need to add Y to the data
 
       formula <- model_params$formula
       caret_params <- model_params$caret_params
@@ -162,7 +162,7 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
                 Converting `X` to a data.frame.")
         X <- as.data.frame(X)
       }
-      X_df$Y <- Y # caret uses a formula so we need to add Y to the data
+      X$Y <- Y # caret uses a formula so we need to add Y to the data
       formula <- model_params$formula
       caret_params <- model_params$caret_params
 

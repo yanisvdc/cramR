@@ -36,7 +36,7 @@ validate_params <- function(model_function, model_type, learner_type, user_param
       default_model_params <- list(alpha = 1)
       return(default_model_params)
     } else if (learner_type == "caret") {
-      default_model_params <- list(formula = Y~., caret_params = list(method = "lm", trControl = trainControl(method = "none")))
+      default_model_params <- list(formula = Y ~ ., caret_params = list(method = "lm", trControl = trainControl(method = "none")))
       return(default_model_params)
     }else {
       stop("Error: model_type should be one of 'causal_forest', 's_learner', 'm_learner', and learner_type should be one of 'ridge', 'fnn'.")
