@@ -60,8 +60,12 @@ validate_params <- function(model_function, model_type, learner_type, user_param
     # Exclude positional arguments from validation
     valid_named_args <- setdiff(valid_args, positional_args)
 
+    # Exclude M-learner-specific fields from argument validation
+    excluded_keys <- c("m_learner_outcome_transform", "m_learner_propensity_model")
+    filtered_user_params <- user_params[setdiff(names(user_params), excluded_keys)]
+
     # Find invalid user-provided parameters
-    invalid_params <- setdiff(names(user_params), valid_named_args)
+    invalid_params <- setdiff(names(filtered_user_params), valid_named_args)
 
     # Raise an error if invalid parameters are found
     if (length(invalid_params) > 0) {
