@@ -160,38 +160,39 @@
     
     
 <div class="section level2">
-<h2 id="introduction-what-is-the-cram-method">Introduction: What is the CRAM Method?<a class="anchor" aria-label="anchor" href="#introduction-what-is-the-cram-method"></a>
+<h2 id="introduction-what-is-the-cram-method">Introduction: What is the Cram Method?<a class="anchor" aria-label="anchor" href="#introduction-what-is-the-cram-method"></a>
 </h2>
-<p>The <strong>CRAM method</strong> is a powerful approach for
+<p>The <strong>Cram method</strong> is a powerful approach for
 <strong>simultaneously learning and evaluating decision rules</strong>,
 such as individualized treatment rules (ITRs), from data.</p>
 <p>Unlike traditional approaches like <strong>sample splitting</strong>
 or <strong>cross-validation</strong>, which waste part of the data on
-evaluation only, <strong>CRAM reuses all available data</strong>
+evaluation only, <strong>Cram reuses all available data</strong>
 efficiently.</p>
-<p>A key distinction from <strong>cross-validation</strong> is that CRAM
+<p>A key distinction from <strong>cross-validation</strong> is that Cram
 evaluates the final learned model, rather than averaging performance
 across multiple models trained on different data splits.</p>
-<p>CRAM:</p>
+<p>Cram:</p>
 <ul>
-<li>Sequentially trains and evaluates models on <em>batches</em> of
-data<br>
-</li>
-<li>Tracks model evolution with minimal assumptions<br>
-</li>
-<li>Estimates treatment effects and policy values using the
-<strong>entire dataset</strong>, increasing efficiency and statistical
-power</li>
+<li><p>Simultaneously trains a model and evaluates the final learned
+decision rule using all available data to improve statistical efficiency
+and precision—unlike cross-validation or sample splitting, which reserve
+part of the data for evaluation only.</p></li>
+<li><p>Learns in cumulative batches, using each new round of data to
+refine the model and check whether it’s actually improving—ensuring that
+learning translates into meaningful gains.</p></li>
+<li><p>Estimates the expected outcome across the population if the
+learned decision rule were applied to everyone (policy value)</p></li>
 </ul>
 <blockquote>
-<p>Think of CRAM like a cram school: learn a bit, test a bit, repeat —
+<p>Think of Cram like a cram school: learn a bit, test a bit, repeat —
 getting better while constantly self-evaluating.</p>
 </blockquote>
 </div>
 <div class="section level2">
-<h2 id="the-cram-workflow">The CRAM Workflow<a class="anchor" aria-label="anchor" href="#the-cram-workflow"></a>
+<h2 id="the-cram-workflow">The Cram Workflow<a class="anchor" aria-label="anchor" href="#the-cram-workflow"></a>
 </h2>
-<p>Below is the core idea of the CRAM method visualized:</p>
+<p>Below is the core idea of the Cram method visualized:</p>
 <div class="float">
 <img src="cram_visual_1.png" alt=" "><div class="figcaption"> </div>
 </div>
@@ -201,9 +202,13 @@ the data.</p>
 <div class="float">
 <img src="cram_visual_3.png" alt=" "><div class="figcaption"> </div>
 </div>
-<p>This schematic represents how CRAM averages over <strong>many mini
+<p>This schematic represents how Cram averages over <strong>many mini
 train-test steps</strong>, ultimately estimating the improvement of the
 final learned rule over the baseline.</p>
+<p>Note: this reflects the difference in policy value relative to a
+baseline, but Cram can also be used to estimate the policy value of the
+learned rule directly (not presented as part of the introduction but
+available in the main functions of Cram).</p>
 <p>Mathematically, the estimated policy value difference is:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>Δ</mi><mo accent="true">̂</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>π</mi><mi>T</mi></msub><mo>;</mo><msub><mi>π</mi><mn>0</mn></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><munderover><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mrow><mi>T</mi><mo>−</mo><mn>1</mn></mrow></munderover><mover><mi>Δ</mi><mo accent="true">̂</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>π</mi><mi>t</mi></msub><mo>,</mo><msub><mi>π</mi><mrow><mi>t</mi><mo>−</mo><mn>1</mn></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">
 \hat{\Delta}(\pi_T; \pi_0) = \sum_{t=1}^{T-1} \hat{\Delta}(\pi_t, \pi_{t-1})
@@ -221,7 +226,7 @@ is the policy learned after batch <code>t</code>
 <h2 id="the-cram_policy-function">The <code>cram_policy()</code> Function<a class="anchor" aria-label="anchor" href="#the-cram_policy-function"></a>
 </h2>
 <p>The <code><a href="../reference/cram_policy.html">cram_policy()</a></code> function in <strong>cramR</strong>
-implements the CRAM framework for binary treatment policy learning.</p>
+implements the Cram framework for binary treatment policy learning.</p>
 <div class="section level3">
 <h3 id="key-features-of-cram_policy">🔑 Key Features of <code>cram_policy()</code><a class="anchor" aria-label="anchor" href="#key-features-of-cram_policy"></a>
 </h3>
@@ -239,7 +244,7 @@ datasets.</p></li>
 </div>
 </div>
 <div class="section level2">
-<h2 id="example-running-cram-policy-on-simulated-data">Example: Running CRAM Policy on simulated data<a class="anchor" aria-label="anchor" href="#example-running-cram-policy-on-simulated-data"></a>
+<h2 id="example-running-cram-policy-on-simulated-data">Example: Running Cram Policy on simulated data<a class="anchor" aria-label="anchor" href="#example-running-cram-policy-on-simulated-data"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
@@ -285,7 +290,7 @@ datasets.</p></li>
 <span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="fl">20</span>  </span>
 <span></span>
 <span><span class="co"># Model type for estimating treatment effects</span></span>
-<span><span class="co"># Options: "causal_forest", "s_learner", "m_learner"</span></span>
+<span><span class="co"># Options: "causal_forest", "s_learner", "m_learner", NULL (to use custom model)</span></span>
 <span><span class="va">model_type</span> <span class="op">&lt;-</span> <span class="st">"causal_forest"</span>  </span>
 <span></span>
 <span><span class="co"># Learner type used inside s/m-learners</span></span>
@@ -294,14 +299,15 @@ datasets.</p></li>
 <span></span>
 <span><span class="co"># Baseline policy to compare against (list of 0/1 for each individual)</span></span>
 <span><span class="co"># Common options:</span></span>
-<span><span class="co"># - All-control baseline: as.list(rep(0, nrow(X)))</span></span>
+<span><span class="co"># - All-control baseline: as.list(rep(0, nrow(X))) or NULL</span></span>
 <span><span class="co"># - Randomized baseline: as.list(sample(c(0, 1), nrow(X), replace = TRUE))</span></span>
 <span><span class="va">baseline_policy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">as.list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>  </span>
 <span></span>
 <span><span class="co"># Whether to parallelize across batches (TRUE for faster but memory-heavy runs)</span></span>
 <span><span class="va">parallelize_batch</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span>  </span>
+<span> </span>
 <span></span>
-<span><span class="co"># Model-specific parameters</span></span>
+<span><span class="co"># Model-specific parameters (MORE DETAILS IN THE ARTICLE "QUICK START")</span></span>
 <span><span class="co"># Examples:</span></span>
 <span><span class="co"># - causal_forest: list(num.trees = 100)</span></span>
 <span><span class="co"># - ridge: list(alpha = 1)</span></span>
@@ -320,7 +326,7 @@ datasets.</p></li>
 <span><span class="co"># Significance level for confidence intervals (default = 95%)</span></span>
 <span><span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">0.05</span>  </span>
 <span></span>
-<span><span class="co"># Run the CRAM policy method</span></span>
+<span><span class="co"># Run the Cram policy method</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_policy.html">cram_policy</a></span><span class="op">(</span></span>
 <span>  <span class="va">X</span>, <span class="va">D</span>, <span class="va">Y</span>,</span>
 <span>  batch <span class="op">=</span> <span class="va">batch</span>,</span>
@@ -377,27 +383,43 @@ datasets.</p></li>
 <script type="application/json" data-for="htmlwidget-e5c8c404fe174e4c81bd">{"x":{"filter":"none","vertical":false,"caption":"<caption>CRAM Experiment Results<\/caption>","data":[["1","2","3","4","5","6","7","8","9"],["Delta Estimate","Delta Standard Error","Delta CI Lower","Delta CI Upper","Policy Value Estimate","Policy Value Standard Error","Policy Value CI Lower","Policy Value CI Upper","Proportion Treated"],[0.23208,0.05862,0.11718,0.34697,0.21751,0.05237,0.11486,0.32016,0.605]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Metric<\/th>\n      <th>Value<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":5,"columnDefs":[{"className":"dt-right","targets":2},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"Metric","targets":1},{"name":"Value","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[5,10,25,50,100]}},"evals":[],"jsHooks":[]}</script><p>The output of <code><a href="../reference/cram_policy.html">cram_policy()</a></code> includes:</p>
 <ul>
 <li>
-<p><code>raw_results</code>: A data frame summarizing key
-metrics:</p>
+<p><strong><code>raw_results</code></strong>: A data frame
+summarizing key evaluation metrics:</p>
 <ul>
 <li>
-<code>Delta Estimate</code>, <code>Delta Standard Error</code>, and
-corresponding confidence interval bounds<br>
+<strong><code>Delta Estimate</code></strong>: The estimated
+improvement in outcomes from using the final learned policy compared to
+a baseline (e.g., no treatment or treat-all).<br>
 </li>
 <li>
-<code>Policy Value Estimate</code>,
-<code>Policy Value Standard Error</code>, and confidence interval
-bounds<br>
+<strong><code>Delta Standard Error</code></strong> and
+<strong>confidence interval bounds</strong>: Reflect the uncertainty
+around the delta estimate.<br>
 </li>
 <li>
-<code>Proportion Treated</code> under the final policy</li>
+<strong><code>Policy Value Estimate</code></strong>: The estimated
+average outcome if the final learned policy were applied across the
+population.<br>
+</li>
+<li>
+<strong><code>Policy Value Standard Error</code></strong> and
+<strong>confidence interval bounds</strong>: Reflect uncertainty in the
+policy value estimate.<br>
+</li>
+<li>
+<strong><code>Proportion Treated</code></strong>: The fraction of
+the population that would be treated under the learned policy.</li>
 </ul>
 </li>
-<li><p><code>interactive_table</code>: An interactive table view of the
-same results for exploration</p></li>
-<li><p><code>final_policy_model</code>: The final fitted policy model
-based on the specified <code>model_type</code>,
-<code>learner_type</code>, or <code>custom_fit</code></p></li>
+<li><p><strong><code>interactive_table</code></strong>: A dynamic,
+scrollable version of <code>raw_results</code> for easier exploration
+and filtering.</p></li>
+<li><p><strong><code>final_policy_model</code></strong>: The trained
+policy model object itself, fitted according to the specified
+<code>model_type</code>, <code>learner_type</code>, or user-provided
+<code>custom_fit</code> and <code>custom_predict</code> (more details in
+the article “Quick Start”). This object can be used for further analysis
+or for applying the learned policy to new data.</p></li>
 </ul>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">final_policy_model</span><span class="op">)</span></span>
@@ -441,7 +463,7 @@ based on the specified <code>model_type</code>,
 <img src="cram_visual_2.png" alt=" "><div class="figcaption"> </div>
 </div>
 <p>This visualization summarizes how multiple evaluations across
-iterations contribute to the full CRAM estimate.</p>
+iterations contribute to the full Cram estimate.</p>
 <p>Notes:</p>
 <ul>
 <li>
@@ -455,11 +477,12 @@ split.<br>
 </li>
 <li>
 <strong>Custom Learners</strong>: Use <code>custom_fit</code> and
-<code>custom_predict</code> to plug in any estimator.</li>
+<code>custom_predict</code> to plug in any estimator. (more details in
+the article “Quick Start”)</li>
 </ul>
 </div>
 <div class="section level2">
-<h2 id="why-cram">Why CRAM?<a class="anchor" aria-label="anchor" href="#why-cram"></a>
+<h2 id="why-cram">Why Cram?<a class="anchor" aria-label="anchor" href="#why-cram"></a>
 </h2>
 <p>Compared to classic evaluation methods:</p>
 <table class="table">
@@ -489,33 +512,33 @@ split.<br>
 <td>⚠️ Partial for each model</td>
 </tr>
 <tr class="odd">
-<td><strong>CRAM</strong></td>
+<td><strong>Cram</strong></td>
 <td>✅ Full</td>
 <td>✅ Final model evaluated directly</td>
 <td>✅ Fully reused for both learning and evaluation</td>
 </tr>
 </tbody>
 </table>
-<p>In practice, CRAM:</p>
-<ul>
-<li>Reduces variance of policy evaluation<br>
-</li>
-<li>Produces tighter confidence intervals<br>
-</li>
-<li>Accommodates online learners and large-scale models</li>
-</ul>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <ul>
-<li>Jia, Z., Imai, K., &amp; Li, M. L. (2024). <em>The CRAM Method for
+<li>Jia, Z., Imai, K., &amp; Li, M. L. (2024). <em>The Cram Method for
 Efficient Simultaneous Learning and Evaluation</em>.
 arXiv:2403.07031.<br>
 </li>
-<li>Wager &amp; Athey (2018). <em>Causal Forests</em>.<br>
+<li>Künzel, S. R., Sekhon, J. S., Bickel, P. J., &amp; Yu, B. (2019).
+Metalearners for estimating heterogeneous treatment effects using
+machine learning. Proceedings of the National Academy of Sciences of the
+United States of America, 116(10), 4156–4165. <a href="https://doi.org/10.1073/pnas.1804597116" class="external-link uri">https://doi.org/10.1073/pnas.1804597116</a>
 </li>
-<li>Athey &amp; Imbens (2016). <em>S/M-learner framework</em>.</li>
+<li>Wager, S., &amp; Athey, S. (2018). Estimation and inference of
+heterogeneous treatment effects using random forests. Journal of the
+American Statistical Association, 113(523), 1228-1242.</li>
+<li>Athey, S., &amp; Imbens, G. (2016). Recursive partitioning for
+heterogeneous causal effects. Proceedings of the National Academy of
+Sciences, 113(27), 7353-7360.</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

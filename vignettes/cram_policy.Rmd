@@ -16,26 +16,28 @@ library(cramR)
 library(DT)
 ```
 
-## Introduction: What is the CRAM Method?
+## Introduction: What is the Cram Method?
 
-The **CRAM method** is a powerful approach for **simultaneously learning and evaluating decision rules**, such as individualized treatment rules (ITRs), from data.
+The **Cram method** is a powerful approach for **simultaneously learning and evaluating decision rules**, such as individualized treatment rules (ITRs), from data.
 
-Unlike traditional approaches like **sample splitting** or **cross-validation**, which waste part of the data on evaluation only, **CRAM reuses all available data** efficiently.
+Unlike traditional approaches like **sample splitting** or **cross-validation**, which waste part of the data on evaluation only, **Cram reuses all available data** efficiently.
 
-A key distinction from **cross-validation** is that CRAM evaluates the final learned model, rather than averaging performance across multiple models trained on different data splits.
+A key distinction from **cross-validation** is that Cram evaluates the final learned model, rather than averaging performance across multiple models trained on different data splits.
 
 
-CRAM:
+Cram:
 
-- Sequentially trains and evaluates models on *batches* of data  
-- Tracks model evolution with minimal assumptions  
-- Estimates treatment effects and policy values using the **entire dataset**, increasing efficiency and statistical power
+- Simultaneously trains a model and evaluates the final learned decision rule using all available data to improve statistical efficiency and precision—unlike cross-validation or sample splitting, which reserve part of the data for evaluation only.
 
-> Think of CRAM like a cram school: learn a bit, test a bit, repeat — getting better while constantly self-evaluating.
+- Learns in cumulative batches, using each new round of data to refine the model and check whether it's actually improving—ensuring that learning translates into meaningful gains.
 
-## The CRAM Workflow
+- Estimates the expected outcome across the population if the learned decision rule were applied to everyone (policy value)
 
-Below is the core idea of the CRAM method visualized:
+> Think of Cram like a cram school: learn a bit, test a bit, repeat — getting better while constantly self-evaluating.
+
+## The Cram Workflow
+
+Below is the core idea of the Cram method visualized:
 
 ![ ](cram_visual_1.png)
 
@@ -45,7 +47,9 @@ This procedure ensures each update is backed by performance testing, enabling **
 ![ ](cram_visual_3.png)
 
 
-This schematic represents how CRAM averages over **many mini train-test steps**, ultimately estimating the improvement of the final learned rule over the baseline. 
+This schematic represents how Cram averages over **many mini train-test steps**, ultimately estimating the improvement of the final learned rule over the baseline. 
+
+Note: this reflects the difference in policy value relative to a baseline, but Cram can also be used to estimate the policy value of the learned rule directly (not presented as part of the introduction but available in the main functions of Cram).
 
 Mathematically, the estimated policy value difference is:
 
@@ -60,7 +64,7 @@ Where:
 
 ## The `cram_policy()` Function
 
-The `cram_policy()` function in **cramR** implements the CRAM framework for binary treatment policy learning.
+The `cram_policy()` function in **cramR** implements the Cram framework for binary treatment policy learning.
 
 ### 🔑 Key Features of `cram_policy()`
 
@@ -69,7 +73,7 @@ The `cram_policy()` function in **cramR** implements the CRAM framework for bina
 - **Efficient by Design**: Built on top of `data.table` for fast, memory-efficient computation, with optional support for parallel batch training to scale across larger datasets.
  
 
-## Example: Running CRAM Policy on simulated data
+## Example: Running Cram Policy on simulated data
 
 ```{r}
 library(data.table)
@@ -119,7 +123,7 @@ Y <- data$Y
 batch <- 20  
 
 # Model type for estimating treatment effects
-# Options: "causal_forest", "s_learner", "m_learner"
+# Options: "causal_forest", "s_learner", "m_learner", NULL (to use custom model)
 model_type <- "causal_forest"  
 
 # Learner type used inside s/m-learners
@@ -128,14 +132,15 @@ learner_type <- NULL
 
 # Baseline policy to compare against (list of 0/1 for each individual)
 # Common options:
-# - All-control baseline: as.list(rep(0, nrow(X)))
+# - All-control baseline: as.list(rep(0, nrow(X))) or NULL
 # - Randomized baseline: as.list(sample(c(0, 1), nrow(X), replace = TRUE))
 baseline_policy <- as.list(rep(0, nrow(X)))  
 
 # Whether to parallelize across batches (TRUE for faster but memory-heavy runs)
 parallelize_batch <- FALSE  
+ 
 
-# Model-specific parameters
+# Model-specific parameters (MORE DETAILS IN THE ARTICLE "QUICK START")
 # Examples:
 # - causal_forest: list(num.trees = 100)
 # - ridge: list(alpha = 1)
@@ -154,7 +159,7 @@ model_params <- NULL
 # Significance level for confidence intervals (default = 95%)
 alpha <- 0.05  
 
-# Run the CRAM policy method
+# Run the Cram policy method
 result <- cram_policy(
   X, D, Y,
   batch = batch,
@@ -184,15 +189,17 @@ result$interactive_table
 
 The output of `cram_policy()` includes:
 
-- `raw_results`: A data frame summarizing key metrics:
-  - `Delta Estimate`, `Delta Standard Error`, and corresponding confidence interval bounds  
-  - `Policy Value Estimate`, `Policy Value Standard Error`, and confidence interval bounds  
-  - `Proportion Treated` under the final policy
+- **`raw_results`**: A data frame summarizing key evaluation metrics:
 
-- `interactive_table`: An interactive table view of the same results for exploration
+  - **`Delta Estimate`**: The estimated improvement in outcomes from using the final learned policy compared to a baseline (e.g., no treatment or treat-all).  
+  - **`Delta Standard Error`** and **confidence interval bounds**: Reflect the uncertainty around the delta estimate.  
+  - **`Policy Value Estimate`**: The estimated average outcome if the final learned policy were applied across the population.  
+  - **`Policy Value Standard Error`** and **confidence interval bounds**: Reflect uncertainty in the policy value estimate.  
+  - **`Proportion Treated`**: The fraction of the population that would be treated under the learned policy.
 
-- `final_policy_model`: The final fitted policy model based on the specified `model_type`, `learner_type`, or `custom_fit`
+- **`interactive_table`**: A dynamic, scrollable version of `raw_results` for easier exploration and filtering.
 
+- **`final_policy_model`**: The trained policy model object itself, fitted according to the specified `model_type`, `learner_type`, or user-provided `custom_fit` and `custom_predict` (more details in the article "Quick Start"). This object can be used for further analysis or for applying the learned policy to new data.
 
 ```{r}
 class(result$final_policy_model)
@@ -207,15 +214,15 @@ You can inspect or apply the learned model to new data.
 ![ ](cram_visual_2.png)
 
 
-This visualization summarizes how multiple evaluations across iterations contribute to the full CRAM estimate.
+This visualization summarizes how multiple evaluations across iterations contribute to the full Cram estimate.
 
 Notes:
 
 - **Batching**: You can pass a number (e.g., `batch = 5`) or a custom vector to control how data is split.  
 - **Parallelization**: Enable with `parallelize_batch = TRUE`.  
-- **Custom Learners**: Use `custom_fit` and `custom_predict` to plug in any estimator.  
+- **Custom Learners**: Use `custom_fit` and `custom_predict` to plug in any estimator. (more details in the article "Quick Start")
 
-## Why CRAM?
+## Why Cram?
 
 Compared to classic evaluation methods:
 
@@ -223,16 +230,12 @@ Compared to classic evaluation methods:
 |-------------------|----------|-------------------|------------------|
 | Sample Splitting  | Partial  | Partial           | ❌ Inefficient    |
 | Cross-Validation  | Partial  | Average performance over different models | ⚠️ Partial for each model  |
-| **CRAM**          | ✅ Full  | ✅ Final model evaluated directly | ✅ Fully reused for both learning and evaluation |
+| **Cram**          | ✅ Full  | ✅ Final model evaluated directly | ✅ Fully reused for both learning and evaluation |
 
-In practice, CRAM:
-
-- Reduces variance of policy evaluation  
-- Produces tighter confidence intervals  
-- Accommodates online learners and large-scale models  
 
 ## References
 
-- Jia, Z., Imai, K., & Li, M. L. (2024). *The CRAM Method for Efficient Simultaneous Learning and Evaluation*. arXiv:2403.07031.  
-- Wager & Athey (2018). *Causal Forests*.  
-- Athey & Imbens (2016). *S/M-learner framework*.  
+- Jia, Z., Imai, K., & Li, M. L. (2024). *The Cram Method for Efficient Simultaneous Learning and Evaluation*. arXiv:2403.07031.  
+- Künzel, S. R., Sekhon, J. S., Bickel, P. J., & Yu, B. (2019). Metalearners for estimating heterogeneous treatment effects using machine learning. Proceedings of the National Academy of Sciences of the United States of America, 116(10), 4156–4165. https://doi.org/10.1073/pnas.1804597116
+- Wager, S., & Athey, S. (2018). Estimation and inference of heterogeneous treatment effects using random forests. Journal of the American Statistical Association, 113(523), 1228-1242. 
+- Athey, S., & Imbens, G. (2016). Recursive partitioning for heterogeneous causal effects. Proceedings of the National Academy of Sciences, 113(27), 7353-7360.
