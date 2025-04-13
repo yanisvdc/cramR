@@ -36,8 +36,8 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
   if (!model_type %in% c("causal_forest", "s_learner", "m_learner")) {
     stop("Unsupported model type. Choose 'causal_forest', 's_learner', or 'm_learner'.")
   }
-  if (!learner_type %in% c("ridge", "fnn") && model_type != "causal_forest") {
-    stop("Unsupported learner type for this model type. Choose 'ridge' or 'fnn'.")
+  if (!learner_type %in% c("ridge", "fnn", "caret") && model_type != "causal_forest") {
+    stop("Unsupported learner type for this model type. Choose 'ridge', 'fnn' or 'caret'.")
   }
   if (is.null(D)) {
     stop("Treatment indicators (D) are required.")
@@ -69,6 +69,29 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
         callbacks = NULL
       )
       fitted_model <- model
+    } else if (learner_type == "caret") {
+      # Caret (S-learner)
+      X <- cbind(as.matrix(X), D)  # Add treatment indicator for S-learner
+      formula <- model_params$formula
+      caret_params <- model_params$caret_params
+
+      # Ensure `formula` is provided
+      if (is.null(formula)) {
+        stop("Error: A formula must be provided for model training.")
+      }
+
+      # Ensure `method` is specified
+      if (!"method" %in% names(caret_params)) {
+        stop("Error: 'method' must be specified in caret_params.")
+      }
+
+      # Set default trControl if not provided
+      if (!"trControl" %in% names(caret_params)) {
+        caret_params$trControl <- caret::trainControl(method = "none")  # Default to no resampling
+      }
+
+      # Call caret::train() with correctly formatted parameters
+      fitted_model <- do.call(model, c(list(formula, data = X), caret_params))
     }
   } else if (model_type == "m_learner") {
     # M-learner requires a propensity score and transformed outcomes
@@ -76,22 +99,44 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
     # Propensity score estimation
     propensity_model <- glm(D ~ ., data = as.data.frame(X), family = "binomial")
     prop_score <- predict(propensity_model, newdata = as.data.frame(X), type = "response")
-    Y_star <- Y * D / prop_score - Y * (1 - D) / (1 - prop_score)
+    Y <- Y * D / prop_score - Y * (1 - D) / (1 - prop_score)
 
     if (learner_type == "ridge") {
       # Ridge Regression for M-learner
-      fitted_model <- do.call(model, c(list(x = as.matrix(X), y = Y_star), model_params))
+      fitted_model <- do.call(model, c(list(x = as.matrix(X), y = Y), model_params))
 
     } else if (learner_type == "fnn") {
       # Feedforward Neural Network for M-learner
       history <- model %>% fit(
         as.matrix(X),
-        Y_star,
+        Y,
         epochs = model_params$fit_params$epochs,
         batch_size = model_params$fit_params$batch_size,
         verbose = model_params$fit_params$verbose
       )
       fitted_model <- model
+    } else if (learner_type == "caret") {
+      # Caret (M-learner)
+      formula <- model_params$formula
+      caret_params <- model_params$caret_params
+
+      # Ensure `formula` is provided
+      if (is.null(formula)) {
+        stop("Error: A formula must be provided for model training.")
+      }
+
+      # Ensure `method` is specified
+      if (!"method" %in% names(caret_params)) {
+        stop("Error: 'method' must be specified in caret_params.")
+      }
+
+      # Set default trControl if not provided
+      if (!"trControl" %in% names(caret_params)) {
+        caret_params$trControl <- caret::trainControl(method = "none")  # Default to no resampling
+      }
+
+      # Call caret::train() with correctly formatted parameters
+      fitted_model <- do.call(model, c(list(formula, data = X), caret_params))
     }
   }
 
