@@ -72,6 +72,7 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
     } else if (learner_type == "caret") {
       # Caret (S-learner)
       X <- cbind(as.matrix(X), D)  # Add treatment indicator for S-learner
+      X <- cbind(as.matrix(X), Y) # caret uses a formula so we need to add Y to the data
       formula <- model_params$formula
       caret_params <- model_params$caret_params
 
@@ -133,6 +134,7 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
       fitted_model <- model
     } else if (learner_type == "caret") {
       # Caret (M-learner)
+      X <- cbind(as.matrix(X), Y) # caret uses a formula so we need to add Y to the data
       formula <- model_params$formula
       caret_params <- model_params$caret_params
 
