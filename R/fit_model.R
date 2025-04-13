@@ -94,12 +94,28 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
       fitted_model <- do.call(model, c(list(formula, data = X), caret_params))
     }
   } else if (model_type == "m_learner") {
-    # M-learner requires a propensity score and transformed outcomes
+    # M-learner requires a propensity model and transformed outcomes
+    outcome_transform <- model_params$outcome_transform
+    propensity_model <- model_params$propensity_model
 
-    # Propensity score estimation
-    propensity_model <- glm(D ~ ., data = as.data.frame(X), family = "binomial")
-    prop_score <- predict(propensity_model, newdata = as.data.frame(X), type = "response")
-    Y <- Y * D / prop_score - Y * (1 - D) / (1 - prop_score)
+    # PROP SCORE - If no function provided, use default logistic regression-based scorer
+    if (is.null(propensity_model)) {
+      propensity_model <- function(D, X) {
+        p_model <- glm(D ~ ., data = as.data.frame(X), family = "binomial")
+        predict(p_model, newdata = as.data.frame(X), type = "response")
+      }
+    }
+    # User-supplied or default prop score
+    prop_score <- propensity_model(D, X)
+
+    # OUTCOME TRANSOFRMATION - If not provided, perform IPW difference
+    if (is.null(outcome_transform)) {
+      outcome_transform <- function(Y, D, prop_score) {
+        Y * D / prop_score - Y * (1 - D) / (1 - prop_score)
+      }
+    }
+    # User-supplied or default transformed outcome
+    Y <- outcome_transform(Y, D, prop_score)
 
     if (learner_type == "ridge") {
       # Ridge Regression for M-learner

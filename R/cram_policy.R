@@ -1,21 +1,21 @@
 #' CRAM Policy
 #'
 #' This function performs the cram method (simultaneous policy learning and evaluation)
-#' on experimental or observational data, for which the data generation process is unknown.
+#' for binary policies on data including covariates (X), binary treatment indicator (D) and outcomes (Y).
 #'
 #' @param X A matrix or data frame of covariates for each sample.
-#' @param D A vector of binary treatment indicators (1 for treated, 0 for untreated).
+#' @param D A vector of binary treatment indicators (1 for treated, 0 for non-treated).
 #' @param Y A vector of outcome values for each sample.
 #' @param batch Either an integer specifying the number of batches (which will be created by random sampling) or a vector of length equal to the sample size providing the batch assignment (index) for each individual in the sample.
 #' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
-#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.
+#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression, \code{"fnn"} for Feedforward Neural Network and \code{"caret"} for Caret. Default is \code{"ridge"}.
 #' @param baseline_policy A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, defaults to a list of zeros with the same length as the number of rows in \code{X}.
 #' @param parallelize_batch Logical. Whether to parallelize batch processing (i.e. the cram method learns T policies, with T the number of batches. They are learned in parallel when parallelize_batch is TRUE vs. learned sequentially using the efficient data.table structure when parallelize_batch is FALSE, recommended for light weight training). Defaults to \code{FALSE}.
 #' @param model_params A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
 #' @param custom_fit A custom, user-defined, function that outputs a fitted model given training data (allows flexibility). Defaults to \code{NULL}.
 #' @param custom_predict A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.
 #' @param alpha Significance level for confidence intervals. Default is 0.05 (95\% confidence).
-#' @param propensity The propensity score function
+#' @param propensity The propensity score function for binary treatment indicator (D) (probability for each unit to receive treatment). Defaults to 0.5 (random assignment).
 #' @return A list containing:
 #' \itemize{
 #'   \item \code{raw_results}: A data frame summarizing key metrics with truncated decimals:
