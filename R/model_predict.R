@@ -49,8 +49,21 @@ model_predict <- function(model, X, D=NULL, model_type, learner_type, model_para
 
       predictions <- as.numeric(predictions_treated) - as.numeric(predictions_control)
 
+    } else if (learner_type == "caret") {
+      # Predict with Caret
+      formula <- model_params$formula
+      caret_params <- model_params$caret_params
+
+      treated_input <- as.matrix(cbind(X, rep(1, nrow(X))))
+      control_input <- as.matrix(cbind(X, rep(0, nrow(X))))
+
+      predictions_treated <- model_predict_ml(model, treated_input, formula, caret_params)
+      predictions_control <- model_predict_ml(model, control_input, formula, caret_params)
+
+      predictions <- as.numeric(predictions_treated) - as.numeric(predictions_control)
+
     } else {
-      stop("Unsupported learner_type for S-learner. Choose 'ridge' or 'fnn'.")
+      stop("Unsupported learner_type for S-learner. Choose 'ridge', 'fnn' or 'caret'.")
     }
 
   } else if (model_type == "m_learner") {
@@ -63,8 +76,15 @@ model_predict <- function(model, X, D=NULL, model_type, learner_type, model_para
       # Transformed outcome prediction with Feedforward Neural Network
       predictions <- predict(model, as.matrix(X))
 
+    } else if (learner_type == "caret") {
+      # Transformed outcome prediction with Caret
+      formula <- model_params$formula
+      caret_params <- model_params$caret_params
+
+      predictions <- model_predict_ml(model, as.matrix(X), formula, caret_params)
+
     } else {
-      stop("Unsupported learner_type for M-learner. Choose 'ridge' or 'fnn'.")
+      stop("Unsupported learner_type for M-learner. Choose 'ridge', 'fnn' or 'caret'.")
     }
 
   } else {
