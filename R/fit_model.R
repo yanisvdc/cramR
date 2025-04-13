@@ -45,17 +45,22 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
 
   fitted_model <- NULL
 
+  # CAUSAL FOREST -------------------------------------------------------------------
   if (model_type == "causal_forest") {
     # Train Causal Forest
     fitted_model <- do.call(model, c(list(X = X, Y = Y, W = D), model_params))
 
+  # S-LEARNER -----------------------------------------------------------------------
   } else if (model_type == "s_learner") {
+
+    # RIDGE -----------------------------------------------------------------
     if (learner_type == "ridge") {
       # Ridge Regression (S-learner)
       X <- cbind(as.matrix(X), D)  # Add treatment indicator for S-learner
 
       fitted_model <- do.call(model, c(list(x = as.matrix(X), y = Y), model_params))
 
+    # FNN --------------------------------------------------------------------
     } else if (learner_type == "fnn") {
       # Feedforward Neural Network (S-learner)
       X <- cbind(as.matrix(X), D)  # Add treatment indicator for S-learner
@@ -69,10 +74,20 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
         callbacks = NULL
       )
       fitted_model <- model
+
+    # CARET -----------------------------------------------------------------
     } else if (learner_type == "caret") {
       # Caret (S-learner)
-      X <- cbind(as.matrix(X), D)  # Add treatment indicator for S-learner
-      X <- cbind(as.matrix(X), Y) # caret uses a formula so we need to add Y to the data
+      # Ensure X is a data.frame for formula-based caret training
+      if (!is.data.frame(X)) {
+        message("`caret::train()` requires a data.frame when using formulas,
+                as column names are needed to match variables in the formula.
+                Converting `X` to a data.frame.")
+        X <- as.data.frame(X)
+      }
+      X_df$D <- D # Add treatment indicator for S-learner
+      X_df$Y <- Y # caret uses a formula so we need to add Y to the data
+
       formula <- model_params$formula
       caret_params <- model_params$caret_params
 
@@ -94,10 +109,12 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
       # Call caret::train() with correctly formatted parameters
       fitted_model <- do.call(model, c(list(formula, data = X), caret_params))
     }
+
+  # M-LEANRER ------------------------------------------------------------------------------
   } else if (model_type == "m_learner") {
     # M-learner requires a propensity model and transformed outcomes
-    outcome_transform <- model_params$outcome_transform
-    propensity_model <- model_params$propensity_model
+    outcome_transform <- model_params$m_learner_outcome_transform
+    propensity_model <- model_params$m_learner_propensity_model
 
     # PROP SCORE - If no function provided, use default logistic regression-based scorer
     if (is.null(propensity_model)) {
@@ -118,10 +135,12 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
     # User-supplied or default transformed outcome
     Y <- outcome_transform(Y, D, prop_score)
 
+    # RIDGE --------------------------------------------------------
     if (learner_type == "ridge") {
       # Ridge Regression for M-learner
       fitted_model <- do.call(model, c(list(x = as.matrix(X), y = Y), model_params))
 
+    # FNN ----------------------------------------------------------
     } else if (learner_type == "fnn") {
       # Feedforward Neural Network for M-learner
       history <- model %>% fit(
@@ -132,9 +151,18 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
         verbose = model_params$fit_params$verbose
       )
       fitted_model <- model
+
+    # CARET --------------------------------------------------------
     } else if (learner_type == "caret") {
       # Caret (M-learner)
-      X <- cbind(as.matrix(X), Y) # caret uses a formula so we need to add Y to the data
+      # Ensure X is a data.frame for formula-based caret training
+      if (!is.data.frame(X)) {
+        message("`caret::train()` requires a data.frame when using formulas,
+                as column names are needed to match variables in the formula.
+                Converting `X` to a data.frame.")
+        X <- as.data.frame(X)
+      }
+      X_df$Y <- Y # caret uses a formula so we need to add Y to the data
       formula <- model_params$formula
       caret_params <- model_params$caret_params
 
