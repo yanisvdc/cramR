@@ -47,10 +47,13 @@ set_model <- function(model_type, learner_type, model_params) {
     model <- grf::causal_forest
     return(model)
   } else if (learner_type == "ridge") {
-    # For S-learner with Ridge Regression
+    # For Ridge Regression
     model <- glmnet::cv.glmnet
+  } else if (learner_type == "caret") {
+    # For Caret
+    model <- caret::train
   } else if (learner_type == "fnn") {
-    # Create the model
+    # For FNN using Keras
     model <- keras_model_sequential()
 
     # Add the input layer
