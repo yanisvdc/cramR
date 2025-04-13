@@ -80,9 +80,6 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
       # Caret (S-learner)
       # Ensure X is a data.frame for formula-based caret training
       if (!is.data.frame(X)) {
-        message("`caret::train()` requires a data.frame when using formulas,
-                as column names are needed to match variables in the formula.
-                Converting `X` to a data.frame.")
         X <- as.data.frame(X)
       }
       X$D <- D # Add treatment indicator for S-learner
@@ -157,9 +154,6 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
       # Caret (M-learner)
       # Ensure X is a data.frame for formula-based caret training
       if (!is.data.frame(X)) {
-        message("`caret::train()` requires a data.frame when using formulas,
-                as column names are needed to match variables in the formula.
-                Converting `X` to a data.frame.")
         X <- as.data.frame(X)
       }
       X$Y <- Y # caret uses a formula so we need to add Y to the data
