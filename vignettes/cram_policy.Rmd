@@ -18,7 +18,7 @@ library(DT)
 
 ## Introduction: What is the Cram Method?
 
-The **Cram method** is a powerful approach for **simultaneously learning and evaluating decision rules**, such as individualized treatment rules (ITRs), from data.
+The Cram method is a powerful approach for simultaneously learning and evaluating decision rules, such as individualized treatment rules (ITRs), from data. Common applications include healthcare (who to treat), pricing and advertising (who to target or how much to charge), and policy (who to support).
 
 Unlike traditional approaches like **sample splitting** or **cross-validation**, which waste part of the data on evaluation only, **Cram reuses all available data** efficiently.
 
@@ -140,7 +140,7 @@ baseline_policy <- as.list(rep(0, nrow(X)))
 parallelize_batch <- FALSE  
  
 
-# Model-specific parameters (MORE DETAILS IN THE ARTICLE "QUICK START")
+# Model-specific parameters (more details in the article "Quick Start")
 # Examples:
 # - causal_forest: list(num.trees = 100)
 # - ridge: list(alpha = 1)
