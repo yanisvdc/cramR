@@ -13,31 +13,38 @@
 #' @import keras
 #' @export
 model_predict_ml <- function(model, data, formula, caret_params) {
-  # Create a local copy to avoid modifying the user's data
   new_data <- data
 
   if (!is.null(formula)) {
-    # Supervised Model: Remove response variable
-    response_var <- all.vars(formula)[1]  # Extract response variable name
+    response_var <- all.vars(formula)[1]
+
     if (response_var %in% colnames(new_data)) {
-      new_data <- new_data[, !(colnames(new_data) %in% response_var), drop = FALSE]  # Remove response variable
+      new_data <- new_data[, !(colnames(new_data) %in% response_var), drop = FALSE]
     }
 
-    # Generate predictions for supervised models
-    predictions <- predict(model, newdata = new_data)
+    # If classification and probability prediction is enabled
+    if (!is.null(caret_params$trControl) &&
+        isTRUE(caret_params$trControl$classProbs)) {
 
-  } else if (!is.null(caret_params$method) && caret_params$method == "kmeans") {
-    # If K-Means, return cluster assignments
-    if (!"finalModel" %in% names(model) || !"cluster" %in% names(model$finalModel)) {
-      stop("Error: K-Means model structure invalid. Ensure the model was trained correctly.")
+      probs <- predict(model, newdata = new_data, type = "prob")
+
+      # Get positive class name from model
+      positive_class <- levels(model$trainingData$.outcome)[2]  # Typically "Yes"
+
+      if (!(positive_class %in% colnames(probs))) {
+        stop(sprintf("Error: Could not find predicted probability column for class '%s'.", positive_class))
+      }
+
+      predictions <- probs[, positive_class]
+
+    } else {
+      # Regular prediction (numeric or factor depending on model)
+      predictions <- predict(model, newdata = new_data)
     }
-    predictions <- model$finalModel$cluster
 
   } else {
-    # Error handling if model is not recognized
     stop("Error: Model not found or method not supported in caret_params.")
   }
 
   return(predictions)
 }
-

@@ -54,8 +54,16 @@ model_predict <- function(model, X, D=NULL, model_type, learner_type, model_para
       formula <- model_params$formula
       caret_params <- model_params$caret_params
 
-      treated_input <- as.matrix(cbind(X, rep(1, nrow(X))))
-      control_input <- as.matrix(cbind(X, rep(0, nrow(X))))
+      if (!is.data.frame(X)) {
+        X <- as.data.frame(X)
+      }
+
+      # Create treated and control input data.frames properly
+      treated_input <- X
+      treated_input$D <- 1  # simulate treatment
+
+      control_input <- X
+      control_input$D <- 0  # simulate control
 
       predictions_treated <- model_predict_ml(model, treated_input, formula, caret_params)
       predictions_control <- model_predict_ml(model, control_input, formula, caret_params)
@@ -81,7 +89,11 @@ model_predict <- function(model, X, D=NULL, model_type, learner_type, model_para
       formula <- model_params$formula
       caret_params <- model_params$caret_params
 
-      predictions <- model_predict_ml(model, as.matrix(X), formula, caret_params)
+      if (!is.data.frame(X)) {
+        X <- as.data.frame(X)
+      }
+
+      predictions <- model_predict_ml(model, X, formula, caret_params)
 
     } else {
       stop("Unsupported learner_type for M-learner. Choose 'ridge', 'fnn' or 'caret'.")

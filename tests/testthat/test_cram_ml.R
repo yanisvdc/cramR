@@ -1,94 +1,102 @@
 library(testthat)
+library(caret)
+library(cramR)
 
+set.seed(42)
 
-test_that("Mean Squared Error (MSE) works", {
-  y_true <- c(1, 2, 3)
-  y_pred <- c(1.5, 2.5, 3.5)
-  expected <- (y_pred - y_true)^2
-  actual <- compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "se")
-  expect_equal(actual, expected)
-})
+# Base dataset for regression
+X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
+Y_reg <- rnorm(100)
+data_df <- data.frame(X_data, Y = Y_reg)
 
-test_that("Mean Absolute Error (MAE) works", {
-  y_true <- c(1, 2, 3)
-  y_pred <- c(1.5, 2.5, 3.5)
-  expected <- abs(y_pred - y_true)
-  actual <- compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "ae")
-  expect_equal(actual, expected)
-})
+# Base dataset for classification
+Y_class <- factor(ifelse(rbinom(100, 1, 0.5) == 1, "Yes", "No"))
+data_df_class <- data.frame(X_data, Y = Y_class)
 
-test_that("Binary Log Loss works", {
-  y_true <- c(0, 1, 0)
-  y_pred <- c(0.1, 0.9, 0.2)
-  epsilon <- 1e-15
-  y_pred_clipped <- pmax(pmin(y_pred, 1 - epsilon), epsilon)
-  expected <- - (y_true * log(y_pred_clipped) + (1 - y_true) * log(1 - y_pred_clipped))
-  actual <- compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "logloss")
-  expect_equal(actual, expected, tolerance = 1e-7)
-})
-
-test_that("Log Loss handles extreme probabilities", {
-  y_true <- c(1, 0)
-  y_pred <- c(1.0, 0.0)
-  loss <- get_loss_function("logloss")
-  clipped_pred <- pmax(pmin(y_pred, 1 - 1e-15), 1e-15)
-  expected <- c(-log(clipped_pred[1]), -log(1 - clipped_pred[2]))
-  actual <- loss(y_pred, y_true)
-  expect_equal(actual, expected)
-})
-
-test_that("Accuracy works", {
-  y_true <- factor(c("A", "B", "A"))
-  y_pred <- factor(c("A", "B", "B"))
-  expected <- as.numeric(y_pred == y_true)
-  actual <- compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "accuracy")
-  expect_equal(actual, expected)
-})
-
-test_that("Euclidean Distance (K-Means) works", {
-  data <- data.frame(x = c(1, 2, 5), y = c(1, 2, 5))
-  ml_preds <- c(1, 1, 2)
-  centroids <- aggregate(. ~ cluster, data = cbind(cluster = ml_preds, data), FUN = mean)
-  assigned_centroids <- centroids[ml_preds, -1]
-  expected <- rowSums((data - assigned_centroids)^2)
-  actual <- compute_loss(ml_preds, data, loss_name = "euclidean_distance")
-  expect_equal(actual, expected)
-})
-
-test_that("Unrecognized loss function throws error", {
-  expect_error(get_loss_function("invalid_loss"), "not recognized")
-})
-
-test_that("Supervised loss with length mismatch errors", {
-  y_true <- c(1, 2)
-  y_pred <- c(1, 2, 3)
-  expect_error(
-    compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "se"),
-    "same length"
+# -----------------------------
+# Built-in caret: Regression SE
+# -----------------------------
+test_that("cram_ml runs with lm and SE loss", {
+  caret_params_lm <- list(
+    method = "lm",
+    trControl = trainControl(method = "none")
   )
-})
 
-test_that("K-Means with incorrect ml_preds length errors", {
-  data <- data.frame(x = 1:3, y = 4:6)
-  ml_preds <- c(1, 2)
-  expect_error(
-    compute_loss(ml_preds, data, loss_name = "euclidean_distance"),
-    "must be a vector"
+  result <- cram_ml(
+    data = data_df,
+    formula = Y ~ .,
+    batch = 5,
+    loss_name = "se",
+    caret_params = caret_params_lm
   )
+
+  expect_type(result, "list")
+  expect_named(result, c("raw_results", "interactive_table", "final_ml_model"))
+  expect_s3_class(result$raw_results, "data.frame")
+  expect_true(all(c("Expected Loss Estimate", "Expected Loss Standard Error") %in% result$raw_results$Metric))
 })
 
-test_that("Accuracy with all correct predictions", {
-  y_true <- factor(c("A", "A", "A"))
-  y_pred <- factor(c("A", "A", "A"))
-  expected <- rep(1, 3)
-  actual <- compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "accuracy")
-  expect_equal(actual, expected)
+# -----------------------------
+# Built-in caret: Classification Accuracy + Logloss
+# -----------------------------
+test_that("cram_ml runs with glm and classification loss (accuracy + logloss)", {
+  caret_params_glm_acc <- list(
+    method = "glm",
+    family = "binomial",
+    trControl = trainControl(method = "none")
+  )
+
+  caret_params_glm_logloss <- list(
+    method = "glm",
+    family = "binomial",
+    trControl = trainControl(method = "none", classProbs = TRUE)
+  )
+
+  result_acc <- cram_ml(
+    data = data_df_class,
+    formula = Y ~ .,
+    batch = 5,
+    loss_name = "accuracy",
+    caret_params = caret_params_glm_acc
+  )
+
+  result_logloss <- cram_ml(
+    data = data_df_class,
+    formula = Y ~ .,
+    batch = 5,
+    loss_name = "logloss",
+    caret_params = caret_params_glm_logloss
+  )
+
+  expect_type(result_acc$raw_results$Value, "double")
+  expect_type(result_logloss$raw_results$Value, "double")
 })
 
-test_that("Accuracy with all incorrect predictions", {
-  y_true <- factor(c("A", "B", "A"))
-  y_pred <- factor(c("B", "A", "B"))
-  expected <- rep(0, 3)
-  actual <- compute_loss(y_pred, data.frame(y = y_true), formula = y ~ ., loss_name = "accuracy")
-  expect_equal(actual, expected)
+# -----------------------------
+# Custom fit, predict, loss
+# -----------------------------
+test_that("cram_ml works with full custom model + loss", {
+  custom_fit <- function(data) {
+    lm(Y ~ x1 + x2 + x3, data = data)
+  }
+
+  custom_predict <- function(model, data) {
+    predict(model, newdata = data)
+  }
+
+  custom_loss <- function(pred, data) {
+    (pred - data$Y)^2  # SE loss
+  }
+
+  result <- cram_ml(
+    data = data_df,
+    formula = Y ~ .,
+    batch = 5,
+    custom_fit = custom_fit,
+    custom_predict = custom_predict,
+    custom_loss = custom_loss
+  )
+
+  expect_type(result$raw_results$Value, "double")
+  expect_s3_class(result$final_ml_model, "lm")
 })

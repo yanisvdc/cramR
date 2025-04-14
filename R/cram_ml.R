@@ -12,8 +12,7 @@
 #'   Use NULL for unsupervised methods like clustering.
 #' @param caret_params List of parameters for `caret::train()` containing:
 #' \itemize{
-#'   \item{method: Model type (e.g., "rf", "glm", "xgbTree" for supervised;
-#'         "kmeans" for clustering)}
+#'   \item{method: Model type (e.g., "rf", "glm", "xgbTree" for supervised learning)}
 #'   \item{Additional method-specific parameters}
 #' }
 #' @param parallelize_batch Logical indicating whether to parallelize batch
@@ -22,7 +21,7 @@
 #' @param custom_predict Optional custom prediction function.
 #' @param custom_loss Optional custom loss function.
 #' @param loss_name Name of loss metric (supported: "se", "logloss",
-#'   "accuracy", "euclidean_distance").
+#'   "accuracy").
 #' @param alpha Confidence level for intervals (default = 0.05).
 #'
 #' @return A list containing:

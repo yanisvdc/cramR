@@ -19,8 +19,7 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "data_cumul", "."))
 #'  - If `FALSE`, training is performed sequentially using `data.table` for efficiency.
 #' @param loss_name The name of the loss function to be used (e.g., `"se"`, `"logloss"`).
 #' @param caret_params A **list** of parameters to pass to the `caret::train()` function.
-#'   - Required: `method` (e.g., `"glm"`, `"rf"`, `"kmeans"`).
-#'   - If `method = "kmeans"`, the function will automatically return **cluster assignments**.
+#'   - Required: `method` (e.g., `"glm"`, `"rf"`).
 #' @param custom_fit A **custom function** for training user-defined models. Defaults to `NULL`.
 #' @param custom_predict A **custom function** for making predictions from user-defined models. Defaults to `NULL`.
 #' @param custom_loss Optional **custom function** for computing the loss of a trained model on the data. Should return a **vector** containing per-instance losses.

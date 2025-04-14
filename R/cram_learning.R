@@ -96,7 +96,6 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     cl <- makeCluster(n_cores)  # Use number of cores specified by the user
     registerDoParallel(cl)
 
-
     # Export variables to cluster
     export_cluster_variables(
       cl = cl,

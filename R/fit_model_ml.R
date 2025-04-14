@@ -26,7 +26,7 @@ fit_model_ml <- function(data, formula, caret_params) {
     caret_params$trControl <- caret::trainControl(method = "none")  # Default to no resampling
   }
 
-  # Call caret::train() with correctly formatted parameters
+  # Call caret::train() with formula
   fitted_model <- do.call(caret::train, c(list(formula, data = data), caret_params))
 
   return(fitted_model)
