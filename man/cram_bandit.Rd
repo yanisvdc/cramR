@@ -4,7 +4,7 @@
 \alias{cram_bandit}
 \title{CRAM Bandit - On-policy Statistical Evaluation in Contextual Bandit}
 \usage{
-cram_bandit(pi, arm, reward, alpha = 0.05)
+cram_bandit(pi, arm, reward, batch = 1, alpha = 0.05)
 }
 \arguments{
 \item{pi}{for each row j, column t, depth a, gives pi_t(Xj, a)}
@@ -12,6 +12,8 @@ cram_bandit(pi, arm, reward, alpha = 0.05)
 \item{arm}{arms selected at each time step}
 
 \item{reward}{rewards at each time step}
+
+\item{batch}{Batch size}
 
 \item{alpha}{Confidence level for intervals (default = 0.05).}
 }

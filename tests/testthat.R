@@ -13,3 +13,6 @@ library(cramR)
 Sys.setenv(PYTHONDONTWRITEBYTECODE = 1)
 
 test_check("cramR")
+
+
+

@@ -32,10 +32,10 @@ validate_params <- function(model_function, model_type, learner_type, user_param
       default_model_params <- list(num.trees = 100)
       return(default_model_params)
       # return immediately to avoid to overwrite
-    } else if (learner_type == "ridge") {
+    } else if (!is.null(learner_type) && learner_type == "ridge") {
       default_model_params <- list(alpha = 1)
       return(default_model_params)
-    } else if (learner_type == "caret") {
+    } else if (!is.null(learner_type) && learner_type == "caret") {
       default_model_params <- list(formula = Y ~ ., caret_params = list(method = "lm", trControl = trainControl(method = "none")))
       return(default_model_params)
     }else {
@@ -64,7 +64,7 @@ validate_params <- function(model_function, model_type, learner_type, user_param
     excluded_keys <- c("m_learner_outcome_transform", "m_learner_propensity_model")
 
     # Handle caret
-    if (learner_type == "caret"){
+    if (!is.null(learner_type) && learner_type == "caret"){
       filtered_user_params <- user_params$caret_params[setdiff(names(user_params$caret_params), excluded_keys)]
     } else {
       filtered_user_params <- user_params[setdiff(names(user_params), excluded_keys)]

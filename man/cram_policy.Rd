@@ -23,7 +23,7 @@ cram_policy(
 \arguments{
 \item{X}{A matrix or data frame of covariates for each sample.}
 
-\item{D}{A vector of binary treatment indicators (1 for treated, 0 for untreated).}
+\item{D}{A vector of binary treatment indicators (1 for treated, 0 for non-treated).}
 
 \item{Y}{A vector of outcome values for each sample.}
 
@@ -31,7 +31,7 @@ cram_policy(
 
 \item{model_type}{The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.}
 
-\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.}
+\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression, \code{"fnn"} for Feedforward Neural Network and \code{"caret"} for Caret. Default is \code{"ridge"}.}
 
 \item{baseline_policy}{A list providing the baseline policy (binary 0 or 1) for each sample. If \code{NULL}, defaults to a list of zeros with the same length as the number of rows in \code{X}.}
 
@@ -45,7 +45,7 @@ cram_policy(
 
 \item{alpha}{Significance level for confidence intervals. Default is 0.05 (95\% confidence).}
 
-\item{propensity}{The propensity score function}
+\item{propensity}{The propensity score function for binary treatment indicator (D) (probability for each unit to receive treatment). Defaults to 0.5 (random assignment).}
 }
 \value{
 A list containing:
@@ -68,7 +68,7 @@ A list containing:
 }
 \description{
 This function performs the cram method (simultaneous policy learning and evaluation)
-on experimental or observational data, for which the data generation process is unknown.
+for binary policies on data including covariates (X), binary treatment indicator (D) and outcomes (Y).
 }
 \examples{
 # Example data
