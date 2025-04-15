@@ -27,7 +27,7 @@
 #' @import glmnet
 #' @import keras
 #' @export
-model_predict <- function(model, X, D=NULL, model_type, learner_type, model_params) {
+model_predict <- function(model, X, D, model_type, learner_type, model_params) {
   if (model_type == "causal_forest") {
     # Predict using Causal Forest
     predictions <- predict(model, X)$predictions
@@ -62,8 +62,14 @@ model_predict <- function(model, X, D=NULL, model_type, learner_type, model_para
       treated_input <- X
       treated_input$D <- 1  # simulate treatment
 
+      print("Data")
+      print(treated_input)
+
       control_input <- X
       control_input$D <- 0  # simulate control
+
+      print("Data control")
+      print(control_input)
 
       predictions_treated <- model_predict_ml(model, treated_input, formula, caret_params)
       predictions_control <- model_predict_ml(model, control_input, formula, caret_params)
