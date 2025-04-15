@@ -117,6 +117,25 @@ test_that("cram_policy works with caret learner (s-learner)", {
   expect_s3_class(res$raw_results, "data.frame")
 })
 
+test_that("cram_policy works with caret learner classification (s-learner)", {
+  set.seed(43)
+  X <- matrix(rnorm(100 * 2), nrow = 100)
+  D <- sample(0:1, 100, replace = TRUE)
+  Y <- sample(c(0, 1), size = nrow(X), replace = TRUE)
+  batch <- rep(1:5, each = 20)
+  model_params <- list(formula = Y ~ ., caret_params = list(method = "rf", trControl = trainControl(method = "none", classProbs = TRUE)))
+
+  res <- cram_policy(
+    X, D, Y, batch,
+    model_type = "s_learner",
+    learner_type = "caret",
+    model_params = model_params
+  )
+
+  expect_type(res, "list")
+  expect_s3_class(res$raw_results, "data.frame")
+})
+
 test_that("cram_policy works with fnn learner if keras is available", {
   skip_if_not_installed("keras")
 

@@ -43,8 +43,8 @@ model_predict_ml <- function(model, data, formula, caret_params, cram_policy_han
       # ONLY FOR CRAM POLICY as we only have binary classifications.
       # Whereas for CRAM ML we may want to calculate losses involving multiple factor levels
       # -> Handle factor outputs into numeric
-      # Note: the user never inputs data with factors).
-      # For classification it is recommended to use type = prob.
+      # Note: the user never inputs data with factors for cram policy.
+      # For classification it is recommended to use type = prob and not this.
       if (isTRUE(cram_policy_handle)) {
         if (is.factor(predictions)) {
           predictions <- as.numeric(pred) - 1  # classification output

@@ -72,6 +72,62 @@ test_that("cram_ml runs with glm and classification loss (accuracy + logloss)", 
   expect_type(result_logloss$raw_results$Value, "double")
 })
 
+test_that("cram_ml runs with caret classification logloss + classProb TRUE", {
+  # Set seed for reproducibility
+  set.seed(42)
+
+  # Generate example dataset
+  X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
+  # Y_data <- rnorm(100)  # Continuous target variable for regression
+  # Test Y binary:
+  Y_data <- factor(sample(c("no", "yes"), size = nrow(X_data), replace = TRUE), levels = c("no", "yes"))
+  data_df <- data.frame(X_data, Y = Y_data)  # Ensure target variable is included
+
+  caret_params_lm <- list(method = "rf", trControl = trainControl(method = "none", classProbs = TRUE))
+
+  nb_batch <- 5
+  # nb_batch <- rep(1:5, each = 20)
+
+  # Run ML learning function
+  result <- cram_ml(
+    data = data_df,
+    formula = Y ~ .,
+    batch = nb_batch,
+    loss_name = 'logloss',
+    caret_params = caret_params_lm
+  )
+
+  expect_type(result$raw_results$Value, "double")
+})
+
+test_that("cram_ml runs with caret classification accuracy + classProb FALSE", {
+  # Set seed for reproducibility
+  set.seed(42)
+
+  # Generate example dataset
+  X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
+  # Y_data <- rnorm(100)  # Continuous target variable for regression
+  # Test Y binary:
+  Y_data <- factor(sample(c("no", "yes"), size = nrow(X_data), replace = TRUE), levels = c("no", "yes"))
+  data_df <- data.frame(X_data, Y = Y_data)  # Ensure target variable is included
+
+  caret_params_lm <- list(method = "rf", trControl = trainControl(method = "none"))
+
+  nb_batch <- 5
+  # nb_batch <- rep(1:5, each = 20)
+
+  # Run ML learning function
+  result <- cram_ml(
+    data = data_df,
+    formula = Y ~ .,
+    batch = nb_batch,
+    loss_name = 'accuracy',
+    caret_params = caret_params_lm
+  )
+
+  expect_type(result$raw_results$Value, "double")
+})
+
 # -----------------------------
 # Custom fit, predict, loss
 # -----------------------------
