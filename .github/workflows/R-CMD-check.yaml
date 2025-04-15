@@ -22,6 +22,10 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           cache: true  # Enables caching for faster builds
+          extra-packages: |
+            devtools
+            covr
+            testthat
 
       - name: Check package
         run: R CMD check .
