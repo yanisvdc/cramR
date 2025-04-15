@@ -41,8 +41,10 @@ Imports:
     purrr
 Suggests: 
     testthat (>= 3.0.0),
+    covr (>= 3.5.1),
     kableExtra (>= 1.4.0),
     profvis (>= 0.4.0),
+    devtools,
     waldo,
     knitr,
     rmarkdown
