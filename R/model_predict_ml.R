@@ -6,13 +6,14 @@
 #' @param data The dataset
 #' @param formula The formula
 #' @param caret_params The parameters of the caret model
+#' @param cram_policy_handle Internal use. Post-process predictions differently for cram policy use. Defaults to FALSE.
 #' @return A vector of predictions or CATE estimates, depending on the \code{model_type} and \code{learner_type}.
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}
 #' @importFrom grf causal_forest
 #' @import glmnet
 #' @import keras
 #' @export
-model_predict_ml <- function(model, data, formula, caret_params) {
+model_predict_ml <- function(model, data, formula, caret_params, cram_policy_handle=FALSE) {
   new_data <- data
 
   if (!is.null(formula)) {
@@ -39,11 +40,15 @@ model_predict_ml <- function(model, data, formula, caret_params) {
 
     } else {
       predictions <- predict(model, newdata = new_data)
-      # Handle factor outputs into numeric, the levels are always "0" and "1" internally
+      # ONLY FOR CRAM POLICY as we only have binary classifications.
+      # Whereas for CRAM ML we may want to calculate losses involving multiple factor levels
+      # -> Handle factor outputs into numeric, the levels are always "0" and "1" internally
       # the user never inputs data with factors).
       # For classification it is recommended to use type = prob.
-      if (is.factor(predictions)) {
-        predictions <- as.numeric(as.character(predictions))  # classification output
+      if (isTRUE(cram_policy_handle)) {
+        if (is.factor(predictions)) {
+          predictions <- as.numeric(as.character(predictions))  # classification output
+        }
       }
     }
 
