@@ -105,7 +105,7 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
         unique_vals <- unique(Y)
 
         if (length(unique_vals) == 2 && all(unique_vals %in% c(0, 1))) {
-          Y <- factor(Y, levels = c(0, 1), labels = c("0", "1"))
+          Y <- factor(Y, levels = c(0, 1), labels = c("no", "yes"))
         }
       }
 
@@ -188,7 +188,7 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
         unique_vals <- unique(Y)
 
         if (length(unique_vals) == 2 && all(unique_vals %in% c(0, 1))) {
-          Y <- factor(Y, levels = c(0, 1), labels = c("0", "1"))
+          Y <- factor(Y, levels = c(0, 1), labels = c("no", "yes"))
         }
       }
 

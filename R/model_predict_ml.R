@@ -30,7 +30,7 @@ model_predict_ml <- function(model, data, formula, caret_params, cram_policy_han
       probs <- predict(model, newdata = new_data, type = "prob")
 
       # Get positive class name from model
-      positive_class <- levels(model$trainingData$.outcome)[2]  # Typically "Yes"
+      positive_class <- levels(model$trainingData$.outcome)[2]  # Typically "yes"
 
       if (!(positive_class %in% colnames(probs))) {
         stop(sprintf("Error: Could not find predicted probability column for class '%s'.", positive_class))
@@ -42,12 +42,12 @@ model_predict_ml <- function(model, data, formula, caret_params, cram_policy_han
       predictions <- predict(model, newdata = new_data)
       # ONLY FOR CRAM POLICY as we only have binary classifications.
       # Whereas for CRAM ML we may want to calculate losses involving multiple factor levels
-      # -> Handle factor outputs into numeric, the levels are always "0" and "1" internally
-      # the user never inputs data with factors).
+      # -> Handle factor outputs into numeric
+      # Note: the user never inputs data with factors).
       # For classification it is recommended to use type = prob.
       if (isTRUE(cram_policy_handle)) {
         if (is.factor(predictions)) {
-          predictions <- as.numeric(as.character(predictions))  # classification output
+          predictions <- as.numeric(pred) - 1  # classification output
         }
       }
     }
