@@ -17,8 +17,8 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           cache: true
+          dependencies: hard
           extra-packages: |
-            devtools
             covr
             testthat
 
