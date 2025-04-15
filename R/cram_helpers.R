@@ -192,3 +192,10 @@ create_cumulative_data <- function(X, D, Y, batches, nb_batch) {
   # Explicitly return the cumulative data table
   return(cumulative_data_dt)
 }
+
+# Check if method is a classification method
+is_classification_method <- function(method) {
+  # Get model metadata from caret
+  info <- caret::getModelInfo(method, regex = FALSE)[[1]]
+  "Classification" %in% info$type
+}

@@ -82,9 +82,6 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
       if (!is.data.frame(X)) {
         X <- as.data.frame(X)
       }
-      X$D <- D # Add treatment indicator for S-learner
-      X$Y <- Y # caret uses a formula so we need to add Y to the data
-
       formula <- model_params$formula
       caret_params <- model_params$caret_params
 
@@ -102,6 +99,18 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
       if (!"trControl" %in% names(caret_params)) {
         caret_params$trControl <- caret::trainControl(method = "none")  # Default to no resampling
       }
+
+      # CARET CLASSIFICATION - Convert 0 & 1 into factors
+      if (is_classification_method(caret_params$method)) {
+        unique_vals <- unique(Y)
+
+        if (length(unique_vals) == 2 && all(unique_vals %in% c(0, 1))) {
+          Y <- factor(Y, levels = c(0, 1), labels = c("0", "1"))
+        }
+      }
+
+      X$D <- D # Add treatment indicator for S-learner
+      X$Y <- Y # caret uses a formula so we need to add Y to the data
 
       # Call caret::train() with correctly formatted parameters
       fitted_model <- do.call(model, c(list(formula, data = X), caret_params))
@@ -156,7 +165,6 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
       if (!is.data.frame(X)) {
         X <- as.data.frame(X)
       }
-      X$Y <- Y # caret uses a formula so we need to add Y to the data
       formula <- model_params$formula
       caret_params <- model_params$caret_params
 
@@ -174,6 +182,17 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
       if (!"trControl" %in% names(caret_params)) {
         caret_params$trControl <- caret::trainControl(method = "none")  # Default to no resampling
       }
+
+      # CARET CLASSIFICATION - Convert 0 & 1 into factors
+      if (is_classification_method(caret_params$method)) {
+        unique_vals <- unique(Y)
+
+        if (length(unique_vals) == 2 && all(unique_vals %in% c(0, 1))) {
+          Y <- factor(Y, levels = c(0, 1), labels = c("0", "1"))
+        }
+      }
+
+      X$Y <- Y # caret uses a formula so we need to add Y to the data
 
       # Call caret::train() with correctly formatted parameters
       fitted_model <- do.call(model, c(list(formula, data = X), caret_params))

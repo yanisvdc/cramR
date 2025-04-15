@@ -38,8 +38,13 @@ model_predict_ml <- function(model, data, formula, caret_params) {
       predictions <- probs[, positive_class]
 
     } else {
-      # Regular prediction (numeric or factor depending on model)
       predictions <- predict(model, newdata = new_data)
+      # Handle factor outputs into numeric, the levels are always "0" and "1" internally
+      # the user never inputs data with factors).
+      # For classification it is recommended to use type = prob.
+      if (is.factor(predictions)) {
+        predictions <- as.numeric(as.character(predictions))  # classification output
+      }
     }
 
   } else {
