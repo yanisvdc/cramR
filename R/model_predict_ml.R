@@ -27,27 +27,21 @@ model_predict_ml <- function(model, data, formula, caret_params, cram_policy_han
     if (!is.null(caret_params$trControl) &&
         isTRUE(caret_params$trControl$classProbs)) {
 
-      probs <- predict(model, newdata = new_data, type = "prob")
+      # Output of Cram ML: dataframe with probabilities for each class (even if binary)
+      predictions <- predict(model, newdata = new_data, type = "prob")
 
-      # Get positive class name from model
-      positive_class <- levels(model$trainingData$.outcome)[2]  # Typically "yes"
-
-      if (!(positive_class %in% colnames(probs))) {
-        stop(sprintf("Error: Could not find predicted probability column for class '%s'.", positive_class))
+      # if binary, corresponds to proba class = 1
+      if (isTRUE(cram_policy_handle)) {
+        predictions <- expected_outcome(predictions)
       }
-
-      predictions <- probs[, positive_class]
 
     } else {
       predictions <- predict(model, newdata = new_data)
-      # ONLY FOR CRAM POLICY as we only have binary classifications.
-      # Whereas for CRAM ML we may want to calculate losses involving multiple factor levels
-      # -> Handle factor outputs into numeric
-      # Note: the user never inputs data with factors for cram policy.
-      # For classification it is recommended to use type = prob and not this.
+      # Could be of factor type for Cram ML for classification (output labels)
+      # For Cram Policy, for classification, we recommended to use type = prob and not this.
       if (isTRUE(cram_policy_handle)) {
         if (is.factor(predictions)) {
-          predictions <- as.numeric(pred) - 1  # classification output
+          predictions <- as.numeric(pred) - 1  # classification label output as numeric
         }
       }
     }

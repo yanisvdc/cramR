@@ -193,9 +193,18 @@ create_cumulative_data <- function(X, D, Y, batches, nb_batch) {
   return(cumulative_data_dt)
 }
 
-# Check if method is a classification method
-is_classification_method <- function(method) {
-  # Get model metadata from caret
-  info <- caret::getModelInfo(method, regex = FALSE)[[1]]
-  "Classification" %in% info$type
+expected_outcome <- function(probs) {
+  # Extract numeric values from column names (e.g., "class0" → 0)
+  class_values <- as.numeric(gsub("[^0-9.-]", "", names(probs)))
+
+  if (anyNA(class_values)) {
+    stop("Column names must include numeric class labels (e.g., 'class0', 'class1').")
+  }
+
+  # Convert to matrix for row-wise multiplication
+  prob_matrix <- as.matrix(probs)
+
+  # Calculate expected value per row
+  rowSums(sweep(prob_matrix, 2, class_values, FUN = "*"))
 }
+

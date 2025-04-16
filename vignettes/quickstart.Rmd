@@ -144,7 +144,8 @@ The `model_params` argument allows you to customize hyperparameters for the mode
   ```r
   model_params <- list(formula = Y ~ ., caret_params = list(method = "rf", trControl = trainControl(method = "none", classProbs = TRUE)))
   ```
-  However, even if `Y` is binary, if you are using `model_type = "m_learner"`, you need to use a regression method per definition of the M learner which re-defines the target as a transformed `Y` (see the Cram method paper given as reference in "Introduction & Cram Policy" for more details). 
+  Also note that all data inputs needs to be of numeric types, hence for `Y` binary, it should contain numeric values that are either `0` or `1`. No need to use the type `factor` for `cram_policy()`. 
+  However, even if `Y` is binary, if you are using `model_type = "m_learner"`, you need to use a regression method per definition of the M learner which re-defines the target as a transformed `Y` as function of the  (see the Cram method paper given as reference in "Introduction & Cram Policy" for more details). 
 
 You can override any of these defaults by passing a custom list to model_params including any parameter name defined in the underlying package, namely `grf::causal_forest()`, `glmnet::cv.glmnet()` or `keras`.
 

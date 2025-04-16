@@ -101,13 +101,14 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params, pr
         caret_params$trControl <- caret::trainControl(method = "none")  # Default to no resampling
       }
 
-      # CARET CLASSIFICATION - Convert 0 & 1 into factors
-      if (is_classification_method(caret_params$method)) {
-        unique_vals <- unique(Y)
+      # CARET CLASSIFICATION - Convert into factors
+      if (!is.null(caret_params$trControl) &&
+          isTRUE(caret_params$trControl$classProbs)) {
 
-        if (length(unique_vals) == 2 && all(unique_vals %in% c(0, 1))) {
-          Y <- factor(Y, levels = c(0, 1), labels = c("no", "yes"))
-        }
+        unique_vals <- sort(unique(Y))
+        labels <- paste0("class", unique_vals)
+        Y <- factor(Y, levels = unique_vals, labels = labels)
+
       }
 
       X$D <- D # Add treatment indicator for S-learner
@@ -182,13 +183,14 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params, pr
         caret_params$trControl <- caret::trainControl(method = "none")  # Default to no resampling
       }
 
-      # CARET CLASSIFICATION - Convert 0 & 1 into factors
-      if (is_classification_method(caret_params$method)) {
-        unique_vals <- unique(Y)
+      # CARET CLASSIFICATION - Convert into factors
+      if (!is.null(caret_params$trControl) &&
+          isTRUE(caret_params$trControl$classProbs)) {
 
-        if (length(unique_vals) == 2 && all(unique_vals %in% c(0, 1))) {
-          Y <- factor(Y, levels = c(0, 1), labels = c("no", "yes"))
-        }
+        unique_vals <- sort(unique(Y))
+        labels <- paste0("class", unique_vals)
+        Y <- factor(Y, levels = unique_vals, labels = labels)
+
       }
 
       X$Y <- Y # caret uses a formula so we need to add Y to the data
