@@ -10,7 +10,6 @@ Authors@R: c(
     person("Zeyang", "Jia", , "zeyangjia@fas.harvard.edu", role = "aut"),
     person("Longlin", "Wang", , "longlin_wang@g.harvard.edu", role = "aut")
   )
-Author: Yanis Vandecasteele [aut, cre] (<yanisvdc.ensae@gmail.com>)
 Maintainer: Yanis Vandecasteele <yanisvdc.ensae@gmail.com>
 Description: Performs the CRAM method, a general and efficient approach to simultaneous learning 
     and evaluation using a generic machine learning (ML) algorithm. In a single pass of batched

@@ -11,6 +11,9 @@
   <a href="https://github.com/yanisvdc/cramR">
     <img src="https://img.shields.io/badge/View%20on-GitHub-black?logo=github" alt="View on GitHub">
   </a>
+  <a href="https://app.codecov.io/gh/yanisvdc/cramR">
+    <img src="https://codecov.io/gh/yanisvdc/cramR/branch/master/graph/badge.svg" alt="Code Coverage">
+  </a>
   <a href="https://github.com/yanisvdc/cramR/issues">
     <img src="https://img.shields.io/badge/Report%20a%20Bug-red?logo=bugatti" alt="Report a Bug">
   </a>
