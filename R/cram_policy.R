@@ -67,7 +67,8 @@ cram_policy <- function(X, D, Y, batch, model_type = "causal_forest",
   learning_result <- cram_learning(X, D, Y, batch, model_type = model_type,
                                    learner_type = learner_type, baseline_policy = baseline_policy,
                                    parallelize_batch = parallelize_batch, model_params = model_params,
-                                   custom_fit = custom_fit, custom_predict = custom_predict)
+                                   custom_fit = custom_fit, custom_predict = custom_predict,
+                                   propensity = propensity)
 
 
   policies <- learning_result$policies

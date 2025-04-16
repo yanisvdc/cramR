@@ -22,7 +22,7 @@ library(caret)
 
 ## Introduction
 
-The **CRAM** package provides a unified framework for:
+The **Cram** package provides a unified framework for:
 
 - 🧠 **Cram Policy (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using CRAM. Offers flexible model choices, including causal forests and custom learners.
 
@@ -95,7 +95,7 @@ batch <- 20
 model_type <- "causal_forest"  
 
 # Learner type used inside s/m-learners
-# NULL is required for causal_forest; use "ridge" or "fnn" for s/m learners
+# NULL is required for causal_forest; use "ridge", "fnn" or "caret" for s/m learners
 learner_type <- NULL  
 
 # Baseline policy to compare against (list of 0/1 for each individual)
@@ -116,23 +116,36 @@ The `model_params` argument allows you to customize hyperparameters for the mode
 - For `model_type = "causal_forest"`:  
   The method defaults to `grf::causal_forest()` with `num.trees = 100`.
 
-- For `model_type = "s_learner"` or `"m_learner"` with `learner_type = "ridge"`:  
-  It defaults to `glmnet::cv.glmnet()` with `alpha = 1`, corresponding to Ridge regression.
+- For `model_type = "s_learner"` or `"m_learner"`, what `model_params` sets as `NULL` falls back to depends on the following learner types:
 
-- For `learner_type = "fnn"` (Feedforward Neural Network):  
+  - For `learner_type = "ridge"`,  the method defaults to `glmnet::cv.glmnet()` with `alpha = 1`, corresponding to Ridge regression.
+
+  - For `learner_type = "fnn"` (Feedforward Neural Network):  
   A default Keras model is built with the following architecture:
   ```r
-  list(
-    input_layer = list(units = 64, activation = 'relu', input_shape = input_shape),
-    layers = list(
-      list(units = 32, activation = 'relu')
-    ),
-    output_layer = list(units = 1, activation = 'linear'),
-    compile_args = list(optimizer = 'adam', loss = 'mse'),
-    fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
-  )
-  ```
+  # Determine the input shape based on model_type
+  input_shape <- if (model_type == "s_learner") ncol(X) + 1 else ncol(X)
   
+  default_model_params <- list(
+      input_layer = list(units = 64, activation = 'relu', input_shape = input_shape), 
+      layers = list(
+        list(units = 32, activation = 'relu')
+      ),
+      output_layer = list(units = 1, activation = 'linear'),
+      compile_args = list(optimizer = 'adam', loss = 'mse'),
+      fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
+    )
+  ```
+  - For `learner_type = "caret"`, it defaults to a linear regression:
+  ```r
+  default_model_params <- list(formula = Y ~ ., caret_params = list(method = "lm", trControl = trainControl(method = "none")))
+  ```
+  When using `caret`, note that if `Y` is binary and you are using `model_type = "s_learner"`, you need to choose a classification method outputting probabilities i.e. using the key word `classProbs = TRUE` in `trainControl`, see the following as an example with a Random Forest Classifier:
+  ```r
+  model_params <- list(formula = Y ~ ., caret_params = list(method = "rf", trControl = trainControl(method = "none", classProbs = TRUE)))
+  ```
+  However, even if `Y` is binary, if you are using `model_type = "m_learner"`, you need to use a regression method per definition of the M learner which re-defines the target as a transformed `Y` (see the Cram method paper given as reference in "Introduction & Cram Policy" for more details). 
+
 You can override any of these defaults by passing a custom list to model_params including any parameter name defined in the underlying package, namely `grf::causal_forest()`, `glmnet::cv.glmnet()` or `keras`.
 
 ```{r}

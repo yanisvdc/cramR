@@ -24,6 +24,7 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 #' @param custom_fit A custom, user-defined, function that outputs a fitted model given training data (allows flexibility). Defaults to \code{NULL}.
 #' @param custom_predict A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.
 #' @param n_cores Number of cores to use for parallelization when parallelize_batch is set to TRUE. Defaults to detectCores() - 1.
+#' @param propensity The propensity score
 #' @return A list containing:
 #'   \item{final_policy_model}{The final fitted policy model, depending on \code{model_type} and \code{learner_type}.}
 #'   \item{policies}{A matrix of learned policies, where each column represents a batch's learned policy and the first column is the baseline policy.}
@@ -59,7 +60,8 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
                           learner_type = "ridge", baseline_policy = NULL,
                           parallelize_batch = FALSE, model_params = NULL,
-                          custom_fit = NULL, custom_predict = NULL, n_cores = detectCores() - 1) {
+                          custom_fit = NULL, custom_predict = NULL, n_cores = detectCores() - 1,
+                          propensity = NULL) {
 
   n <- nrow(X)
 
@@ -129,7 +131,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
       ## FIT and PREDICT
       if (!(is.null(model_type))) {
         # Package model
-        trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
+        trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params, propensity)
         learned_policy <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
       } else {
         # Custom model
@@ -198,7 +200,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
       ## FIT and PREDICT
       if (!(is.null(model_type))) {
         # Package model
-        trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params)
+        trained_model <- fit_model(model, X_subset, Y_subset, D_subset, model_type, learner_type, model_params, propensity)
         learned_policy <- model_predict(trained_model, X, D, model_type, learner_type, model_params)
       } else {
         # Custom model

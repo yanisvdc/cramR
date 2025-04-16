@@ -24,9 +24,9 @@
 
 ---
 
-## 📚 What is CRAM?
+## 📚 What is Cram?
 
-The **CRAM method** is a powerful approach for **simultaneously learning and evaluating decision rules**—such as individualized treatment rules (ITRs)—from data. It is particularly relevant in high-stakes applications where decisions must be both personalized and statistically reliable.
+The **Cram method** is a powerful approach for **simultaneously learning and evaluating decision rules**—such as individualized treatment rules (ITRs)—from data. It is particularly relevant in high-stakes applications where decisions must be both personalized and statistically reliable.
 
 Common examples include:
 
@@ -60,7 +60,7 @@ A key distinction from **cross-validation** is that Cram evaluates the **final l
 
 ## 🛠️ Installation
 
-To install the development version of CRAM from GitHub:
+To install the development version of Cram from GitHub:
 ```r
 # Install devtools if needed
 install.packages("devtools")

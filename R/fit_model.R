@@ -10,6 +10,7 @@
 #' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
 #' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.
 #' @param model_params A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
+#' @param propensity The propensity score
 #' @return The fitted model object.
 #' @examples
 #' # Example usage for Ridge Regression S-learner
@@ -28,7 +29,7 @@
 #'                         learner_type = "ridge",
 #'                         model_params = model_params)
 #' @export
-fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
+fit_model <- function(model, X, Y, D, model_type, learner_type, model_params, propensity) {
   # Validate input
   if (is.null(model)) {
     stop("The provided model is NULL. Please ensure `set_model` returns a valid model.")
@@ -120,17 +121,15 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params) {
   } else if (model_type == "m_learner") {
     # M-learner requires a propensity model and transformed outcomes
     outcome_transform <- model_params$m_learner_outcome_transform
-    propensity_model <- model_params$m_learner_propensity_model
 
-    # PROP SCORE - If no function provided, use default logistic regression-based scorer
-    if (is.null(propensity_model)) {
-      propensity_model <- function(D, X) {
-        p_model <- glm(D ~ ., data = as.data.frame(X), family = "binomial")
-        predict(p_model, newdata = as.data.frame(X), type = "response")
+    # PROP SCORE - If no function provided, use default 0.5
+    if (is.null(propensity)) {
+      propensity <- function(X) {
+        rep(0.5, length(X))
       }
     }
     # User-supplied or default prop score
-    prop_score <- propensity_model(D, X)
+    prop_score <- propensity(X)
 
     # OUTCOME TRANSOFRMATION - If not provided, perform IPW difference
     if (is.null(outcome_transform)) {

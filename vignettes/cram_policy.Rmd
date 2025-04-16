@@ -123,11 +123,11 @@ Y <- data$Y
 batch <- 20  
 
 # Model type for estimating treatment effects
-# Options: "causal_forest", "s_learner", "m_learner", NULL (to use custom model)
+# Options: "causal_forest", "s_learner", "m_learner", NULL (to use custom models)
 model_type <- "causal_forest"  
 
 # Learner type used inside s/m-learners
-# NULL is required for causal_forest; use "ridge" or "fnn" for s/m learners
+# NULL is required for causal_forest; use "ridge", "fnn" or "caret" for s/m learners
 learner_type <- NULL  
 
 # Baseline policy to compare against (list of 0/1 for each individual)
@@ -141,20 +141,23 @@ parallelize_batch <- FALSE
  
 
 # Model-specific parameters (more details in the article "Quick Start")
-# Examples:
+# Examples: NULL defaults to the following:
 # - causal_forest: list(num.trees = 100)
 # - ridge: list(alpha = 1)
+# - caret: list(formula = Y ~ ., caret_params = list(method = "lm", trControl = trainControl(method = "none")))
 # - fnn (Feedforward Neural Network): see below
+# input_shape <- if (model_type == "s_learner") ncol(X) + 1 else ncol(X)
+# default_model_params <- list(
+#       input_layer = list(units = 64, activation = 'relu', input_shape = input_shape),
+#       layers = list(
+#         list(units = 32, activation = 'relu')
+#       ),
+#       output_layer = list(units = 1, activation = 'linear'),
+#       compile_args = list(optimizer = 'adam', loss = 'mse'),
+#       fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
+#     )
 model_params <- NULL  
 
-# Advanced example for fnn (not used here):
-# default_model_params <- list(
-#   input_layer = list(units = 64, activation = 'relu', input_shape = input_shape),
-#   layers = list(list(units = 32, activation = 'relu')),
-#   output_layer = list(units = 1, activation = 'linear'),
-#   compile_args = list(optimizer = 'adam', loss = 'mse'),
-#   fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
-# )
 
 # Significance level for confidence intervals (default = 95%)
 alpha <- 0.05  

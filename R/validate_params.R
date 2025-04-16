@@ -61,7 +61,7 @@ validate_params <- function(model_function, model_type, learner_type, user_param
     valid_named_args <- setdiff(valid_args, positional_args)
 
     # Exclude M-learner-specific fields from argument validation
-    excluded_keys <- c("m_learner_outcome_transform", "m_learner_propensity_model")
+    excluded_keys <- c("m_learner_outcome_transform")
 
     # Handle caret
     if (!is.null(learner_type) && learner_type == "caret"){
