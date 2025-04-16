@@ -24,6 +24,7 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "data_cumul", "."))
 #' @param custom_predict A **custom function** for making predictions from user-defined models. Defaults to `NULL`.
 #' @param custom_loss Optional **custom function** for computing the loss of a trained model on the data. Should return a **vector** containing per-instance losses.
 #' @param n_cores Number of CPU cores to use for parallel processing (`parallelize_batch = TRUE`). Defaults to `detectCores() - 1`.
+#' @param classify Indicate if this is a classification problem. Defaults to FALSE
 #'
 #' @return A **list** containing:
 #'   \item{final_ml_model}{The final trained ML model.}
@@ -76,7 +77,7 @@ ml_learning <- function(data, formula=NULL, batch,
                         parallelize_batch = FALSE, loss_name = NULL,
                         caret_params = NULL, custom_fit = NULL,
                         custom_predict = NULL, custom_loss = NULL,
-                        n_cores = detectCores() - 1) {
+                        n_cores = detectCores() - 1, classify=FALSE) {
 
   n <- nrow(data)
 
@@ -110,7 +111,7 @@ ml_learning <- function(data, formula=NULL, batch,
       ## FIT and PREDICT
       if (!(is.null(caret_params))) {
         # Caret model
-        trained_model <- fit_model_ml(data_subset, formula, caret_params)
+        trained_model <- fit_model_ml(data_subset, formula, caret_params, classify)
         ml_preds <- model_predict_ml(trained_model, data, formula, caret_params)
       } else {
         # Custom model
@@ -173,7 +174,7 @@ ml_learning <- function(data, formula=NULL, batch,
       ## FIT and PREDICT
       if (!(is.null(caret_params))) {
         # Caret model
-        trained_model <- fit_model_ml(data_subset, formula, caret_params)
+        trained_model <- fit_model_ml(data_subset, formula, caret_params, classify)
         ml_preds <- model_predict_ml(trained_model, data, formula, caret_params)
 
       } else {

@@ -23,6 +23,7 @@
 #' @param loss_name Name of loss metric (supported: "se", "logloss",
 #'   "accuracy").
 #' @param alpha Confidence level for intervals (default = 0.05).
+#' @param classify Indicate if this is a classification problem. Defaults to FALSE.
 #'
 #' @return A list containing:
 #' \itemize{
@@ -86,7 +87,7 @@
 cram_ml <- function(data, batch, formula=NULL, caret_params = NULL,
                     parallelize_batch = FALSE, loss_name=NULL,
                     custom_fit = NULL, custom_predict = NULL,
-                    custom_loss = NULL, alpha=0.05) {
+                    custom_loss = NULL, alpha=0.05, classify=FALSE) {
 
   ## CRAM LEARNING --------------------------------------------------------------------------
   learning_result <- ml_learning(data=data, formula=formula, batch=batch,
@@ -96,7 +97,8 @@ cram_ml <- function(data, batch, formula=NULL, caret_params = NULL,
                                  custom_fit = custom_fit,
                                  custom_predict = custom_predict,
                                  custom_loss = custom_loss,
-                                 n_cores = detectCores() - 1)
+                                 n_cores = detectCores() - 1,
+                                 classify = classify)
 
 
   losses <- learning_result$losses

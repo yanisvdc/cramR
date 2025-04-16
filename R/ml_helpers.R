@@ -13,27 +13,45 @@ get_loss_function <- function(loss_name) {
       abs(y_pred - y_true)
     },
 
-    # Binary Log Loss - Per individual (Classification)
-    # y_pred: Numeric vector of predicted probabilities (values between 0 and 1)
-    # y_true: Numeric vector of actual binary labels (0 or 1)
-    "logloss" = function(y_pred, y_true) {
-      y_pred <- pmax(pmin(y_pred, 1 - 1e-15), 1e-15)  # Prevent log(0) errors
-      - (y_true * log(y_pred) + (1 - y_true) * log(1 - y_pred))
+    # Log Loss - Per individual (Classification)
+    # y_pred: Data frame with probabilities assigned to each label
+    # y_true: Factor
+    "logloss" = logloss <- function(y_pred, y_true) {
+      if (!is.factor(y_true)) {
+        stop("y_true must be a factor with levels matching the column names of y_pred.")
+      }
+
+      # Ensure predicted probabilities are numeric matrix
+      y_pred <- as.matrix(y_pred)
+
+      # Safety: clamp predicted probabilities to avoid log(0)
+      eps <- 1e-15
+      y_pred <- pmax(pmin(y_pred, 1 - eps), eps)
+
+      # Convert factor to character to match column names
+      class_labels <- as.character(y_true)
+
+      # Get probability assigned to the true class for each observation
+      row_indices <- seq_len(nrow(y_pred))
+      col_indices <- match(class_labels, colnames(y_pred))
+
+      if (any(is.na(col_indices))) {
+        stop("Some labels in y_true do not match column names of y_pred.")
+      }
+
+      probs_for_true <- y_pred[cbind(row_indices, col_indices)]
+
+      # Return mean log loss
+      -log(probs_for_true)
     },
 
     # Accuracy - Per individual (Classification)
-    # y_pred: Factor or character vector of predicted class labels
-    # y_true: Factor or character vector of actual class labels
+    # y_pred: Factor
+    # y_true: Factor
     "accuracy" = function(y_pred, y_true) {
-      as.numeric(y_pred == y_true)  # Returns 1 if correct, 0 if incorrect
-    },
-
-    # Squared Euclidean Distance - Per individual (Unsupervised K-Means)
-    # points: Matrix where each row represents an individual's feature vector
-    # centroids: Matrix where each row is the centroid assigned to the corresponding individual
-    # Returns: Numeric vector of squared distances (one per individual)
-    "euclidean_distance" = function(points, centroids) {
-      rowSums((points - centroids) ^ 2)
+      # Convert both factors to their labels (character) before comparing
+      # Return vector with 1 if match and 0 otherwise
+      as.numeric(as.character(y_pred) == as.character(y_true))
     }
   )
 
@@ -50,24 +68,14 @@ compute_loss <- function(ml_preds, data, formula=NULL, loss_name) {
   # Get the appropriate loss function
   loss_function <- get_loss_function(loss_name)
 
-
-  # Supervised Learning Case
-
   # Extract the response variable from the formula
   target_var <- all.vars(formula)[1]
   true_y <- data[[target_var]]  # Actual target values
 
-  # Handle classification labels
   if (loss_name %in% c("logloss", "accuracy")) {
-    # Convert factor to 0/1 for logloss
-    if (loss_name == "logloss" && is.factor(true_y)) {
-      if (nlevels(true_y) != 2) stop("logloss requires binary factor (0/1)")
-      true_y <- as.numeric(true_y) - 1  # Convert to 0/1
-    }
-    # Ensure factors for accuracy
-    if (loss_name == "accuracy" && !is.factor(true_y)) {
-      true_y <- factor(true_y)
-    }
+    unique_vals <- sort(unique(true_y))
+    labels <- paste0("class", unique_vals)
+    true_y <- factor(Y, levels = unique_vals, labels = labels)
   }
 
   # Ensure ml_preds and true_y have the same length
@@ -80,74 +88,6 @@ compute_loss <- function(ml_preds, data, formula=NULL, loss_name) {
 
   return(individual_losses)
 }
-
-
-# # install.packages(c("caret", "mlbench", "MASS"))
-#
-# library(caret)
-# library(MASS)       # For Boston dataset
-# library(mlbench)    # For PimaIndiansDiabetes2 dataset
-#
-# # --------------------------
-# # 1. Regression Example (MSE, RMSE, MAE)
-# # --------------------------
-# data(Boston)
-#
-# # Train linear regression
-# set.seed(123)
-# lm_model <- train(medv ~ .,
-#                   data = Boston,
-#                   method = "lm",
-#                   trControl = trainControl(method = "cv", number = 5))
-#
-# # Compute losses
-# mse <- compute_loss(predict(lm_model, Boston), Boston, medv ~ ., "mse")
-# cat("Regression MSE:", mean(mse), "(Caret RMSE^2:", lm_model$results$RMSE^2, ")\n")
-#
-# # --------------------------
-# # 2. Classification Example (Log Loss, Accuracy)
-# # --------------------------
-# data(PimaIndiansDiabetes2)
-# pima_data <- na.omit(PimaIndiansDiabetes2)
-#
-# # Convert target to factor with valid levels
-# pima_data$diabetes <- factor(pima_data$diabetes, levels = c("neg", "pos"))
-#
-# # Train logistic regression
-# set.seed(123)
-# logreg_model <- train(diabetes ~ .,
-#                       data = pima_data,
-#                       method = "glm",
-#                       family = "binomial",
-#                       trControl = trainControl(method = "cv", number = 5))
-#
-# # Get predictions
-# pred_probs <- predict(logreg_model, pima_data, type = "prob")$pos  # Probabilities
-# pred_classes <- predict(logreg_model, pima_data)  # Class labels
-#
-# # Compute losses
-# logloss <- compute_loss(pred_probs, pima_data, diabetes ~ ., "logloss")
-# accuracy <- compute_loss(pred_classes, pima_data, diabetes ~ ., "accuracy")
-#
-# cat("Classification Results:\n",
-#     "Mean Log Loss:", mean(logloss), "\n",
-#     "Accuracy:", mean(accuracy), "\n")
-#
-# # --------------------------
-# # 3. K-Means Example (Euclidean Distance)
-# # --------------------------
-# data(iris)
-# features <- iris[, 1:4]
-#
-# # Train K-Means
-# set.seed(123)
-# kmeans_model <- kmeans(features, centers = 3)
-#
-# # Compute distances
-# kmeans_loss <- compute_loss(kmeans_model$cluster, features, loss_name = "euclidean_distance")
-# cat("K-Means Total Within-SS:", sum(kmeans_loss), "(Model's Within-SS:", kmeans_model$tot.withinss, ")\n")
-
-
 
 create_cumulative_data_ml <- function(data, batches, nb_batch) {
   # Step 3: Create a data.table for cumulative batches

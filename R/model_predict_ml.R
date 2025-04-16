@@ -41,13 +41,13 @@ model_predict_ml <- function(model, data, formula, caret_params, cram_policy_han
       # For Cram Policy, for classification, we recommended to use type = prob and not this.
       if (isTRUE(cram_policy_handle)) {
         if (is.factor(predictions)) {
-          predictions <- as.numeric(pred) - 1  # classification label output as numeric
+          stop("For classification with cram policy, you must set `classProbs = TRUE` in `trainControl` inside your `caret_params`.")
         }
       }
     }
 
   } else {
-    stop("Error: Model not found or method not supported in caret_params.")
+    stop("Error: Model not found or method not supported in caret_params, please set a formula.")
   }
 
   return(predictions)
