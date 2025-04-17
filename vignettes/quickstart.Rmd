@@ -111,19 +111,21 @@ parallelize_batch <- FALSE
 model_params <- NULL  
 ```
 
-The `model_params` argument allows you to customize hyperparameters for the model used in policy learning. If left as `NULL`, `cram_policy()` will fall back to sensible defaults depending on the model and learner type:
+The `model_params` argument allows you to customize hyperparameters for the model used in policy learning. If left as `NULL`, `cram_policy()` will fall back to sensible defaults depending on the model and learner type. In the following, we give default examples of `model_params` for each `model_type` and `learner_type` to illustrate how you can specify `model_params`. Generally speaking, `model_params` is a list containing all of the parameters used in the underlying model and its values:
 
 - For `model_type = "causal_forest"`:  
-  The method defaults to `grf::causal_forest()` with `num.trees = 100`.
+  When `model_params <- NULL`, the method defaults to `grf::causal_forest()` with `model_params <- list(num.trees = 100)`.
 
-- For `model_type = "s_learner"` or `"m_learner"`, what `model_params` sets as `NULL` falls back to depends on the following learner types:
+- For `model_type = "s_learner"` or `"m_learner"`, it depends on the `learner_type`:
 
-  - For `learner_type = "ridge"`,  the method defaults to `glmnet::cv.glmnet()` with `alpha = 1`, corresponding to Ridge regression.
+  - For `learner_type = "ridge"`, when `model_params <- NULL`, the method defaults to `glmnet::cv.glmnet()` with `model_params <- list(alpha = 1)`, corresponding to Ridge regression.
 
   - For `learner_type = "fnn"` (Feedforward Neural Network):  
   A default Keras model is built with the following architecture:
   ```r
   # Determine the input shape based on model_type
+  # For s_learner, the treatment D is added to the covariates to constitute the training data
+  # So the input shape is ncol(X) + 1
   input_shape <- if (model_type == "s_learner") ncol(X) + 1 else ncol(X)
   
   default_model_params <- list(
@@ -136,10 +138,12 @@ The `model_params` argument allows you to customize hyperparameters for the mode
       fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
     )
   ```
-  - For `learner_type = "caret"`, it defaults to a linear regression:
+  - For `learner_type = "caret"`, it defaults to a linear regression with no re sampling (see https://topepo.github.io/caret/model-training-and-tuning.html for details about the caret train parameters):
   ```r
   default_model_params <- list(formula = Y ~ ., caret_params = list(method = "lm", trControl = trainControl(method = "none")))
   ```
+Please note that the list should contain an element `formula` where `Y` refers to the vector that you provided as input for `Y`, and an element named `caret_params` containing the parameters of your choice to pass to `caret::train` (see full list of parameters here: https://topepo.github.io/caret/model-training-and-tuning.html).
+
   When using `caret`, note that if `Y` is binary and you are using `model_type = "s_learner"`, you need to choose a classification method outputting probabilities i.e. using the key word `classProbs = TRUE` in `trainControl`, see the following as an example with a Random Forest Classifier:
   ```r
   model_params <- list(formula = Y ~ ., caret_params = list(method = "rf", trControl = trainControl(method = "none", classProbs = TRUE)))

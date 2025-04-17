@@ -59,7 +59,6 @@
 #'   trControl = trainControl(method = "none")
 #' )
 #'
-#' # Define the batch count (not used in this simple example)
 #' nb_batch <- 5
 #'
 #' # Run ML learning function

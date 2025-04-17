@@ -166,7 +166,8 @@ test_that("cram_policy allows custom propensity function", {
 
   res <- cram_policy(
     X, D, Y, batch,
-    propensity = propensity_fn
+    propensity = propensity_fn,
+    model_type = "m_learner"
   )
 
   expect_true("Delta Estimate" %in% res$raw_results$Metric)

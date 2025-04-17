@@ -10,7 +10,7 @@ Y_reg <- rnorm(100)
 data_df <- data.frame(X_data, Y = Y_reg)
 
 # Base dataset for classification
-Y_class <- factor(ifelse(rbinom(100, 1, 0.5) == 1, "Yes", "No"))
+Y_class <- rbinom(100, 1, 0.5)
 data_df_class <- data.frame(X_data, Y = Y_class)
 
 # -----------------------------
@@ -78,15 +78,13 @@ test_that("cram_ml runs with caret classification logloss + classProb TRUE", {
 
   # Generate example dataset
   X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
-  # Y_data <- rnorm(100)  # Continuous target variable for regression
   # Test Y binary:
-  Y_data <- factor(sample(c("no", "yes"), size = nrow(X_data), replace = TRUE), levels = c("no", "yes"))
+  Y_data <- rbinom(nrow(X_data), 1, 0.5)
   data_df <- data.frame(X_data, Y = Y_data)  # Ensure target variable is included
 
   caret_params_lm <- list(method = "rf", trControl = trainControl(method = "none", classProbs = TRUE))
 
   nb_batch <- 5
-  # nb_batch <- rep(1:5, each = 20)
 
   # Run ML learning function
   result <- cram_ml(
@@ -106,15 +104,12 @@ test_that("cram_ml runs with caret classification accuracy + classProb FALSE", {
 
   # Generate example dataset
   X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
-  # Y_data <- rnorm(100)  # Continuous target variable for regression
-  # Test Y binary:
-  Y_data <- factor(sample(c("no", "yes"), size = nrow(X_data), replace = TRUE), levels = c("no", "yes"))
+  Y_data <- rbinom(nrow(X_data), 1, 0.5)
   data_df <- data.frame(X_data, Y = Y_data)  # Ensure target variable is included
 
   caret_params_lm <- list(method = "rf", trControl = trainControl(method = "none"))
 
   nb_batch <- 5
-  # nb_batch <- rep(1:5, each = 20)
 
   # Run ML learning function
   result <- cram_ml(
