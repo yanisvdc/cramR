@@ -77,11 +77,27 @@ devtools::install_github("yanisvdc/cramR")
 If you use Cram in your research, please cite the following paper:
 
 ```bibtex
-@article{jia2024cram,
-  title={The Cram Method for Efficient Simultaneous Learning and Evaluation},
-  author={Jia, Zeyang and Imai, Kosuke and Li, Michael Lingzhi},
-  journal={arXiv preprint arXiv:2403.07031},
-  year={2024}
+@techreport{jia2024cram,
+  title        = {The Cram Method for Efficient Simultaneous Learning and Evaluation},
+  author       = {Jia, Zeyang and Imai, Kosuke and Li, Michael Lingzhi},
+  institution  = {Harvard Business School},
+  type         = {Working Paper},
+  year         = {2024},
+  url          = {https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf},
+  note         = {Accessed April 2025}
+}
+
+```
+
+```bibtex
+@misc{jia2025crammingcontextualbanditsonpolicy,
+      title={Cramming Contextual Bandits for On-policy Statistical Evaluation}, 
+      author={Zeyang Jia and Kosuke Imai and Michael Lingzhi Li},
+      year={2025},
+      eprint={2403.07031},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2403.07031}, 
 }
 ```
 
