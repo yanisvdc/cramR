@@ -4,7 +4,7 @@
 \alias{fit_model_ml}
 \title{Fit Model ML}
 \usage{
-fit_model_ml(data, formula, caret_params)
+fit_model_ml(data, formula, caret_params, classify)
 }
 \arguments{
 \item{data}{The dataset}
@@ -12,6 +12,8 @@ fit_model_ml(data, formula, caret_params)
 \item{formula}{The formula}
 
 \item{caret_params}{The parameters for caret model}
+
+\item{classify}{Indicate if this is a classification problem. Defaults to FALSE}
 }
 \value{
 The fitted model object.

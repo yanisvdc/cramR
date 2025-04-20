@@ -4,7 +4,7 @@
 \alias{model_predict}
 \title{Predict with the Specified Model}
 \usage{
-model_predict(model, X, D = NULL, model_type, learner_type, model_params)
+model_predict(model, X, D, model_type, learner_type, model_params)
 }
 \arguments{
 \item{model}{A trained model object returned by the `fit_model` function.}

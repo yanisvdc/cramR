@@ -115,6 +115,7 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params, pr
       X$Y <- Y # caret uses a formula so we need to add Y to the data
 
       # Call caret::train() with correctly formatted parameters
+      ensure_caret_dependencies(caret_params$method)
       fitted_model <- do.call(model, c(list(formula, data = X), caret_params))
     }
 
@@ -126,7 +127,7 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params, pr
     # PROP SCORE - If no function provided, use default 0.5
     if (is.null(propensity)) {
       propensity <- function(X) {
-        rep(0.5, length(X))
+        rep(0.5, nrow(X))
       }
     }
     # User-supplied or default prop score
@@ -196,6 +197,7 @@ fit_model <- function(model, X, Y, D, model_type, learner_type, model_params, pr
       X$Y <- Y # caret uses a formula so we need to add Y to the data
 
       # Call caret::train() with correctly formatted parameters
+      ensure_caret_dependencies(caret_params$method)
       fitted_model <- do.call(model, c(list(formula, data = X), caret_params))
     }
   }

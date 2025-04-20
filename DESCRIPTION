@@ -47,7 +47,10 @@ Suggests:
     devtools,
     waldo,
     knitr,
-    rmarkdown
+    rmarkdown,
+    randomForest,
+    gbm,
+    nnet
 Remotes:
     Nth-iteration-labs/contextual
 Encoding: UTF-8

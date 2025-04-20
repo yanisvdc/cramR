@@ -16,7 +16,8 @@ cram_learning(
   model_params = NULL,
   custom_fit = NULL,
   custom_predict = NULL,
-  n_cores = detectCores() - 1
+  n_cores = detectCores() - 1,
+  propensity = NULL
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ cram_learning(
 \item{custom_predict}{A custom, user-defined, function for making predictions given a fitted model and test data (allow flexibility). Defaults to \code{NULL}.}
 
 \item{n_cores}{Number of cores to use for parallelization when parallelize_batch is set to TRUE. Defaults to detectCores() - 1.}
+
+\item{propensity}{The propensity score}
 }
 \value{
 A list containing:

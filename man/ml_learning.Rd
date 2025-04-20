@@ -14,7 +14,8 @@ ml_learning(
   custom_fit = NULL,
   custom_predict = NULL,
   custom_loss = NULL,
-  n_cores = detectCores() - 1
+  n_cores = detectCores() - 1,
+  classify = FALSE
 )
 }
 \arguments{
@@ -31,8 +32,7 @@ ml_learning(
 \item{loss_name}{The name of the loss function to be used (e.g., `"se"`, `"logloss"`).}
 
 \item{caret_params}{A **list** of parameters to pass to the `caret::train()` function.
-- Required: `method` (e.g., `"glm"`, `"rf"`, `"kmeans"`).
-- If `method = "kmeans"`, the function will automatically return **cluster assignments**.}
+- Required: `method` (e.g., `"glm"`, `"rf"`).}
 
 \item{custom_fit}{A **custom function** for training user-defined models. Defaults to `NULL`.}
 
@@ -41,6 +41,8 @@ ml_learning(
 \item{custom_loss}{Optional **custom function** for computing the loss of a trained model on the data. Should return a **vector** containing per-instance losses.}
 
 \item{n_cores}{Number of CPU cores to use for parallel processing (`parallelize_batch = TRUE`). Defaults to `detectCores() - 1`.}
+
+\item{classify}{Indicate if this is a classification problem. Defaults to FALSE}
 }
 \value{
 A **list** containing:

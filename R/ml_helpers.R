@@ -75,12 +75,21 @@ compute_loss <- function(ml_preds, data, formula=NULL, loss_name) {
   if (loss_name %in% c("logloss", "accuracy")) {
     unique_vals <- sort(unique(true_y))
     labels <- paste0("class", unique_vals)
-    true_y <- factor(Y, levels = unique_vals, labels = labels)
+    true_y <- factor(true_y, levels = unique_vals, labels = labels)
   }
 
-  # Ensure ml_preds and true_y have the same length
-  if (length(ml_preds) != length(true_y)) {
-    stop("Error: Predictions and true values must have the same length.")
+  if (is.data.frame(ml_preds)) {
+    num_obs <- nrow(ml_preds)
+  } else {
+    num_obs <- length(ml_preds)
+  }
+
+  # Ensure ml_pred and true_y have the same length
+  if (num_obs != length(true_y)) {
+    stop(sprintf(
+      "Error: Predictions and true values must have the same length.\nPredictions: %d rows, True values: %d rows.",
+      num_obs, length(true_y)
+    ))
   }
 
   # Compute per-instance loss
@@ -110,3 +119,15 @@ create_cumulative_data_ml <- function(data, batches, nb_batch) {
   # Explicitly return the cumulative data table
   return(cumulative_data_dt)
 }
+
+
+ensure_caret_dependencies <- function(method) {
+  libs <- caret::getModelInfo(method, regex = FALSE)[[1]]$library
+  missing <- libs[!vapply(libs, requireNamespace, logical(1), quietly = TRUE)]
+  if (length(missing) > 0) {
+    stop("The following packages are required for method = '", method,
+         "': ", paste(missing, collapse = ", "),
+         ". Please install them manually.")
+  }
+}
+

@@ -194,7 +194,7 @@ create_cumulative_data <- function(X, D, Y, batches, nb_batch) {
 }
 
 expected_outcome <- function(probs) {
-  # Extract numeric values from column names (e.g., "class0" → 0)
+  # Extract numeric values from column names (e.g., "class0" -> 0)
   class_values <- as.numeric(gsub("[^0-9.-]", "", names(probs)))
 
   if (anyNA(class_values)) {

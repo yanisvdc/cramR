@@ -21,10 +21,10 @@ test_that("cram_policy runs correctly with default causal_forest settings", {
 
 test_that("cram_policy works with ridge learner (s-learner)", {
   set.seed(42)
-  X <- matrix(rnorm(80 * 2), nrow = 80)
-  D <- sample(0:1, 80, replace = TRUE)
-  Y <- rnorm(80)
-  batch <- rep(1:4, each = 20)
+  X <- matrix(rnorm(200 * 2), nrow = 200)
+  D <- sample(0:1, 200, replace = TRUE)
+  Y <- rnorm(200)
+  batch <- rep(1:5, each = 40)
 
   res <- cram_policy(
     X, D, Y, batch,
@@ -38,10 +38,10 @@ test_that("cram_policy works with ridge learner (s-learner)", {
 
 test_that("cram_policy works with FNN user param (s-learner)", {
   set.seed(42)
-  X <- matrix(rnorm(80 * 2), nrow = 80)
-  D <- sample(0:1, 80, replace = TRUE)
-  Y <- rnorm(80)
-  batch <- rep(1:4, each = 20)
+  X <- matrix(rnorm(200 * 2), nrow = 200)
+  D <- sample(0:1, 200, replace = TRUE)
+  Y <- rnorm(200)
+  batch <- rep(1:5, each = 40)
 
   input_shape <- ncol(X) + 1 # S-learner so add D
 
@@ -157,10 +157,10 @@ test_that("cram_policy works with fnn learner if keras is available", {
 
 test_that("cram_policy allows custom propensity function", {
   set.seed(99)
-  X <- matrix(rnorm(100 * 2), nrow = 100)
-  D <- sample(0:1, 100, replace = TRUE)
-  Y <- rnorm(100)
-  batch <- rep(1:5, each = 20)
+  X <- matrix(rnorm(200 * 2), nrow = 200)
+  D <- sample(0:1, 200, replace = TRUE)
+  Y <- rnorm(200)
+  batch <- rep(1:5, each = 40)
 
   propensity_fn <- function(X) rep(0.6, nrow(X))
 

@@ -14,7 +14,8 @@ cram_ml(
   custom_fit = NULL,
   custom_predict = NULL,
   custom_loss = NULL,
-  alpha = 0.05
+  alpha = 0.05,
+  classify = FALSE
 )
 }
 \arguments{
@@ -29,8 +30,7 @@ Use NULL for unsupervised methods like clustering.}
 
 \item{caret_params}{List of parameters for `caret::train()` containing:
 \itemize{
-  \item{method: Model type (e.g., "rf", "glm", "xgbTree" for supervised;
-        "kmeans" for clustering)}
+  \item{method: Model type (e.g., "rf", "glm", "xgbTree" for supervised learning)}
   \item{Additional method-specific parameters}
 }}
 
@@ -38,7 +38,7 @@ Use NULL for unsupervised methods like clustering.}
 processing (default = FALSE).}
 
 \item{loss_name}{Name of loss metric (supported: "se", "logloss",
-"accuracy", "euclidean_distance").}
+"accuracy").}
 
 \item{custom_fit}{Optional custom model training function.}
 
@@ -47,6 +47,8 @@ processing (default = FALSE).}
 \item{custom_loss}{Optional custom loss function.}
 
 \item{alpha}{Confidence level for intervals (default = 0.05).}
+
+\item{classify}{Indicate if this is a classification problem. Defaults to FALSE.}
 }
 \value{
 A list containing:
@@ -89,7 +91,6 @@ caret_params_lm <- list(
   trControl = trainControl(method = "none")
 )
 
-# Define the batch count (not used in this simple example)
 nb_batch <- 5
 
 # Run ML learning function

@@ -57,7 +57,8 @@ test_that("cram_ml runs with glm and classification loss (accuracy + logloss)", 
     formula = Y ~ .,
     batch = 5,
     loss_name = "accuracy",
-    caret_params = caret_params_glm_acc
+    caret_params = caret_params_glm_acc,
+    classify = TRUE
   )
 
   result_logloss <- cram_ml(
@@ -65,7 +66,8 @@ test_that("cram_ml runs with glm and classification loss (accuracy + logloss)", 
     formula = Y ~ .,
     batch = 5,
     loss_name = "logloss",
-    caret_params = caret_params_glm_logloss
+    caret_params = caret_params_glm_logloss,
+    classify = TRUE
   )
 
   expect_type(result_acc$raw_results$Value, "double")
@@ -92,7 +94,8 @@ test_that("cram_ml runs with caret classification logloss + classProb TRUE", {
     formula = Y ~ .,
     batch = nb_batch,
     loss_name = 'logloss',
-    caret_params = caret_params_lm
+    caret_params = caret_params_lm,
+    classify = TRUE
   )
 
   expect_type(result$raw_results$Value, "double")
@@ -117,7 +120,8 @@ test_that("cram_ml runs with caret classification accuracy + classProb FALSE", {
     formula = Y ~ .,
     batch = nb_batch,
     loss_name = 'accuracy',
-    caret_params = caret_params_lm
+    caret_params = caret_params_lm,
+    classify = TRUE
   )
 
   expect_type(result$raw_results$Value, "double")

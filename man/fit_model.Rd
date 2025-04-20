@@ -4,7 +4,7 @@
 \alias{fit_model}
 \title{Fit Model}
 \usage{
-fit_model(model, X, Y, D, model_type, learner_type, model_params)
+fit_model(model, X, Y, D, model_type, learner_type, model_params, propensity)
 }
 \arguments{
 \item{model}{An unfitted model object, as returned by `set_model`.}
@@ -20,6 +20,8 @@ fit_model(model, X, Y, D, model_type, learner_type, model_params)
 \item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.}
 
 \item{model_params}{A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.}
+
+\item{propensity}{The propensity score}
 }
 \value{
 The fitted model object.
