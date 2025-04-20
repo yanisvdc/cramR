@@ -141,7 +141,8 @@
 <span>  model_params <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  custom_fit <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  custom_predict <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  n_cores <span class="op">=</span> <span class="fu">detectCores</span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span></span>
+<span>  n_cores <span class="op">=</span> <span class="fu">detectCores</span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>,</span>
+<span>  propensity <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -195,6 +196,10 @@
 
 <dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
 <dd><p>Number of cores to use for parallelization when parallelize_batch is set to TRUE. Defaults to detectCores() - 1.</p></dd>
+
+
+<dt id="arg-propensity">propensity<a class="anchor" aria-label="anchor" href="#arg-propensity"></a></dt>
+<dd><p>The propensity score</p></dd>
 
 </dl></div>
     <div class="section level2">

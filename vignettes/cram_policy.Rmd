@@ -31,7 +31,7 @@ Cram:
 
 - Learns in cumulative batches, using each new round of data to refine the model and check whether it's actually improving—ensuring that learning translates into meaningful gains.
 
-- Estimates the expected outcome across the population if the learned decision rule were applied to everyone (policy value)
+- Estimates the expected outcome across the entire population as if the policy learned on a data sample were applied to everyone in the population, and not just to the data sample (statistical quantity called "policy value"), which allows the user to assess how the learned policy would generalize beyond the data sample.
 
 > Think of Cram like a cram school: learn a bit, test a bit, repeat — getting better while constantly self-evaluating.
 
@@ -47,20 +47,8 @@ This procedure ensures each update is backed by performance testing, enabling **
 ![ ](cram_visual_3.png)
 
 
-This schematic represents how Cram averages over **many mini train-test steps**, ultimately estimating the improvement of the final learned rule over the baseline. 
+Note: this schematic represents how Cram estimates the difference in policy value (see the definition of policy value above) relative to a baseline policy - an example of baseline policy in healthcare would be to treat nobody (all-zeros) or to randomly treat individuals (assign 1 for treatment and 0 for no treatment randomly); the policy value difference "Delta" gives you how much better (or worse) is the policy learned by Cram on the data relative to the baseline policy - but Cram can also be used to estimate the policy value of the learned policy directly, without the need to specify a baseline policy (not presented here as part of the introduction but available in the outputs of the main functions of Cram).
 
-Note: this reflects the difference in policy value relative to a baseline, but Cram can also be used to estimate the policy value of the learned rule directly (not presented as part of the introduction but available in the main functions of Cram).
-
-Mathematically, the estimated policy value difference is:
-
-\[
-\hat{\Delta}(\pi_T; \pi_0) = \sum_{t=1}^{T-1} \hat{\Delta}(\pi_t, \pi_{t-1})
-\]
-
-Where:
-
-- \(\pi_t\) is the policy learned after batch `t`
-- Evaluation is done using the *unseen* remaining data
 
 ## The `cram_policy()` Function
 
@@ -119,24 +107,33 @@ Y <- data$Y
 
 
 ```{r}
-# Number of batches to split the data into
-batch <- 20  
+# Options for batch:
+# Either an integer specifying the number of batches or a vector/list of batch assignments for all individuals
+batch <- 20
 
 # Model type for estimating treatment effects
-# Options: "causal_forest", "s_learner", "m_learner", NULL (to use custom models)
+# Options for model_type: 'causal_forest', 's_learner', 'm_learner'
+# Note: you can also set model_type to NULL and specify custom_fit and custom_predict to use your custom model
 model_type <- "causal_forest"  
 
-# Learner type used inside s/m-learners
-# NULL is required for causal_forest; use "ridge", "fnn" or "caret" for s/m learners
+# Options for learner_type:
+# if model_type == 'causal_forest', choose NULL
+# if model_type == 's_learner' or 'm_learner', choose between 'ridge', 'fnn' and 'caret'
 learner_type <- NULL  
 
 # Baseline policy to compare against (list of 0/1 for each individual)
-# Common options:
+# Options for baseline_policy:
+# A list representing the baseline policy assignment for each individual.
+# If NULL, a default baseline policy of zeros is created.
+# Examples of baseline policy: 
 # - All-control baseline: as.list(rep(0, nrow(X))) or NULL
 # - Randomized baseline: as.list(sample(c(0, 1), nrow(X), replace = TRUE))
 baseline_policy <- as.list(rep(0, nrow(X)))  
 
-# Whether to parallelize across batches (TRUE for faster but memory-heavy runs)
+# Whether to parallelize batch processing (i.e. the cram method learns T policies, with T the number of batches.
+# They are learned in parallel when parallelize_batch is TRUE
+# vs. learned sequentially using the efficient data.table structure when parallelize_batch is FALSE, recommended for light weight training).
+# Defaults to FALSE.
 parallelize_batch <- FALSE  
  
 

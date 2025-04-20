@@ -132,7 +132,7 @@ in Contextual Bandit</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">cram_bandit</span><span class="op">(</span><span class="va">pi</span>, <span class="va">arm</span>, <span class="va">reward</span>, alpha <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">cram_bandit</span><span class="op">(</span><span class="va">pi</span>, <span class="va">arm</span>, <span class="va">reward</span>, batch <span class="op">=</span> <span class="fl">1</span>, alpha <span class="op">=</span> <span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -149,6 +149,10 @@ in Contextual Bandit</p>
 
 <dt id="arg-reward">reward<a class="anchor" aria-label="anchor" href="#arg-reward"></a></dt>
 <dd><p>rewards at each time step</p></dd>
+
+
+<dt id="arg-batch">batch<a class="anchor" aria-label="anchor" href="#arg-batch"></a></dt>
+<dd><p>Batch size</p></dd>
 
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>

@@ -139,7 +139,8 @@
 <span>  custom_fit <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  custom_predict <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  custom_loss <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  n_cores <span class="op">=</span> <span class="fu">detectCores</span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span></span>
+<span>  n_cores <span class="op">=</span> <span class="fu">detectCores</span><span class="op">(</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span>,</span>
+<span>  classify <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -171,8 +172,7 @@
 
 <dt id="arg-caret-params">caret_params<a class="anchor" aria-label="anchor" href="#arg-caret-params"></a></dt>
 <dd><p>A **list** of parameters to pass to the `caret::train()` function.
-- Required: `method` (e.g., `"glm"`, `"rf"`, `"kmeans"`).
-- If `method = "kmeans"`, the function will automatically return **cluster assignments**.</p></dd>
+- Required: `method` (e.g., `"glm"`, `"rf"`).</p></dd>
 
 
 <dt id="arg-custom-fit">custom_fit<a class="anchor" aria-label="anchor" href="#arg-custom-fit"></a></dt>
@@ -189,6 +189,10 @@
 
 <dt id="arg-n-cores">n_cores<a class="anchor" aria-label="anchor" href="#arg-n-cores"></a></dt>
 <dd><p>Number of CPU cores to use for parallel processing (`parallelize_batch = TRUE`). Defaults to `detectCores() - 1`.</p></dd>
+
+
+<dt id="arg-classify">classify<a class="anchor" aria-label="anchor" href="#arg-classify"></a></dt>
+<dd><p>Indicate if this is a classification problem. Defaults to FALSE</p></dd>
 
 </dl></div>
     <div class="section level2">
