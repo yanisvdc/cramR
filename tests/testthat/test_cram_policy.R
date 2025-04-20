@@ -68,10 +68,10 @@ test_that("cram_policy works with FNN user param (s-learner)", {
 
 test_that("cram_policy works with ridge learner (m-learner)", {
   set.seed(43)
-  X <- matrix(rnorm(100 * 2), nrow = 100)
-  D <- sample(0:1, 100, replace = TRUE)
-  Y <- rnorm(100)
-  batch <- rep(1:5, each = 20)
+  X <- matrix(rnorm(200 * 2), nrow = 200)
+  D <- sample(0:1, 200, replace = TRUE)
+  Y <- rnorm(200)
+  batch <- rep(1:5, each = 40)
 
   res <- cram_policy(
     X, D, Y, batch,
@@ -180,15 +180,21 @@ test_that("cram_policy returns correct structure for custom model function", {
   Y <- rnorm(100)
   batch <- rep(1:5, each = 20)
 
-  dummy_fit <- function(X, Y, D) lm(Y ~ D + ., data = data.frame(cbind(Y, D, X)))
+  colnames(X) <- paste0("X", seq_len(ncol(X)))  # Name columns X1, X2, ...
+
+  dummy_fit <- function(X, Y, D) {
+    df <- data.frame(Y = Y, D = D, X)
+    lm(Y ~ D + ., data = df)
+  }
+
   dummy_predict <- function(model, X_new, D_new) {
     newdata <- data.frame(D = D_new, X_new)
-    cate <- predict(model, newdata = newdata)
-    return(as.integer(cate > 0))
+    predict(model, newdata = newdata) > 0
   }
 
   res <- cram_policy(
     X, D, Y, batch,
+    model_type = NULL,
     custom_fit = dummy_fit,
     custom_predict = dummy_predict
   )
