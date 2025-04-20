@@ -208,3 +208,5 @@ expected_outcome <- function(probs) {
   rowSums(sweep(prob_matrix, 2, class_values, FUN = "*"))
 }
 
+
+# covr::codecov(token = "your-token")
