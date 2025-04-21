@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Using cram_policy() for Policy Learning and Evaluation • cramR</title>
+<title>Cram Policy part 2 for Simultaneous Policy Learning and Evaluation • cramR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Using cram_policy() for Policy Learning and Evaluation">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Cram Policy part 2 for Simultaneous Policy Learning and Evaluation">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <!-- Load Inter font --><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet">
 <style>
@@ -147,7 +147,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Using cram_policy() for Policy Learning and Evaluation</h1>
+      <h1>Cram Policy part 2 for Simultaneous Policy Learning and Evaluation</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/yanisvdc/cramR/blob/HEAD/vignettes/cram_policy_part_2.Rmd" class="external-link"><code>vignettes/cram_policy_part_2.Rmd</code></a></small>
@@ -159,12 +159,14 @@
 <div class="section level2">
 <h2 id="cram-policy">Cram Policy<a class="anchor" aria-label="anchor" href="#cram-policy"></a>
 </h2>
-<p>In the article “Introduction &amp; Cram Policy part 1”, we presented
-the Cram method to simultaneously learn and evaluate a binary policy. We
-discussed the main parameters of cram_policy and showed how to run the
-function on an example dataset. In the following section, we provide an
-in-depth explanation on how to set the parameters for different use
-cases.</p>
+<p>In the article <em>“Introduction &amp; Cram Policy Part 1”</em>, we
+introduced the Cram method, which enables simultaneous learning and
+evaluation of a binary policy. We outlined the primary parameters of the
+<code><a href="../reference/cram_policy.html">cram_policy()</a></code> function and demonstrated its application
+using an example dataset. In this section, we provide a more detailed
+discussion on how to configure these parameters for various use cases,
+depending notably on the nature of the dataset and specific policy
+learning goals.</p>
 <p>We begin by simulating a dataset consisting of covariates
 <code>X</code>, a binary treatment assignment <code>D</code>, and a
 continuous outcome <code>Y</code>, which we will use to demonstrate the
@@ -217,7 +219,7 @@ walk through the key parameters that control how
 <code><a href="../reference/cram_policy.html">cram_policy()</a></code> behaves, including the choice of model,
 learner type, baseline policy, and batching strategy.</p>
 <p>These parameters allow flexibility in configuring the learning
-process depending on your use case and computational resources.</p>
+process depending on your use case and nature of your dataset.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Options for batch:</span></span>
 <span><span class="co"># Either an integer specifying the number of batches or a vector/list of batch assignments for all individuals</span></span>
@@ -266,6 +268,9 @@ process depending on your use case and computational resources.</p>
 <span><span class="co">#       fit_params = list(epochs = 5, batch_size = 32, verbose = 0)</span></span>
 <span><span class="co">#     )</span></span>
 <span><span class="va">model_params</span> <span class="op">&lt;-</span> <span class="cn">NULL</span>  </span></code></pre></div>
+<div class="section level4">
+<h4 id="how-to-set-model_params">How to set model_params?<a class="anchor" aria-label="anchor" href="#how-to-set-model_params"></a>
+</h4>
 <p>The <code>model_params</code> argument allows you to customize
 hyperparameters for the model used in policy learning. If left as
 <code>NULL</code>, <code><a href="../reference/cram_policy.html">cram_policy()</a></code> will fall back to sensible
@@ -321,16 +326,21 @@ for details about the caret train parameters):</li>
 provided as input for <code>Y</code>, and an element named
 <code>caret_params</code> containing the parameters of your choice to
 pass to <code><a href="https://rdrr.io/pkg/caret/man/train.html" class="external-link">caret::train</a></code> (see full list of parameters here: <a href="https://topepo.github.io/caret/model-training-and-tuning.html" class="external-link uri">https://topepo.github.io/caret/model-training-and-tuning.html</a>).</p>
+</li>
+</ul>
+</div>
+<div class="section level4">
+<h4 id="case-of-categorical-target-y">Case of categorical target Y<a class="anchor" aria-label="anchor" href="#case-of-categorical-target-y"></a>
+</h4>
 <p>When using <code>caret</code>, note that if <code>Y</code> is
 categorical and you are using <code>model_type = "s_learner"</code>, you
 need to choose a classification method outputting probabilities
 i.e. using the key word <code>classProbs = TRUE</code> in
 <code>trainControl</code>, see the following as an example with a Random
-Forest Classifier:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">.</span>, caret_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"rf"</span>, trControl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/trainControl.html" class="external-link">trainControl</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"none"</span>, classProbs <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Also note that all data inputs needs to be of numeric types, hence
-for <code>Y</code> categorical, it should contain numeric values
+Forest Classifier:
+<code>r   model_params &lt;- list(formula = Y ~ ., caret_params = list(method = "rf", trControl = trainControl(method = "none", classProbs = TRUE)))</code>
+Also note that all data inputs needs to be of numeric types, hence for
+<code>Y</code> categorical, it should contain numeric values
 representing the class of each observation. No need to use the type
 <code>factor</code> for <code><a href="../reference/cram_policy.html">cram_policy()</a></code>.</p>
 <p>Note on M-learner: If <code>model_type = "m_learner"</code>, keep in
@@ -350,14 +360,12 @@ reference for more details about the M-learner: Jia, Z., Imai, K., &amp;
 Li, M. L. (2024). <em>The Cram Method for Efficient Simultaneous
 Learning and Evaluation</em>, URL: <a href="https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf" class="external-link uri">https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf</a>.).</li>
 </ul>
-</li>
-</ul>
 <p>You can override any of these defaults by passing a custom list to
 model_params including any parameter name defined in the underlying
 package of the model that you chose, namely
 <code><a href="https://rdrr.io/pkg/grf/man/causal_forest.html" class="external-link">grf::causal_forest()</a></code>, <code><a href="https://glmnet.stanford.edu/reference/cv.glmnet.html" class="external-link">glmnet::cv.glmnet()</a></code>,
 <code>keras</code> and <code><a href="https://rdrr.io/pkg/caret/man/train.html" class="external-link">caret::train()</a></code></p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Significance level for confidence intervals (default = 95%)</span></span>
 <span><span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">0.05</span>  </span>
 <span></span>
@@ -397,6 +405,7 @@ package of the model that you chose, namely
 <span><span class="co">#&gt;     1     2     3 </span></span>
 <span><span class="co">#&gt; 0.437 0.350 0.213</span></span></code></pre></div>
 </div>
+</div>
 <div class="section level3">
 <h3 id="custom-model">Custom Model<a class="anchor" aria-label="anchor" href="#custom-model"></a>
 </h3>
@@ -423,7 +432,7 @@ or 1)</li>
 </ul>
 <p><strong>Example</strong>: Custom X-learner with Ridge regression and
 5-fold cross-validation</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://glmnet.stanford.edu" class="external-link">glmnet</a></span><span class="op">)</span></span>
 <span><span class="co">#&gt; Loading required package: Matrix</span></span>
 <span><span class="co">#&gt; Loaded glmnet 4.1-8</span></span>
@@ -458,7 +467,7 @@ You may also incorporate a custom threshold or post-processing logic
 within the function.</p>
 <p><strong>Example</strong>: Apply the decision rule — treat if the
 estimated CATE is greater than 0</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">custom_predict</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">model</span>, <span class="va">X_new</span>, <span class="va">D_new</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">cate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">X_new</span><span class="op">)</span>, s <span class="op">=</span> <span class="st">"lambda.min"</span><span class="op">)</span></span>
 <span></span>
@@ -474,7 +483,7 @@ estimated CATE is greater than 0</p>
 are defined, you can integrate them into the Cram framework by passing
 them to <code><a href="../reference/cram_policy.html">cram_policy()</a></code> as shown below (do not forget to set
 <code>model_type = NULL</code>):</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">experiment_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_policy.html">cram_policy</a></span><span class="op">(</span></span>
 <span>  <span class="va">X</span>, <span class="va">D</span>, <span class="va">Y</span>,</span>
 <span>  batch <span class="op">=</span> <span class="fl">20</span>,</span>

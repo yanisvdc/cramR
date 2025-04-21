@@ -1,8 +1,8 @@
 ---
-title: "Using cram_policy() for Policy Learning and Evaluation"
+title: "Introduction and Cram Policy part 1 for Simultaneous Policy Learning and Evaluation"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Using cram_policy() for Policy Learning and Evaluation}
+  %\VignetteIndexEntry{Introduction and Cram Policy part 1 for Simultaneous Policy Learning and Evaluation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -47,7 +47,7 @@ This procedure ensures each update is backed by performance testing, enabling **
 ![ ](cram_visual_3.png)
 
 
-Note: this schematic represents how Cram estimates the difference in policy value (see the definition of policy value above) relative to a baseline policy - an example of baseline policy in healthcare would be to treat nobody (all-zeros) or to randomly treat individuals (assign 1 for treatment and 0 for no treatment randomly); the policy value difference "Delta" gives you how much better (or worse) is the policy learned by Cram on the data relative to the baseline policy - but Cram can also be used to estimate the policy value of the learned policy directly, without the need to specify a baseline policy (not presented here as part of the introduction but available in the outputs of the main functions of Cram).
+Note: this schematic represents how Cram estimates the difference in policy value (see the definition of policy value above) relative to a baseline policy - an example of baseline policy in healthcare would be to treat nobody (all-zeros) or to randomly treat individuals (assign 1 for treatment and 0 for no treatment randomly); the policy value difference "Delta" gives you how much better (or worse) is the policy learned by Cram on the data relative to the baseline policy - but Cram can also be used to estimate the policy value of the learned policy directly, without the need to specify a baseline policy (not presented here as part of the introduction but available in the outputs of the main functions of Cram; see result table below).
 
 
 ## The `cram_policy()` Function
@@ -191,9 +191,9 @@ The output of `cram_policy()` includes:
 
 - **`raw_results`**: A data frame summarizing key evaluation metrics:
 
-  - **`Delta Estimate`**: The estimated improvement in outcomes from using the final learned policy compared to a baseline (e.g., no treatment or treat-all).  
+  - **`Delta Estimate`**: The estimated policy value difference i.e. improvement in outcomes from using the final learned policy compared to a baseline (e.g., no treatment or treat-all).  
   - **`Delta Standard Error`** and **confidence interval bounds**: Reflect the uncertainty around the delta estimate.  
-  - **`Policy Value Estimate`**: The estimated average outcome if the final learned policy were applied across the population.  
+  - **`Policy Value Estimate`**: The estimated policy value i.e. average outcome if the final learned policy were applied across the population.  
   - **`Policy Value Standard Error`** and **confidence interval bounds**: Reflect uncertainty in the policy value estimate.  
   - **`Proportion Treated`**: The fraction of the population that would be treated under the learned policy.
 

@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Using cram_policy() for Policy Learning and Evaluation • cramR</title>
+<title>Introduction and Cram Policy part 1 for Simultaneous Policy Learning and Evaluation • cramR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Using cram_policy() for Policy Learning and Evaluation">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Introduction and Cram Policy part 1 for Simultaneous Policy Learning and Evaluation">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <!-- Load Inter font --><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet">
 <style>
@@ -151,7 +151,7 @@
 <script src="cram_policy_part_1_files/crosstalk-1.2.1/js/crosstalk.min.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Using cram_policy() for Policy Learning and Evaluation</h1>
+      <h1>Introduction and Cram Policy part 1 for Simultaneous Policy Learning and Evaluation</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/yanisvdc/cramR/blob/HEAD/vignettes/cram_policy_part_1.Rmd" class="external-link"><code>vignettes/cram_policy_part_1.Rmd</code></a></small>
@@ -218,7 +218,7 @@ learned by Cram on the data relative to the baseline policy - but Cram
 can also be used to estimate the policy value of the learned policy
 directly, without the need to specify a baseline policy (not presented
 here as part of the introduction but available in the outputs of the
-main functions of Cram).</p>
+main functions of Cram; see result table below).</p>
 </div>
 <div class="section level2">
 <h2 id="the-cram_policy-function">The <code>cram_policy()</code> Function<a class="anchor" aria-label="anchor" href="#the-cram_policy-function"></a>
@@ -397,9 +397,10 @@ datasets.</p></li>
 summarizing key evaluation metrics:</p>
 <ul>
 <li>
-<strong><code>Delta Estimate</code></strong>: The estimated
-improvement in outcomes from using the final learned policy compared to
-a baseline (e.g., no treatment or treat-all).<br>
+<strong><code>Delta Estimate</code></strong>: The estimated policy
+value difference i.e. improvement in outcomes from using the final
+learned policy compared to a baseline (e.g., no treatment or
+treat-all).<br>
 </li>
 <li>
 <strong><code>Delta Standard Error</code></strong> and
@@ -408,8 +409,8 @@ around the delta estimate.<br>
 </li>
 <li>
 <strong><code>Policy Value Estimate</code></strong>: The estimated
-average outcome if the final learned policy were applied across the
-population.<br>
+policy value i.e. average outcome if the final learned policy were
+applied across the population.<br>
 </li>
 <li>
 <strong><code>Policy Value Standard Error</code></strong> and
@@ -494,7 +495,8 @@ the article “Cram Policy part 2”)</li>
 <div class="section level2">
 <h2 id="why-cram">Why Cram?<a class="anchor" aria-label="anchor" href="#why-cram"></a>
 </h2>
-<p>Compared to classic evaluation methods:</p>
+<p>Compared to classic learning and evaluation methods, in terms of data
+usage for both learning and evaluation:</p>
 <table class="table">
 <colgroup>
 <col width="28%">
@@ -506,7 +508,7 @@ the article “Cram Policy part 2”)</li>
 <th>Method</th>
 <th>Learning</th>
 <th>Evaluation</th>
-<th>Data Use</th>
+<th>Data Usage Overall</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -518,13 +520,14 @@ the article “Cram Policy part 2”)</li>
 <tr class="even">
 <td>Cross-Validation</td>
 <td>Partial</td>
-<td>Average performance over different models</td>
-<td>⚠️ Partial for each model</td>
+<td>Final model not evaluated directly, average performance across
+fold-specific models used as proxy</td>
+<td>⚠️ Partial for each fold-specific model</td>
 </tr>
 <tr class="odd">
 <td><strong>Cram</strong></td>
 <td>✅ Full</td>
-<td>✅ Final model evaluated directly</td>
+<td>✅ Final model evaluated directly using all data</td>
 <td>✅ Fully reused for both learning and evaluation</td>
 </tr>
 </tbody>

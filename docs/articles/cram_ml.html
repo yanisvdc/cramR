@@ -161,6 +161,240 @@
     
     
 <div class="section level2">
+<h2 id="cram-ml">1. CRAM ML<a class="anchor" aria-label="anchor" href="#cram-ml"></a>
+</h2>
+<div class="section level3">
+<h3 id="built-in-model">Built-in Model<a class="anchor" aria-label="anchor" href="#built-in-model"></a>
+</h3>
+<p>This section illustrates how to use <code><a href="../reference/cram_ml.html">cram_ml()</a></code> with
+built-in modeling options available through the <code>cramR</code>
+package. The function integrates with the <code>caret</code> framework,
+allowing users to specify a learning algorithm, a loss function, and a
+batching strategy to evaluate model performance.</p>
+<p>Beyond <code>caret</code>, <code><a href="../reference/cram_ml.html">cram_ml()</a></code> also supports fully
+custom model training, prediction, and loss functions, making it
+suitable for virtually any machine learning task — including regression,
+classification, or clustering.</p>
+<p>To illustrate the use of <code><a href="../reference/cram_ml.html">cram_ml()</a></code>, we begin by
+generating a synthetic dataset for a regression task. The data consists
+of three independent covariates and a continuous outcome.</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">X_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, x2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, x3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">Y_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span></span>
+<span><span class="va">data_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">X_data</span>, Y <span class="op">=</span> <span class="va">Y_data</span><span class="op">)</span></span></code></pre></div>
+<p>The <code><a href="../reference/cram_ml.html">cram_ml()</a></code> function offers extensive flexibility
+through its <code>loss_name</code> and <code>caret_params</code>
+arguments.</p>
+<p>The <code>loss_name</code> argument specifies the performance metric
+used to evaluate the model at each batch. Available options include:</p>
+<ul>
+<li>
+<code>"se"</code> – Squared Error (for regression)<br>
+</li>
+<li>
+<code>"ae"</code> – Absolute Error<br>
+</li>
+<li>
+<code>"logloss"</code> – Logarithmic Loss (for probabilistic
+classification)<br>
+</li>
+<li>
+<code>"accuracy"</code> – Classification Accuracy<br>
+</li>
+<li>
+<code>"euclidean_distance"</code> – Squared Euclidean Distance (for
+clustering tasks)</li>
+</ul>
+<p>The <code>caret_params</code> list defines how the model should be
+trained using the <a href="https://topepo.github.io/caret/model-training-and-tuning.html" class="external-link"><code>caret</code></a>
+package. It can include <strong>any argument supported by
+<code><a href="https://rdrr.io/pkg/caret/man/train.html" class="external-link">caret::train()</a></code></strong>, allowing full control over model
+specification and tuning. Common components include:</p>
+<ul>
+<li>
+<code>method</code>: the machine learning algorithm (e.g.,
+<code>"lm"</code> for linear regression, <code>"rf"</code> for random
+forest, <code>"xgbTree"</code> for XGBoost, <code>"svmLinear"</code> for
+support vector machines)</li>
+<li>
+<code>trControl</code>: the resampling strategy (e.g.,
+<code>trainControl(method = "cv", number = 5)</code> for 5-fold
+cross-validation, or <code>"none"</code> for training without
+resampling)</li>
+<li>
+<code>tuneGrid</code>: a grid of hyperparameters for tuning (e.g.,
+<code>expand.grid(mtry = c(2, 3, 4))</code>)</li>
+<li>
+<code>metric</code>: the model selection metric used during tuning
+(e.g., <code>"RMSE"</code> or <code>"Accuracy"</code>)</li>
+<li>
+<code>preProcess</code>: optional preprocessing steps (e.g.,
+centering, scaling)</li>
+<li>
+<code>importance</code>: logical flag to compute variable importance
+(useful for tree-based models)</li>
+</ul>
+<p>Refer to the full documentation at <a href="https://topepo.github.io/caret/model-training-and-tuning.html" class="external-link">caret
+model training and tuning</a> for the complete list of supported
+arguments and options.</p>
+<p>Together, these arguments allow users to apply <code><a href="../reference/cram_ml.html">cram_ml()</a></code>
+using a wide variety of built-in machine learning models and losses. If
+users need to go beyond these built-in choices, we also provide in the
+next section a friendly workflow on how to specify custom models and
+losses with <code><a href="../reference/cram_ml.html">cram_ml()</a></code>.</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">caret_params_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>  method <span class="op">=</span> <span class="st">"lm"</span>,</span>
+<span>  trControl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/trainControl.html" class="external-link">trainControl</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_ml.html">cram_ml</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">data_df</span>,</span>
+<span>  formula <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">.</span>,</span>
+<span>  batch <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  loss_name <span class="op">=</span> <span class="st">"se"</span>,</span>
+<span>  caret_params <span class="op">=</span> <span class="va">caret_params_lm</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $raw_results</span></span>
+<span><span class="co">#&gt;                         Metric    Value</span></span>
+<span><span class="co">#&gt; 1       Expected Loss Estimate  0.86429</span></span>
+<span><span class="co">#&gt; 2 Expected Loss Standard Error  0.73665</span></span>
+<span><span class="co">#&gt; 3       Expected Loss CI Lower -0.57952</span></span>
+<span><span class="co">#&gt; 4       Expected Loss CI Upper  2.30809</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $interactive_table</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $final_ml_model</span></span>
+<span><span class="co">#&gt; Linear Regression </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; 100 samples</span></span>
+<span><span class="co">#&gt;   3 predictor</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; No pre-processing</span></span>
+<span><span class="co">#&gt; Resampling: None</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="custom-model">Custom Model<a class="anchor" aria-label="anchor" href="#custom-model"></a>
+</h3>
+<p>In addition to using built-in learners via <code>caret</code>,
+<code><a href="../reference/cram_ml.html">cram_ml()</a></code> also supports <strong>fully custom model
+workflows</strong>. You can specify your own:</p>
+<ul>
+<li>Model fitting function (<code>custom_fit</code>)</li>
+<li>Prediction function (<code>custom_predict</code>)</li>
+<li>Loss function (<code>custom_loss</code>)</li>
+</ul>
+<p>This offers maximum flexibility, allowing CRAM to evaluate any
+learning model with any performance criterion, including regression,
+classification, or even unsupervised losses such as clustering
+distance.</p>
+<hr>
+<div class="section level4">
+<h4 id="custom_fitdata----">1. <code>custom_fit(data, ...)</code><a class="anchor" aria-label="anchor" href="#custom_fitdata----"></a>
+</h4>
+<p>This function takes a data frame and returns a fitted model. You may
+define additional arguments such as hyperparameters or training
+settings.</p>
+<ul>
+<li>
+<code>data</code>: A data frame that includes both predictors and
+the outcome variable <code>Y</code>.</li>
+</ul>
+<p><strong>Example</strong>: A basic linear model fit on three
+predictors:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">custom_fit</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span> <span class="op">+</span> <span class="va">x3</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="custom_predictmodel-data">2. <code>custom_predict(model, data)</code><a class="anchor" aria-label="anchor" href="#custom_predictmodel-data"></a>
+</h4>
+<p>This function generates predictions from the fitted model on new
+data. It returns a numeric vector of predicted outcomes.</p>
+<ul>
+<li>
+<code>model</code>: The fitted model returned by
+<code>custom_fit()</code>
+</li>
+<li>
+<code>data</code>: A data frame of new observations (typically
+including all original predictors)</li>
+</ul>
+<p><strong>Example</strong>: Extract predictors and apply a standard
+<code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> call:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">custom_predict</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">model</span>, <span class="va">data</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">predictors_only</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span>, <span class="st">"Y"</span><span class="op">)</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, newdata <span class="op">=</span> <span class="va">predictors_only</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="custom_losspredictions-data">3. <code>custom_loss(predictions, data)</code><a class="anchor" aria-label="anchor" href="#custom_losspredictions-data"></a>
+</h4>
+<p>This function defines the loss metric used to evaluate model
+predictions. It should return a numeric vector of <strong>individual
+losses</strong>, one per observation. These are internally aggregated by
+<code><a href="../reference/cram_ml.html">cram_ml()</a></code> to compute the overall performance.</p>
+<ul>
+<li>
+<code>predictions</code>: A numeric vector of predicted values from
+the model</li>
+<li>
+<code>data</code>: The data frame containing the true outcome values
+(<code>Y</code>)</li>
+</ul>
+<p><strong>Example</strong>: Define a custom loss function using
+<strong>Squared Error (SE)</strong></p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">custom_loss</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">predictions</span>, <span class="va">data</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">actuals</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">Y</span></span>
+<span>  <span class="va">se_loss</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">predictions</span> <span class="op">-</span> <span class="va">actuals</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">se_loss</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="use-cram_ml-with-custom-functions">4. Use <code>cram_ml()</code> with Custom Functions<a class="anchor" aria-label="anchor" href="#use-cram_ml-with-custom-functions"></a>
+</h4>
+<p>Once you have defined your custom training, prediction, and loss
+functions, you can pass them directly to <code><a href="../reference/cram_ml.html">cram_ml()</a></code> as shown
+below, note that <code>caret_params</code> and <code>loss_name</code>
+that were used for built-in functionalities are now
+<code>NULL</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_ml.html">cram_ml</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">data_df</span>,</span>
+<span>  formula <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">.</span>,</span>
+<span>  batch <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  custom_fit <span class="op">=</span> <span class="va">custom_fit</span>,</span>
+<span>  custom_predict <span class="op">=</span> <span class="va">custom_predict</span>,</span>
+<span>  custom_loss <span class="op">=</span> <span class="va">custom_loss</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="co">#&gt; $raw_results</span></span>
+<span><span class="co">#&gt;                         Metric    Value</span></span>
+<span><span class="co">#&gt; 1       Expected Loss Estimate  0.59946</span></span>
+<span><span class="co">#&gt; 2 Expected Loss Standard Error  0.39867</span></span>
+<span><span class="co">#&gt; 3       Expected Loss CI Lower -0.18192</span></span>
+<span><span class="co">#&gt; 4       Expected Loss CI Upper  1.38085</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $interactive_table</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; $final_ml_model</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Call:</span></span>
+<span><span class="co">#&gt; lm(formula = Y ~ x1 + x2 + x3, data = data)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Coefficients:</span></span>
+<span><span class="co">#&gt; (Intercept)           x1           x2           x3  </span></span>
+<span><span class="co">#&gt;    0.031503     0.057754     0.008829    -0.031611</span></span></code></pre></div>
+<hr>
+</div>
+</div>
+</div>
+<div class="section level2">
 <h2 id="what-is-cram_ml">What is <code>cram_ml()</code>?<a class="anchor" aria-label="anchor" href="#what-is-cram_ml"></a>
 </h2>
 <p>The <code><a href="../reference/cram_ml.html">cram_ml()</a></code> function provides a flexible and efficient
@@ -183,13 +417,13 @@ built on <strong>all available data</strong>.</p>
 <div class="section level2">
 <h2 id="example-linear-regression-with-mean-squared-error-mse">Example: Linear Regression with Mean Squared Error (MSE)<a class="anchor" aria-label="anchor" href="#example-linear-regression-with-mean-squared-error-mse"></a>
 </h2>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Simulate dataset</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">X_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, x2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, x3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">Y_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span></span>
 <span><span class="va">data_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">X_data</span>, Y <span class="op">=</span> <span class="va">Y_data</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define caret parameters for linear regression (no cross-validation)</span></span>
 <span><span class="va">caret_params_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  method <span class="op">=</span> <span class="st">"lm"</span>,</span>
@@ -200,7 +434,7 @@ built on <strong>all available data</strong>.</p>
 <div class="section level3">
 <h3 id="run-the-cram-ml-method">Run the CRAM ML method<a class="anchor" aria-label="anchor" href="#run-the-cram-ml-method"></a>
 </h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_ml.html">cram_ml</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">data_df</span>,</span>
 <span>  formula <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">.</span>,</span>
@@ -217,7 +451,7 @@ built on <strong>all available data</strong>.</p>
 <div class="section level3">
 <h3 id="summary-table">Summary Table<a class="anchor" aria-label="anchor" href="#summary-table"></a>
 </h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span><span class="op">$</span><span class="va">raw_results</span></span>
 <span><span class="co">#&gt;                         Metric    Value</span></span>
 <span><span class="co">#&gt; 1       Expected Loss Estimate  0.86429</span></span>
@@ -228,16 +462,16 @@ built on <strong>all available data</strong>.</p>
 <div class="section level3">
 <h3 id="interactive-table">Interactive Table<a class="anchor" aria-label="anchor" href="#interactive-table"></a>
 </h3>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span><span class="op">$</span><span class="va">interactive_table</span></span></code></pre></div>
-<div class="datatables html-widget html-fill-item" id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"filter":"none","vertical":false,"caption":"<caption>CRAM ML Results<\/caption>","data":[["1","2","3","4"],["Expected Loss Estimate","Expected Loss Standard Error","Expected Loss CI Lower","Expected Loss CI Upper"],[0.86429,0.73665,-0.57952,2.30809]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Metric<\/th>\n      <th>Value<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":5,"columnDefs":[{"className":"dt-right","targets":2},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"Metric","targets":1},{"name":"Value","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[5,10,25,50,100]}},"evals":[],"jsHooks":[]}</script><hr>
+<div class="datatables html-widget html-fill-item" id="htmlwidget-36aa3d2a04d42bbc2145" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-36aa3d2a04d42bbc2145">{"x":{"filter":"none","vertical":false,"caption":"<caption>CRAM ML Results<\/caption>","data":[["1","2","3","4"],["Expected Loss Estimate","Expected Loss Standard Error","Expected Loss CI Lower","Expected Loss CI Upper"],[0.86429,0.73665,-0.57952,2.30809]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Metric<\/th>\n      <th>Value<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":5,"columnDefs":[{"className":"dt-right","targets":2},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"Metric","targets":1},{"name":"Value","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[5,10,25,50,100]}},"evals":[],"jsHooks":[]}</script><hr>
 </div>
 </div>
 <div class="section level2">
 <h2 id="access-the-final-model">Access the Final Model<a class="anchor" aria-label="anchor" href="#access-the-final-model"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">final_ml_model</span><span class="op">)</span></span>
 <span><span class="co">#&gt; List of 24</span></span>
 <span><span class="co">#&gt;  $ method      : chr "lm"</span></span>
@@ -346,7 +580,7 @@ built on <strong>all available data</strong>.</p>
 <span><span class="co">#&gt;   .. .. ..- attr(*, "order")= int [1:3] 1 1 1</span></span>
 <span><span class="co">#&gt;   .. .. ..- attr(*, "intercept")= int 1</span></span>
 <span><span class="co">#&gt;   .. .. ..- attr(*, "response")= int 1</span></span>
-<span><span class="co">#&gt;   .. .. ..- attr(*, ".Environment")=&lt;environment: 0x0000028b3eb400d8&gt; </span></span>
+<span><span class="co">#&gt;   .. .. ..- attr(*, ".Environment")=&lt;environment: 0x0000026b3246ab38&gt; </span></span>
 <span><span class="co">#&gt;   .. .. ..- attr(*, "predvars")= language list(.outcome, x1, x2, x3)</span></span>
 <span><span class="co">#&gt;   .. .. ..- attr(*, "dataClasses")= Named chr [1:4] "numeric" "numeric" "numeric" "numeric"</span></span>
 <span><span class="co">#&gt;   .. .. .. ..- attr(*, "names")= chr [1:4] ".outcome" "x1" "x2" "x3"</span></span>
@@ -365,7 +599,7 @@ built on <strong>all available data</strong>.</p>
 <span><span class="co">#&gt;   .. .. .. ..- attr(*, "order")= int [1:3] 1 1 1</span></span>
 <span><span class="co">#&gt;   .. .. .. ..- attr(*, "intercept")= int 1</span></span>
 <span><span class="co">#&gt;   .. .. .. ..- attr(*, "response")= int 1</span></span>
-<span><span class="co">#&gt;   .. .. .. ..- attr(*, ".Environment")=&lt;environment: 0x0000028b3eb400d8&gt; </span></span>
+<span><span class="co">#&gt;   .. .. .. ..- attr(*, ".Environment")=&lt;environment: 0x0000026b3246ab38&gt; </span></span>
 <span><span class="co">#&gt;   .. .. .. ..- attr(*, "predvars")= language list(.outcome, x1, x2, x3)</span></span>
 <span><span class="co">#&gt;   .. .. .. ..- attr(*, "dataClasses")= Named chr [1:4] "numeric" "numeric" "numeric" "numeric"</span></span>
 <span><span class="co">#&gt;   .. .. .. .. ..- attr(*, "names")= chr [1:4] ".outcome" "x1" "x2" "x3"</span></span>
@@ -392,7 +626,7 @@ built on <strong>all available data</strong>.</p>
 <span><span class="co">#&gt;  $ maximize    : logi FALSE</span></span>
 <span><span class="co">#&gt;  $ yLimits     : num [1:2] -1.89 2.63</span></span>
 <span><span class="co">#&gt;  $ times       :List of 3</span></span>
-<span><span class="co">#&gt;   ..$ everything: 'proc_time' Named num [1:5] 0.01 0 0.02 NA NA</span></span>
+<span><span class="co">#&gt;   ..$ everything: 'proc_time' Named num [1:5] 0.02 0 0.02 NA NA</span></span>
 <span><span class="co">#&gt;   .. ..- attr(*, "names")= chr [1:5] "user.self" "sys.self" "elapsed" "user.child" ...</span></span>
 <span><span class="co">#&gt;   ..$ final     : 'proc_time' Named num [1:5] 0 0 0 NA NA</span></span>
 <span><span class="co">#&gt;   .. ..- attr(*, "names")= chr [1:5] "user.self" "sys.self" "elapsed" "user.child" ...</span></span>

@@ -1,8 +1,8 @@
 ---
-title: "Using cram_policy() for Policy Learning and Evaluation"
+title: "Cram Policy part 2 for Simultaneous Policy Learning and Evaluation"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Using cram_policy() for Policy Learning and Evaluation}
+  %\VignetteIndexEntry{Cram Policy part 2 for Simultaneous Policy Learning and Evaluation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -18,7 +18,7 @@ library(DT)
 
 # Cram Policy
 
-In the article "Introduction & Cram Policy part 1", we presented the Cram method to simultaneously learn and evaluate a binary policy. We discussed the main parameters of cram_policy and showed how to run the function on an example dataset. In the following section, we provide an in-depth explanation on how to set the parameters for different use cases.
+In the article *"Introduction & Cram Policy Part 1"*, we introduced the Cram method, which enables simultaneous learning and evaluation of a binary policy. We outlined the primary parameters of the `cram_policy()` function and demonstrated its application using an example dataset. In this section, we provide a more detailed discussion on how to configure these parameters for various use cases, depending notably on the nature of the dataset and specific policy learning goals.
 
 We begin by simulating a dataset consisting of covariates `X`, a binary treatment assignment `D`, and a continuous outcome `Y`, which we will use to demonstrate the `cram_policy()` function.
 
@@ -68,7 +68,7 @@ Y <- data$Y
 
 In this example, we demonstrate how to use the **built-in modeling options** provided by the `cramR` package. We walk through the key parameters that control how `cram_policy()` behaves, including the choice of model, learner type, baseline policy, and batching strategy. 
 
-These parameters allow flexibility in configuring the learning process depending on your use case and computational resources. 
+These parameters allow flexibility in configuring the learning process depending on your use case and nature of your dataset.
 
 ```{r}
 # Options for batch:
@@ -120,6 +120,8 @@ parallelize_batch <- FALSE
 model_params <- NULL  
 ```
 
+### How to set model_params?
+
 The `model_params` argument allows you to customize hyperparameters for the model used in policy learning. If left as `NULL`, `cram_policy()` will fall back to sensible defaults depending on the model and learner type. In the following, we give default examples of `model_params` for each `model_type` and `learner_type` to illustrate how you can specify `model_params`. Generally speaking, `model_params` is a list containing all of the parameters used in the underlying model and its values:
 
 - For `model_type = "causal_forest"`:  
@@ -152,6 +154,8 @@ The `model_params` argument allows you to customize hyperparameters for the mode
   default_model_params <- list(formula = Y ~ ., caret_params = list(method = "lm", trControl = trainControl(method = "none")))
   ```
 Please note that the list should contain an element `formula` where `Y` refers to the vector that you provided as input for `Y`, and an element named `caret_params` containing the parameters of your choice to pass to `caret::train` (see full list of parameters here: https://topepo.github.io/caret/model-training-and-tuning.html).
+
+### Case of categorical target Y
 
   When using `caret`, note that if `Y` is categorical  and you are using `model_type = "s_learner"`, you need to choose a classification method outputting probabilities i.e. using the key word `classProbs = TRUE` in `trainControl`, see the following as an example with a Random Forest Classifier:
   ```r
