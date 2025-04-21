@@ -224,13 +224,13 @@ Notes:
 
 ## Why Cram?
 
-Compared to classic evaluation methods:
+Compared to classic learning and evaluation methods, in terms of data usage for both learning and evaluation: 
 
-| Method            | Learning | Evaluation        | Data Use         |
+| Method            | Learning | Evaluation        | Data Usage Overall       |
 |-------------------|----------|-------------------|------------------|
 | Sample Splitting  | Partial  | Partial           | ❌ Inefficient    |
-| Cross-Validation  | Partial  | Average performance over different models | ⚠️ Partial for each model  |
-| **Cram**          | ✅ Full  | ✅ Final model evaluated directly | ✅ Fully reused for both learning and evaluation |
+| Cross-Validation  | Partial  | Final model not evaluated directly, average performance across fold-specific models used as proxy  | ⚠️ Partial for each fold-specific model  |
+| **Cram**          | ✅ Full  | ✅ Final model evaluated directly using all data |✅ Fully reused for both learning and evaluation |
 
 
 ## References
