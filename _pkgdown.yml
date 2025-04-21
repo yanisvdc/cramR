@@ -98,7 +98,7 @@ home:
       href: https://github.com/yanisvdc/cramR
     - icon: fa-solid fa-file-lines
       text: "Read Paper"
-      href: https://arxiv.org/abs/2403.07031
+      href: https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf
 
 navbar:
   brand:
@@ -110,10 +110,12 @@ navbar:
     articles:
       text: Articles
       menu:
-        - text: "Introduction & Cram Policy"
-          href: articles/cram_policy.html
+        - text: "Introduction & Cram Policy part 1"
+          href: articles/cram_policy_part_1.html
         - text: "Quick Start"
           href: articles/quickstart.html
+        - text: "Cram Policy part 2"
+          href: articles/cram_policy_part_2.html
         - text: "Cram ML"
           href: articles/cram_ml.html
         - text: "Cram Bandit"
@@ -145,7 +147,7 @@ navbar:
 
     paper:
       icon: fa-solid fa-file-pdf
-      href: https://arxiv.org/abs/2403.07031
+      href: https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf
       title: Research Paper
       aria-label: "Research paper"
 
@@ -158,7 +160,8 @@ articles:
     subtitle: "Learn core concepts and basic usage"
     contents:
       - quickstart
-      - cram_policy
+      - cram_policy_part_1
+      - cram_policy_part_2
       - cram_ml
       - cram_policy_simulation
 

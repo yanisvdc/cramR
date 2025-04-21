@@ -8,10 +8,11 @@ articles:
   cram_learning: cram_learning.html
   cram_ml: cram_ml.html
   cram_ml_learning: cram_ml_learning.html
-  cram_policy: cram_policy.html
+  cram_policy_part_1: cram_policy_part_1.html
+  cram_policy_part_2: cram_policy_part_2.html
   cram_policy_simulation: cram_policy_simulation.html
   quickstart: quickstart.html
-last_built: 2025-04-20T22:39Z
+last_built: 2025-04-21T00:51Z
 urls:
   reference: https://yanisvdc.github.io/cramR/reference
   article: https://yanisvdc.github.io/cramR/articles

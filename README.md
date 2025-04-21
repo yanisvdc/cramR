@@ -74,7 +74,7 @@ devtools::install_github("yanisvdc/cramR")
 ## 📄 Citation & 🤝 Contributing
 
 ### 📚 Citation
-If you use Cram in your research, please cite the following paper:
+If you use Cram in your research, please cite the following papers:
 
 ```bibtex
 @techreport{jia2024cram,

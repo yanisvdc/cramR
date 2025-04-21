@@ -113,8 +113,9 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/cram_policy.html">Introduction &amp; Cram Policy</a></li>
+<li><a class="dropdown-item" href="articles/cram_policy_part_1.html">Introduction &amp; Cram Policy part 1</a></li>
     <li><a class="dropdown-item" href="articles/quickstart.html">Quick Start</a></li>
+    <li><a class="dropdown-item" href="articles/cram_policy_part_2.html">Cram Policy part 2</a></li>
     <li><a class="dropdown-item" href="articles/cram_ml.html">Cram ML</a></li>
     <li><a class="dropdown-item" href="articles/cram_bandit.html">Cram Bandit</a></li>
     <li><a class="dropdown-item" href="articles/cram_bandit_helpers.html">Cram Bandit Helpers</a></li>
@@ -134,7 +135,7 @@
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/yanisvdc/cramR" aria-label="GitHub repository"><span class="fa fa-brands fa-github"></span></a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://arxiv.org/abs/2403.07031" aria-label="Research paper"><span class="fa fa-solid fa-file-pdf"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf" aria-label="Research paper"><span class="fa fa-solid fa-file-pdf"></span></a></li>
       </ul>
 </div>
 
@@ -206,41 +207,53 @@ The Cram Method for Efficient Simultaneous Learning and Evaluation
 <div class="section level3">
 <h3 id="id_-citation">📚 Citation<a class="anchor" aria-label="anchor" href="#id_-citation"></a>
 </h3>
-<p>If you use Cram in your research, please cite the following paper:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="va">@article</span>{<span class="ot">jia2024cram</span>,</span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="dt">title</span>={The Cram Method for Efficient Simultaneous Learning and Evaluation},</span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="dt">author</span>={Jia, Zeyang and Imai, Kosuke and Li, Michael Lingzhi},</span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="dt">journal</span>={arXiv preprint arXiv:2403.07031},</span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="dt">year</span>={2024}</span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>}</span></code></pre></div>
+<p>If you use Cram in your research, please cite the following papers:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="va">@techreport</span>{<span class="ot">jia2024cram</span>,</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  <span class="dt">title</span>        = {The Cram Method for Efficient Simultaneous Learning and Evaluation},</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  <span class="dt">author</span>       = {Jia, Zeyang and Imai, Kosuke and Li, Michael Lingzhi},</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  <span class="dt">institution</span>  = {Harvard Business School},</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  <span class="dt">type</span>         = {Working Paper},</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="dt">year</span>         = {2024},</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  <span class="dt">url</span>          = {https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf},</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="dt">note</span>         = {Accessed April 2025}</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="va">@misc</span>{<span class="ot">jia2025crammingcontextualbanditsonpolicy</span>,</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>      <span class="dt">title</span>={Cramming Contextual Bandits for On-policy Statistical Evaluation}, </span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>      <span class="dt">author</span>={Zeyang Jia and Kosuke Imai and Michael Lingzhi Li},</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>      <span class="dt">year</span>={2025},</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>      <span class="dt">eprint</span>={2403.07031},</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>      <span class="dt">archivePrefix</span>={arXiv},</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>      <span class="dt">primaryClass</span>={cs.LG},</span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>      <span class="dt">url</span>={https://arxiv.org/abs/2403.07031}, </span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>}</span></code></pre></div>
 <p>You can also cite the R package:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="va">@Manual</span>{,</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="dt">title</span>  = {cramR: The Cram Method for Efficient Simultaneous Learning and Evaluation},</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  <span class="dt">author</span> = {Yanis Vandecasteele and Michael Lingzhi Li and Kosuke Imai and Zeyang Jia and Longlin Wang},</span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>  <span class="dt">year</span>   = {2025},</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>  <span class="dt">note</span>   = {R package version 0.1.0},</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>  <span class="dt">url</span>    = {https://github.com/yanisvdc/cramR}</span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bibtex"><code class="sourceCode bibtex"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="va">@Manual</span>{,</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  <span class="dt">title</span>  = {cramR: The Cram Method for Efficient Simultaneous Learning and Evaluation},</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>  <span class="dt">author</span> = {Yanis Vandecasteele and Michael Lingzhi Li and Kosuke Imai and Zeyang Jia and Longlin Wang},</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  <span class="dt">year</span>   = {2025},</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>  <span class="dt">note</span>   = {R package version 0.1.0},</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>  <span class="dt">url</span>    = {https://github.com/yanisvdc/cramR}</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>}</span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="id_-how-to-contribute">🤝 How to Contribute<a class="anchor" aria-label="anchor" href="#id_-how-to-contribute"></a>
 </h3>
 <p>We welcome contributions! To contribute:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># 1. Fork the repository.</span></span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="co"># 2. Create a new branch</span></span>
-<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="fu">git</span> checkout <span class="at">-b</span> feature/your-feature</span>
-<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="co"># 3. Commit your changes</span></span>
-<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-am</span> <span class="st">'Add some feature'</span></span>
-<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a></span>
-<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="co"># 4. Push to the branch</span></span>
-<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="fu">git</span> push origin feature/your-feature</span>
-<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a></span>
-<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="co"># 5. Create a pull request.</span></span>
-<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a></span>
-<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="co"># 6. Open an Issue or PR at:</span></span>
-<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co"># https://github.com/yanisvdc/cramR/issues</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># 1. Fork the repository.</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># 2. Create a new branch</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">git</span> checkout <span class="at">-b</span> feature/your-feature</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co"># 3. Commit your changes</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-am</span> <span class="st">'Add some feature'</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co"># 4. Push to the branch</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="fu">git</span> push origin feature/your-feature</span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co"># 5. Create a pull request.</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co"># 6. Open an Issue or PR at:</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co"># https://github.com/yanisvdc/cramR/issues</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -256,7 +269,7 @@ The Cram Method for Efficient Simultaneous Learning and Evaluation
 <li><a href="https://github.com/yanisvdc/cramR/" class="external-link">Browse source code</a></li>
 <li><a href="https://github.com/yanisvdc/cramR/issues" class="external-link">Report a bug</a></li>
 <li><a href="https://github.com/yanisvdc/cramR" class="external-link">View Source</a></li>
-<li><a href="https://arxiv.org/abs/2403.07031" class="external-link">Read Paper</a></li>
+<li><a href="https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf" class="external-link">Read Paper</a></li>
 </ul>
 </div>
 
@@ -291,9 +304,9 @@ The Cram Method for Efficient Simultaneous Learning and Evaluation
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://github.com/yanisvdc/cramR" class="external-link"> <img src="https://img.shields.io/badge/View%20on-GitHub-black?logo=github" alt="View on GitHub"></a></li>
-<li><a href="https://app.codecov.io/gh/yanisvdc/cramR" class="external-link"> <img src="https://codecov.io/gh/yanisvdc/cramR/branch/master/graph/badge.svg" alt="Code Coverage"></a></li>
+<li><a href="https://codecov.io/github/yanisvdc/cramR" class="external-link"> <img src="https://codecov.io/github/yanisvdc/cramR/graph/badge.svg?token=7MX98QJ7Y0"></a></li>
 <li><a href="https://github.com/yanisvdc/cramR/issues" class="external-link"> <img src="https://img.shields.io/badge/Report%20a%20Bug-red?logo=bugatti" alt="Report a Bug"></a></li>
-<li><a href="https://arxiv.org/abs/2403.07031" class="external-link"> <img src="https://img.shields.io/badge/Read%20Paper-blue?logo=bookstack" alt="Read Paper"></a></li>
+<li><a href="https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf" class="external-link"> <img src="https://img.shields.io/badge/Read%20Paper-blue?logo=bookstack" alt="Read Paper"></a></li>
 </ul>
 </div>
 

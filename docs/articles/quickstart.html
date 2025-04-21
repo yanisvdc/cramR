@@ -111,8 +111,9 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/cram_policy.html">Introduction &amp; Cram Policy</a></li>
+<li><a class="dropdown-item" href="../articles/cram_policy_part_1.html">Introduction &amp; Cram Policy part 1</a></li>
     <li><a class="dropdown-item" href="../articles/quickstart.html">Quick Start</a></li>
+    <li><a class="dropdown-item" href="../articles/cram_policy_part_2.html">Cram Policy part 2</a></li>
     <li><a class="dropdown-item" href="../articles/cram_ml.html">Cram ML</a></li>
     <li><a class="dropdown-item" href="../articles/cram_bandit.html">Cram Bandit</a></li>
     <li><a class="dropdown-item" href="../articles/cram_bandit_helpers.html">Cram Bandit Helpers</a></li>
@@ -132,7 +133,7 @@
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/yanisvdc/cramR" aria-label="GitHub repository"><span class="fa fa-brands fa-github"></span></a></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://arxiv.org/abs/2403.07031" aria-label="Research paper"><span class="fa fa-solid fa-file-pdf"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf" aria-label="Research paper"><span class="fa fa-solid fa-file-pdf"></span></a></li>
       </ul>
 </div>
 
@@ -183,312 +184,10 @@ modules</strong>.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="cram-policy">1. CRAM Policy<a class="anchor" aria-label="anchor" href="#cram-policy"></a>
+<h2 id="cram-ml">1. CRAM ML<a class="anchor" aria-label="anchor" href="#cram-ml"></a>
 </h2>
-<p>We begin by simulating a dataset consisting of covariates
-<code>X</code>, a binary treatment assignment <code>D</code>, and a
-continuous outcome <code>Y</code>, which we will use to demonstrate the
-<code><a href="../reference/cram_policy.html">cram_policy()</a></code> function.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-datatable.com" class="external-link">data.table</a></span><span class="op">)</span></span>
-<span><span class="co"># Function to generate sample data with heterogeneous treatment effects:</span></span>
-<span><span class="co"># - Positive effect group</span></span>
-<span><span class="co"># - Neutral effect group</span></span>
-<span><span class="co"># - Adverse effect group</span></span>
-<span><span class="va">generate_data</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
-<span>    binary <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span>,                 <span class="co"># Binary variable</span></span>
-<span>    discrete <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,  <span class="co"># Discrete variable</span></span>
-<span>    continuous <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>                       <span class="co"># Continuous variable</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span>  <span class="co"># Binary treatment assignment (50% treated)</span></span>
-<span>  <span class="va">D</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="co"># Define heterogeneous treatment effects based on X</span></span>
-<span>  <span class="va">treatment_effect</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span></span>
-<span>    <span class="va">X</span><span class="op">[</span>, <span class="va">binary</span><span class="op">]</span> <span class="op">==</span> <span class="fl">1</span> <span class="op">&amp;</span> <span class="va">X</span><span class="op">[</span>, <span class="va">discrete</span><span class="op">]</span> <span class="op">&lt;=</span> <span class="fl">2</span>,        <span class="co"># Group 1: Positive effect</span></span>
-<span>    <span class="fl">1</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">X</span><span class="op">[</span>, <span class="va">binary</span><span class="op">]</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">X</span><span class="op">[</span>, <span class="va">discrete</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="fl">4</span>, <span class="co"># Group 3: Adverse effect</span></span>
-<span>           <span class="op">-</span><span class="fl">1</span>,</span>
-<span>           <span class="fl">0.1</span><span class="op">)</span>                                   <span class="co"># Group 2: Neutral effect</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span>  <span class="co"># Outcome depends on treatment effect + noise</span></span>
-<span>  <span class="va">Y</span> <span class="op">&lt;-</span> <span class="va">D</span> <span class="op">*</span> <span class="op">(</span><span class="va">treatment_effect</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, mean <span class="op">=</span> <span class="fl">0</span>, sd <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>    <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">D</span><span class="op">)</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>X <span class="op">=</span> <span class="va">X</span>, D <span class="op">=</span> <span class="va">D</span>, Y <span class="op">=</span> <span class="va">Y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="co"># Generate a sample dataset</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
-<span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu">generate_data</span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="va">X</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">X</span></span>
-<span><span class="va">D</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">D</span></span>
-<span><span class="va">Y</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">Y</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="built-in-model">Built-in Model<a class="anchor" aria-label="anchor" href="#built-in-model"></a>
-</h3>
-<p>In this example, we demonstrate how to use the <strong>built-in
-modeling options</strong> provided by the <code>cramR</code> package. We
-walk through the key parameters that control how
-<code><a href="../reference/cram_policy.html">cram_policy()</a></code> behaves, including the choice of model,
-learner type, baseline policy, and batching strategy.</p>
-<p>These parameters allow flexibility in configuring the learning
-process depending on your use case and computational resources.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Number of batches to split the data into</span></span>
-<span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="fl">20</span>  </span>
-<span></span>
-<span><span class="co"># Model type for estimating treatment effects</span></span>
-<span><span class="co"># Options: "causal_forest", "s_learner", "m_learner", NULL (to use custom model)</span></span>
-<span><span class="va">model_type</span> <span class="op">&lt;-</span> <span class="st">"causal_forest"</span>  </span>
-<span></span>
-<span><span class="co"># Learner type used inside s/m-learners</span></span>
-<span><span class="co"># NULL is required for causal_forest; use "ridge", "fnn" or "caret" for s/m learners</span></span>
-<span><span class="va">learner_type</span> <span class="op">&lt;-</span> <span class="cn">NULL</span>  </span>
-<span></span>
-<span><span class="co"># Baseline policy to compare against (list of 0/1 for each individual)</span></span>
-<span><span class="co"># Common options:</span></span>
-<span><span class="co"># - All-control baseline: as.list(rep(0, nrow(X))) or NULL</span></span>
-<span><span class="co"># - Randomized baseline: as.list(sample(c(0, 1), nrow(X), replace = TRUE))</span></span>
-<span><span class="va">baseline_policy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">as.list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>  </span>
-<span></span>
-<span><span class="co"># Whether to parallelize across batches (TRUE for faster but memory-heavy runs)</span></span>
-<span><span class="va">parallelize_batch</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span>  </span>
-<span></span>
-<span><span class="co"># Model params </span></span>
-<span><span class="va">model_params</span> <span class="op">&lt;-</span> <span class="cn">NULL</span>  </span></code></pre></div>
-<p>The <code>model_params</code> argument allows you to customize
-hyperparameters for the model used in policy learning. If left as
-<code>NULL</code>, <code><a href="../reference/cram_policy.html">cram_policy()</a></code> will fall back to sensible
-defaults depending on the model and learner type. In the following, we
-give default examples of <code>model_params</code> for each
-<code>model_type</code> and <code>learner_type</code> to illustrate how
-you can specify <code>model_params</code>. Generally speaking,
-<code>model_params</code> is a list containing all of the parameters
-used in the underlying model and its values:</p>
-<ul>
-<li><p>For <code>model_type = "causal_forest"</code>:<br>
-When <code>model_params &lt;- NULL</code>, the method defaults to
-<code><a href="https://rdrr.io/pkg/grf/man/causal_forest.html" class="external-link">grf::causal_forest()</a></code> with
-<code>model_params &lt;- list(num.trees = 100)</code>.</p></li>
-<li>
-<p>For <code>model_type = "s_learner"</code> or
-<code>"m_learner"</code>, it depends on the
-<code>learner_type</code>:</p>
-<ul>
-<li><p>For <code>learner_type = "ridge"</code>, when
-<code>model_params &lt;- NULL</code>, the method defaults to
-<code><a href="https://glmnet.stanford.edu/reference/cv.glmnet.html" class="external-link">glmnet::cv.glmnet()</a></code> with
-<code>model_params &lt;- list(alpha = 1)</code>, corresponding to Ridge
-regression.</p></li>
-<li><p>For <code>learner_type = "fnn"</code> (Feedforward Neural
-Network):<br>
-A default Keras model is built with the following architecture:</p></li>
-</ul>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Determine the input shape based on model_type</span></span>
-<span><span class="co"># For s_learner, the treatment D is added to the covariates to constitute the training data</span></span>
-<span><span class="co"># So the input shape is ncol(X) + 1</span></span>
-<span><span class="va">input_shape</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="va">model_type</span> <span class="op">==</span> <span class="st">"s_learner"</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span> <span class="kw">else</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">default_model_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>    input_layer <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>units <span class="op">=</span> <span class="fl">64</span>, activation <span class="op">=</span> <span class="st">'relu'</span>, input_shape <span class="op">=</span> <span class="va">input_shape</span><span class="op">)</span>, </span>
-<span>    layers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>units <span class="op">=</span> <span class="fl">32</span>, activation <span class="op">=</span> <span class="st">'relu'</span><span class="op">)</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    output_layer <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>units <span class="op">=</span> <span class="fl">1</span>, activation <span class="op">=</span> <span class="st">'linear'</span><span class="op">)</span>,</span>
-<span>    compile_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>optimizer <span class="op">=</span> <span class="st">'adam'</span>, loss <span class="op">=</span> <span class="st">'mse'</span><span class="op">)</span>,</span>
-<span>    fit_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>epochs <span class="op">=</span> <span class="fl">5</span>, batch_size <span class="op">=</span> <span class="fl">32</span>, verbose <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<ul>
-<li>For <code>learner_type = "caret"</code>, it defaults to a linear
-regression with no re sampling (see <a href="https://topepo.github.io/caret/model-training-and-tuning.html" class="external-link uri">https://topepo.github.io/caret/model-training-and-tuning.html</a>
-for details about the caret train parameters):</li>
-</ul>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">default_model_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">.</span>, caret_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"lm"</span>, trControl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/trainControl.html" class="external-link">trainControl</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Please note that the list should contain an element
-<code>formula</code> where <code>Y</code> refers to the vector that you
-provided as input for <code>Y</code>, and an element named
-<code>caret_params</code> containing the parameters of your choice to
-pass to <code><a href="https://rdrr.io/pkg/caret/man/train.html" class="external-link">caret::train</a></code> (see full list of parameters here: <a href="https://topepo.github.io/caret/model-training-and-tuning.html" class="external-link uri">https://topepo.github.io/caret/model-training-and-tuning.html</a>).</p>
-<p>When using <code>caret</code>, note that if <code>Y</code> is binary
-and you are using <code>model_type = "s_learner"</code>, you need to
-choose a classification method outputting probabilities i.e. using the
-key word <code>classProbs = TRUE</code> in <code>trainControl</code>,
-see the following as an example with a Random Forest Classifier:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>formula <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">.</span>, caret_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"rf"</span>, trControl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/trainControl.html" class="external-link">trainControl</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"none"</span>, classProbs <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Also note that all data inputs needs to be of numeric types, hence
-for <code>Y</code> binary, it should contain numeric values that are
-either <code>0</code> or <code>1</code>. No need to use the type
-<code>factor</code> for <code><a href="../reference/cram_policy.html">cram_policy()</a></code>. However, even if
-<code>Y</code> is binary, if you are using
-<code>model_type = "m_learner"</code>, you need to use a regression
-method per definition of the M learner which re-defines the target as a
-transformed <code>Y</code> as function of the (see the Cram method paper
-given as reference in “Introduction &amp; Cram Policy” for more
-details).</p>
-</li>
-</ul>
-<p>You can override any of these defaults by passing a custom list to
-model_params including any parameter name defined in the underlying
-package, namely <code><a href="https://rdrr.io/pkg/grf/man/causal_forest.html" class="external-link">grf::causal_forest()</a></code>,
-<code><a href="https://glmnet.stanford.edu/reference/cv.glmnet.html" class="external-link">glmnet::cv.glmnet()</a></code> or <code>keras</code>.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Significance level for confidence intervals (default = 95%)</span></span>
-<span><span class="va">alpha</span> <span class="op">&lt;-</span> <span class="fl">0.05</span>  </span>
-<span></span>
-<span><span class="co"># Run the CRAM policy method</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_policy.html">cram_policy</a></span><span class="op">(</span></span>
-<span>  <span class="va">X</span>, <span class="va">D</span>, <span class="va">Y</span>,</span>
-<span>  batch <span class="op">=</span> <span class="va">batch</span>,</span>
-<span>  model_type <span class="op">=</span> <span class="va">model_type</span>,</span>
-<span>  learner_type <span class="op">=</span> <span class="va">learner_type</span>,</span>
-<span>  baseline_policy <span class="op">=</span> <span class="va">baseline_policy</span>,</span>
-<span>  parallelize_batch <span class="op">=</span> <span class="va">parallelize_batch</span>,</span>
-<span>  model_params <span class="op">=</span> <span class="va">model_params</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="va">alpha</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Display the results</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
-<span><span class="co">#&gt; $raw_results</span></span>
-<span><span class="co">#&gt;                        Metric   Value</span></span>
-<span><span class="co">#&gt; 1              Delta Estimate 0.23208</span></span>
-<span><span class="co">#&gt; 2        Delta Standard Error 0.05862</span></span>
-<span><span class="co">#&gt; 3              Delta CI Lower 0.11718</span></span>
-<span><span class="co">#&gt; 4              Delta CI Upper 0.34697</span></span>
-<span><span class="co">#&gt; 5       Policy Value Estimate 0.21751</span></span>
-<span><span class="co">#&gt; 6 Policy Value Standard Error 0.05237</span></span>
-<span><span class="co">#&gt; 7       Policy Value CI Lower 0.11486</span></span>
-<span><span class="co">#&gt; 8       Policy Value CI Upper 0.32016</span></span>
-<span><span class="co">#&gt; 9          Proportion Treated 0.60500</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $interactive_table</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $final_policy_model</span></span>
-<span><span class="co">#&gt; GRF forest object of type causal_forest </span></span>
-<span><span class="co">#&gt; Number of trees: 100 </span></span>
-<span><span class="co">#&gt; Number of training samples: 1000 </span></span>
-<span><span class="co">#&gt; Variable importance: </span></span>
-<span><span class="co">#&gt;     1     2     3 </span></span>
-<span><span class="co">#&gt; 0.437 0.350 0.213</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="custom-model">Custom Model<a class="anchor" aria-label="anchor" href="#custom-model"></a>
-</h3>
-<p>To use your own model for policy learning, you can supply two
-user-defined functions:</p>
-<div class="section level4">
-<h4 id="custom_fitx-y-d----">1. <code>custom_fit(X, Y, D, ...)</code><a class="anchor" aria-label="anchor" href="#custom_fitx-y-d----"></a>
-</h4>
-<p>This function takes the training data: covariates <code>X</code>,
-outcomes <code>Y</code>, and binary treatment indicators <code>D</code>,
-and returns a fitted model object.<br>
-You may also define and use additional parameters (e.g., number of
-folds, regularization settings, etc.) within the function body.</p>
-<ul>
-<li>
-<code>X</code>: a matrix or data frame of features</li>
-<li>
-<code>Y</code>: a numeric outcome vector<br>
-</li>
-<li>
-<code>D</code>: a binary vector indicating treatment assignment (0
-or 1)</li>
-</ul>
-<p><strong>Example</strong>: Custom X-learner with Ridge regression and
-5-fold cross-validation</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">custom_fit</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">X</span>, <span class="va">Y</span>, <span class="va">D</span>, <span class="va">n_folds</span> <span class="op">=</span> <span class="fl">5</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">treated_indices</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">D</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="va">control_indices</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="va">D</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span></span>
-<span>  <span class="va">X_treated</span> <span class="op">&lt;-</span> <span class="va">X</span><span class="op">[</span><span class="va">treated_indices</span>, <span class="op">]</span></span>
-<span>  <span class="va">Y_treated</span> <span class="op">&lt;-</span> <span class="va">Y</span><span class="op">[</span><span class="va">treated_indices</span><span class="op">]</span></span>
-<span>  <span class="va">X_control</span> <span class="op">&lt;-</span> <span class="va">X</span><span class="op">[</span><span class="va">control_indices</span>, <span class="op">]</span></span>
-<span>  <span class="va">Y_control</span> <span class="op">&lt;-</span> <span class="va">Y</span><span class="op">[</span><span class="va">control_indices</span><span class="op">]</span></span>
-<span>  <span class="va">model_treated</span> <span class="op">&lt;-</span> <span class="fu">cv.glmnet</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">X_treated</span><span class="op">)</span>, <span class="va">Y_treated</span>, alpha <span class="op">=</span> <span class="fl">0</span>, nfolds <span class="op">=</span> <span class="va">n_folds</span><span class="op">)</span></span>
-<span>  <span class="va">model_control</span> <span class="op">&lt;-</span> <span class="fu">cv.glmnet</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">X_control</span><span class="op">)</span>, <span class="va">Y_control</span>, alpha <span class="op">=</span> <span class="fl">0</span>, nfolds <span class="op">=</span> <span class="va">n_folds</span><span class="op">)</span></span>
-<span>  <span class="va">tau_control</span> <span class="op">&lt;-</span> <span class="va">Y_treated</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model_control</span>, <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">X_treated</span><span class="op">)</span>, s <span class="op">=</span> <span class="st">"lambda.min"</span><span class="op">)</span></span>
-<span>  <span class="va">tau_treated</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model_treated</span>, <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">X_control</span><span class="op">)</span>, s <span class="op">=</span> <span class="st">"lambda.min"</span><span class="op">)</span> <span class="op">-</span> <span class="va">Y_control</span></span>
-<span>  <span class="va">X_combined</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">X_treated</span>, <span class="va">X_control</span><span class="op">)</span></span>
-<span>  <span class="va">tau_combined</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">tau_control</span>, <span class="va">tau_treated</span><span class="op">)</span></span>
-<span>  <span class="va">weights</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">tau_control</span><span class="op">)</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">tau_treated</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="va">final_model</span> <span class="op">&lt;-</span> <span class="fu">cv.glmnet</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">X_combined</span><span class="op">)</span>, <span class="va">tau_combined</span>, alpha <span class="op">=</span> <span class="fl">0</span>, weights <span class="op">=</span> <span class="va">weights</span>, nfolds <span class="op">=</span> <span class="va">n_folds</span><span class="op">)</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">final_model</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="custom_predictmodel-x_new-d_new">2. <code>custom_predict(model, X_new, D_new)</code><a class="anchor" aria-label="anchor" href="#custom_predictmodel-x_new-d_new"></a>
-</h4>
-<p>This function uses the fitted model to generate a <strong>binary
-treatment decision</strong> for each individual in
-<code>X_new</code>.</p>
-<p>It should return a vector of 0s and 1s, indicating whether to assign
-treatment (<code>1</code>) or not (<code>0</code>).<br>
-You may also incorporate a custom threshold or post-processing logic
-within the function.</p>
-<p><strong>Example</strong>: Apply the decision rule — treat if the
-estimated CATE is greater than 0</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">custom_predict</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">model</span>, <span class="va">X_new</span>, <span class="va">D_new</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">cate</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">X_new</span><span class="op">)</span>, s <span class="op">=</span> <span class="st">"lambda.min"</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="co"># Apply decision rule: treat if CATE &gt; 0</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">cate</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-</div>
-<div class="section level4">
-<h4 id="use-cram_policy-with-custom_fit-and-custom_predict">3. Use <code>cram_policy()</code> with <code>custom_fit()</code> and
-<code>custom_predict()</code><a class="anchor" aria-label="anchor" href="#use-cram_policy-with-custom_fit-and-custom_predict"></a>
-</h4>
-<p>Once both <code>custom_fit()</code> and <code>custom_predict()</code>
-are defined, you can integrate them into the CRAM framework by passing
-them to <code><a href="../reference/cram_policy.html">cram_policy()</a></code> as shown below:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">experiment_results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_policy.html">cram_policy</a></span><span class="op">(</span></span>
-<span>  <span class="va">X</span>, <span class="va">D</span>, <span class="va">Y</span>,</span>
-<span>  batch <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>  custom_fit <span class="op">=</span> <span class="va">custom_fit</span>,</span>
-<span>  custom_predict <span class="op">=</span> <span class="va">custom_predict</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="fl">0.05</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">experiment_results</span><span class="op">)</span></span>
-<span><span class="co">#&gt; $raw_results</span></span>
-<span><span class="co">#&gt;                        Metric    Value</span></span>
-<span><span class="co">#&gt; 1              Delta Estimate  0.13367</span></span>
-<span><span class="co">#&gt; 2        Delta Standard Error  0.10053</span></span>
-<span><span class="co">#&gt; 3              Delta CI Lower -0.06338</span></span>
-<span><span class="co">#&gt; 4              Delta CI Upper  0.33071</span></span>
-<span><span class="co">#&gt; 5       Policy Value Estimate  0.11910</span></span>
-<span><span class="co">#&gt; 6 Policy Value Standard Error  0.10105</span></span>
-<span><span class="co">#&gt; 7       Policy Value CI Lower -0.07897</span></span>
-<span><span class="co">#&gt; 8       Policy Value CI Upper  0.31716</span></span>
-<span><span class="co">#&gt; 9          Proportion Treated  0.57600</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $interactive_table</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; $final_policy_model</span></span>
-<span><span class="co">#&gt; GRF forest object of type causal_forest </span></span>
-<span><span class="co">#&gt; Number of trees: 100 </span></span>
-<span><span class="co">#&gt; Number of training samples: 1000 </span></span>
-<span><span class="co">#&gt; Variable importance: </span></span>
-<span><span class="co">#&gt;     1     2     3 </span></span>
-<span><span class="co">#&gt; 0.446 0.327 0.227</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="cram-ml">2. CRAM ML<a class="anchor" aria-label="anchor" href="#cram-ml"></a>
-</h2>
-<div class="section level3">
-<h3 id="built-in-model-1">Built-in Model<a class="anchor" aria-label="anchor" href="#built-in-model-1"></a>
 </h3>
 <p>This section illustrates how to use <code><a href="../reference/cram_ml.html">cram_ml()</a></code> with
 built-in modeling options available through the <code>cramR</code>
@@ -502,7 +201,7 @@ classification, or clustering.</p>
 <p>To illustrate the use of <code><a href="../reference/cram_ml.html">cram_ml()</a></code>, we begin by
 generating a synthetic dataset for a regression task. The data consists
 of three independent covariates and a continuous outcome.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span><span class="va">X_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, x2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, x3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">Y_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span></span>
@@ -567,7 +266,7 @@ using a wide variety of built-in machine learning models and losses. If
 users need to go beyond these built-in choices, we also provide in the
 next section a friendly workflow on how to specify custom models and
 losses with <code><a href="../reference/cram_ml.html">cram_ml()</a></code>.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">caret_params_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>  method <span class="op">=</span> <span class="st">"lm"</span>,</span>
 <span>  trControl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/trainControl.html" class="external-link">trainControl</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
@@ -600,7 +299,7 @@ losses with <code><a href="../reference/cram_ml.html">cram_ml()</a></code>.</p>
 <span><span class="co">#&gt; Resampling: None</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="custom-model-1">Custom Model<a class="anchor" aria-label="anchor" href="#custom-model-1"></a>
+<h3 id="custom-model">Custom Model<a class="anchor" aria-label="anchor" href="#custom-model"></a>
 </h3>
 <p>In addition to using built-in learners via <code>caret</code>,
 <code><a href="../reference/cram_ml.html">cram_ml()</a></code> also supports <strong>fully custom model
@@ -628,7 +327,7 @@ the outcome variable <code>Y</code>.</li>
 </ul>
 <p><strong>Example</strong>: A basic linear model fit on three
 predictors:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">custom_fit</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span> <span class="op">+</span> <span class="va">x3</span>, data <span class="op">=</span> <span class="va">data</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
@@ -649,7 +348,7 @@ including all original predictors)</li>
 </ul>
 <p><strong>Example</strong>: Extract predictors and apply a standard
 <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> call:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">custom_predict</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">model</span>, <span class="va">data</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">predictors_only</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/sets.html" class="external-link">setdiff</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span>, <span class="st">"Y"</span><span class="op">)</span>, drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">model</span>, newdata <span class="op">=</span> <span class="va">predictors_only</span><span class="op">)</span></span>
@@ -672,7 +371,7 @@ the model</li>
 </ul>
 <p><strong>Example</strong>: Define a custom loss function using
 <strong>Squared Error (SE)</strong></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">custom_loss</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">predictions</span>, <span class="va">data</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">actuals</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">$</span><span class="va">Y</span></span>
 <span>  <span class="va">se_loss</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">predictions</span> <span class="op">-</span> <span class="va">actuals</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span></span>
@@ -687,7 +386,7 @@ functions, you can pass them directly to <code><a href="../reference/cram_ml.htm
 below, note that <code>caret_params</code> and <code>loss_name</code>
 that were used for built-in functionalities are now
 <code>NULL</code>:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_ml.html">cram_ml</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">data_df</span>,</span>
 <span>  formula <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">.</span>,</span>
@@ -776,7 +475,7 @@ helper utilities in the <code>cramR:::</code> namespace (see “Bandit
 Helpers” vignette). Note that the exact method may depend on how your
 bandit logs and models are structured.</p>
 </blockquote>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Assume pi is a 3D array: observations x time x arms</span></span>
 <span><span class="co"># Assume arm and reward are vectors of length = nrow(pi)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
@@ -802,8 +501,8 @@ bandit logs and models are structured.</p>
 <span></span>
 <span><span class="co"># View interactive summary table</span></span>
 <span><span class="va">cram_results</span><span class="op">$</span><span class="va">interactive_table</span></span></code></pre></div>
-<div class="datatables html-widget html-fill-item" id="htmlwidget-1fb4450895fe099f74a1" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-1fb4450895fe099f74a1">{"x":{"filter":"none","vertical":false,"caption":"<caption>CRAM Bandit Policy Evaluation Results<\/caption>","data":[["1","2","3","4"],["Policy Value Estimate","Policy Value Standard Error","Policy Value CI Lower","Policy Value CI Upper"],[0.67621,0.04394,0.59008,0.76234]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Metric<\/th>\n      <th>Value<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":5,"columnDefs":[{"className":"dt-right","targets":2},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"Metric","targets":1},{"name":"Value","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[5,10,25,50,100]}},"evals":[],"jsHooks":[]}</script><p>The returned object includes both a raw numerical summary and an
+<div class="datatables html-widget html-fill-item" id="htmlwidget-36aa3d2a04d42bbc2145" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-36aa3d2a04d42bbc2145">{"x":{"filter":"none","vertical":false,"caption":"<caption>CRAM Bandit Policy Evaluation Results<\/caption>","data":[["1","2","3","4"],["Policy Value Estimate","Policy Value Standard Error","Policy Value CI Lower","Policy Value CI Upper"],[0.67621,0.04394,0.59008,0.76234]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Metric<\/th>\n      <th>Value<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":5,"columnDefs":[{"className":"dt-right","targets":2},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"Metric","targets":1},{"name":"Value","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[5,10,25,50,100]}},"evals":[],"jsHooks":[]}</script><p>The returned object includes both a raw numerical summary and an
 interactive table showing:</p>
 <ul>
 <li>the estimated policy value,</li>

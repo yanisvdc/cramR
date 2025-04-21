@@ -137,7 +137,7 @@ baseline_policy <- as.list(rep(0, nrow(X)))
 parallelize_batch <- FALSE  
  
 
-# Model-specific parameters (more details in the article "Quick Start")
+# Model-specific parameters (more details in the article "Cram Policy part 2")
 # Examples: NULL defaults to the following:
 # - causal_forest: list(num.trees = 100)
 # - ridge: list(alpha = 1)
@@ -199,7 +199,7 @@ The output of `cram_policy()` includes:
 
 - **`interactive_table`**: A dynamic, scrollable version of `raw_results` for easier exploration and filtering.
 
-- **`final_policy_model`**: The trained policy model object itself, fitted according to the specified `model_type`, `learner_type`, or user-provided `custom_fit` and `custom_predict` (more details in the article "Quick Start"). This object can be used for further analysis or for applying the learned policy to new data.
+- **`final_policy_model`**: The trained policy model object itself, fitted according to the specified `model_type`, `learner_type`, or user-provided `custom_fit` and `custom_predict` (more details in the article "Cram Policy part 2"). This object can be used for further analysis or for applying the learned policy to new data.
 
 ```{r}
 class(result$final_policy_model)
@@ -220,7 +220,7 @@ Notes:
 
 - **Batching**: You can pass a number (e.g., `batch = 5`) or a custom vector to control how data is split.  
 - **Parallelization**: Enable with `parallelize_batch = TRUE`.  
-- **Custom Learners**: Use `custom_fit` and `custom_predict` to plug in any estimator. (more details in the article "Quick Start")
+- **Custom Learners**: Use `custom_fit` and `custom_predict` to plug in any estimator. (more details in the article "Cram Policy part 2")
 
 ## Why Cram?
 
@@ -235,7 +235,7 @@ Compared to classic evaluation methods:
 
 ## References
 
-- Jia, Z., Imai, K., & Li, M. L. (2024). *The Cram Method for Efficient Simultaneous Learning and Evaluation*. arXiv:2403.07031.  
+- Jia, Z., Imai, K., & Li, M. L. (2024). *The Cram Method for Efficient Simultaneous Learning and Evaluation*, URL: https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf.  
 - Künzel, S. R., Sekhon, J. S., Bickel, P. J., & Yu, B. (2019). Metalearners for estimating heterogeneous treatment effects using machine learning. Proceedings of the National Academy of Sciences of the United States of America, 116(10), 4156–4165. https://doi.org/10.1073/pnas.1804597116
 - Wager, S., & Athey, S. (2018). Estimation and inference of heterogeneous treatment effects using random forests. Journal of the American Statistical Association, 113(523), 1228-1242. 
 - Athey, S., & Imbens, G. (2016). Recursive partitioning for heterogeneous causal effects. Proceedings of the National Academy of Sciences, 113(27), 7353-7360.
