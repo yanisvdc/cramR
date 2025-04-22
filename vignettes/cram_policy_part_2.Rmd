@@ -1,8 +1,8 @@
 ---
-title: "Cram Policy part 2 for Simultaneous Policy Learning and Evaluation"
+title: "Cram Policy part 2"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Cram Policy part 2 for Simultaneous Policy Learning and Evaluation}
+  %\VignetteIndexEntry{Cram Policy part 2}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -158,6 +158,7 @@ Please note that the list should contain an element `formula` where `Y` refers t
 ### Case of categorical target Y
 
   When using `caret`, note that if `Y` is categorical  and you are using `model_type = "s_learner"`, you need to choose a classification method outputting probabilities i.e. using the key word `classProbs = TRUE` in `trainControl`, see the following as an example with a Random Forest Classifier:
+  
   ```r
   model_params <- list(formula = Y ~ ., caret_params = list(method = "rf", trControl = trainControl(method = "none", classProbs = TRUE)))
   ```
@@ -166,8 +167,30 @@ Please note that the list should contain an element `formula` where `Y` refers t
   Note on M-learner:
   If `model_type = "m_learner"`, keep in mind that Y is transformed internally. M-learner requires a propensity model and transformed outcomes:
   
-  - propensity is an argument of cram_policy, if `NULL`, it defaults to propensity <- function(X) {rep(0.5, nrow(X))}
-  - outcome_transform is an element of model_params accessed as follows: `outcome_transform <- model_params$m_learner_outcome_transform`. If `NULL`, it defaults to `outcome_transform <- function(Y, D, prop_score) {Y * D / prop_score - Y * (1 - D) / (1 - prop_score)}`, where `prop_score` is `propensity(X)`. Thus, the Y transformed might not be categorical even though Y is categorical i.e. you might want to use a regression model (see the following reference for more details about the M-learner: Jia, Z., Imai, K., & Li, M. L. (2024). *The Cram Method for Efficient Simultaneous Learning and Evaluation*, URL: https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf.). 
+  - propensity is an argument of cram_policy, if `NULL`, it defaults to 
+  
+  ```r
+  propensity <- function(X) {rep(0.5, nrow(X))}
+  ```
+  
+  - outcome_transform is an element of model_params accessed as follows: 
+  
+  ```r
+  outcome_transform <- model_params$m_learner_outcome_transform
+  ```
+  
+  If `NULL`, it defaults to 
+  
+  ```r
+  outcome_transform <- function(Y, D, prop_score) {Y * D / prop_score - Y * (1 - D) / (1 - prop_score)}`, where `prop_score` is `propensity(X)
+  ```
+  
+  Thus, the Y transformed might not be categorical even though Y is categorical i.e. you might want to use a regression model. 
+  
+  See the following reference for more details about the M-learner: 
+  
+  Jia, Z., Imai, K., & Li, M. L. (2024). *The Cram Method for Efficient Simultaneous Learning and Evaluation*, URL: https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf.
+  
 
 You can override any of these defaults by passing a custom list to model_params including any parameter name defined in the underlying package of the model that you chose, namely `grf::causal_forest()`, `glmnet::cv.glmnet()`, `keras` and `caret::train()`
 

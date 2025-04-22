@@ -1,8 +1,8 @@
 ---
-title: "Introduction and Cram Policy part 1 for Simultaneous Policy Learning and Evaluation"
+title: "Introduction & Cram Policy part 1"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction and Cram Policy part 1 for Simultaneous Policy Learning and Evaluation}
+  %\VignetteIndexEntry{Introduction & Cram Policy part 1}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
