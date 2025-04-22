@@ -1,8 +1,8 @@
 ---
-title: "Using cram_bandit() for On-Policy Evaluation in Contextual Bandits"
+title: "Cram Bandit"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Using cram_bandit() for On-Policy Evaluation in Contextual Bandits}
+  %\VignetteIndexEntry{Cram Bandit}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -18,22 +18,75 @@ library(DT)
 
 ## What is `cram_bandit()`?
 
-The `cram_bandit()` function performs **on-policy statistical evaluation** of contextual bandit policies using the **CRAM method**.
+The `cram_bandit()` function implements the Cram methodology for **on-policy statistical evaluation** of contextual bandit algorithms. Unlike traditional off-policy approaches, Cram uses the *same adaptively collected data* for both learning and evaluation, delivering more **efficient, consistent**, and **asymptotically normal** policy value estimates.
 
-Given:
-- `pi`: A 3D array where each entry `pi[j, t, a]` is the probability of choosing arm `a` at time `t` for context `j`
-- `arm`: The vector of actions chosen at each timestep
-- `reward`: The observed rewards
-- `alpha`: Confidence level for inference
+## Introduction: Bandits, Policies, and Cram
 
-It returns:
-- A point estimate of the policy value  
-- Standard error and confidence interval  
-- Results in both tabular and interactive format
+In many machine learning settings, decisions must be made sequentially under uncertainty — for instance, recommending content, personalizing treatments, or allocating resources. These problems are often modeled as **contextual bandits**, where an agent:
+
+1. Observes context (features of the situation)
+2. Chooses an action (e.g., recommend an article)
+3. Observes a reward (e.g., targeted user clicks on the article or not)
+
+A **policy** is a function that maps context to a probability distribution over actions, with the goal of **maximizing expected cumulative reward over time**. Learning an optimal policy and evaluating its performance using the same data is difficult due to the adaptive nature of the data collection. 
+
+This challenge becomes evident when comparing to supervised learning: in supervised learning, the outcome or label \( y \) is observed for every input \( x \), allowing direct minimization of prediction error. In contrast, in a bandit setting, the outcome (reward) is only observed for the single action chosen by the agent. The agent must therefore select an action in order to reveal the reward associated with it, making data collection and learning inherently intertwined.
+
+The **Cram** method addresses this as being a general statistical framework for evaluating the final learned policy from a multi-armed contextual bandit algorithm, using the dataset generated
+by the same bandit algorithm. Notably, Cram is able to leverage this setting to return an estimate of how well the learned policy would perform *if deployed on the entire population* (policy value), along with a confidence interval at desired significance level.
+
+## Understanding the inputs
+
+Many contextual bandit algorithms update their policies every few rounds instead of at every step — this is known as the **batched setting**. For example, if the batch size is \( B = 5 \), the algorithm collects 5 new samples before updating its policy. This results in a sequence of policies \( \hat{\pi}_1, \hat{\pi}_2, ..., \hat{\pi}_T \), where \( T \) is the number of batches.
+
+In total, we observe \( T \times B \) data points, each consisting of:
+
+- A context
+
+- An action selected by the policy active at the time
+
+- A reward
+
+
+Cram supports the batched setting of bandit algorithms to allow for flexible use. Note that one can still set \( B = 1 \) if performing policy updates after each observation.
+
+Thus, Cram bandit takes as inputs:
+
+- `pi`: An array of shape **(T × B, T, K)** or **(T × B, T)**, where:
+
+  - \( T \) is the number of learning steps (or policy updates)
+  
+  - \( B \) is the batch size
+  
+  - \( K \) is the number of arms
+  
+  - \( T \times B \) is the total number of contexts
+  
+  - In the natural 3D version, `pi[j, t, a]` gives the probability that the policy \( \hat{\pi}_t \) assigns arm `a` to context \( X_j \)
+  
+  - Users may still use the 2D version as internally, we actually only need the probabilities assigned to the **chosen arm** \( A_j \) for each context \( X_j \) in the historical data - and not the probabilities for all of the arms \( a \) under each context \( X_j \), which allows us to remove the last dimension ("arm dimension") of the 3D array. In other words, this compact form omits the full distribution over arms and assumes you are only providing the realized action probabilities.
+  
+  > 🛠️ If you need to compute this probability array from a trained policy or historical data, the `cramR` package provides helper utilities in the `cramR:::` namespace (see “Bandit Helpers” vignette). Note that the exact method may depend on how your bandit logs and models are structured.
+  
+- `arm`: A vector of length \( T \times B \) indicating which arm was selected in each context.
+
+- `reward`: A vector of observed rewards of length \( T \times B \).
+
+- `batch`: (optional) Integer batch size \( B \). Default is 1.
+
+- `alpha`: Significance level for confidence intervals.
+
+Cram bandit returns:
+
+- Estimated policy value  
+
+- Estimated standard error 
+
+- Confidence interval at level alpha
 
 ---
 
-## Example: Simulated Contextual Bandit Evaluation
+## Example: Use `cram_bandit()` on simulated data with batch size of 1
 
 ```{r}
 # Set random seed for reproducibility
@@ -65,23 +118,15 @@ reward <- rnorm(T, mean = 1, sd = 0.5)
 
 ---
 
-### Run the CRAM Bandit method
-
 ```{r}
-result <- cram_bandit(pi, arm, reward)
+result <- cram_bandit(pi, arm, reward, batch=1, alpha=0.05)
 ```
 
----
-
-## Results
-
-### Summary Table
 
 ```{r}
 result$raw_results
 ```
 
-### Interactive Table
 
 ```{r}
 result$interactive_table
@@ -89,21 +134,7 @@ result$interactive_table
 
 ---
 
-## Notes
-
-- The array `pi` should have shape **(T × T × K)**, with each slice along the third dimension representing the probability distribution over arms at a given time.
-- The method assumes the policy used to collect the data is **the same** as the one being evaluated (*on-policy*).
-- Confidence intervals are based on asymptotic theory using influence functions.
-
----
-
 ## References
 
-This method builds on:
-
-- On-policy evaluation in contextual bandits  
-- Influence-function-based variance estimation  
-
-See also:
-
-- `DT::datatable()` for interactive result viewing
+- Jia, Z., Imai, K., & Li, M. L. (2024). The Cram Method for Efficient Simultaneous Learning and Evaluation. arXiv preprint arXiv:2403.07031.
+- Zhan et al. (2021). *Off-policy evaluation via adaptive weighting with data from contextual bandits.* KDD.

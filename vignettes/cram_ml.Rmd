@@ -131,7 +131,10 @@ print(result)
 
 ### Case of categorical target variable
 
-The `cram_ml()` function can also be used for **classification tasks**, whether predicting hard labels or class probabilities. This is controlled via the `classify` argument and `loss_name`. Below, we demonstrate two typical use cases.
+The `cram_ml()` function can also be used for **classification tasks**, whether predicting hard labels or class probabilities. This is controlled via the `classify` argument and `loss_name`.
+Below, we demonstrate two typical use cases.
+
+Also note that all data inputs needs to be of numeric types, hence for `Y` categorical, it should contain numeric values representing the class of each observation. No need to use the type `factor` for `cram_ml()`. 
 
 #### Case 1: Predicting Class Labels
 

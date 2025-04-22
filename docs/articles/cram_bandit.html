@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Using cram_bandit() for On-Policy Evaluation in Contextual Bandits • cramR</title>
+<title>Cram Bandit • cramR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Using cram_bandit() for On-Policy Evaluation in Contextual Bandits">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Cram Bandit">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <!-- Load Inter font --><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet">
 <style>
@@ -151,7 +151,7 @@
 <script src="cram_bandit_files/crosstalk-1.2.1/js/crosstalk.min.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Using cram_bandit() for On-Policy Evaluation in Contextual Bandits</h1>
+      <h1>Cram Bandit</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/yanisvdc/cramR/blob/HEAD/vignettes/cram_bandit.Rmd" class="external-link"><code>vignettes/cram_bandit.Rmd</code></a></small>
@@ -163,22 +163,138 @@
 <div class="section level2">
 <h2 id="what-is-cram_bandit">What is <code>cram_bandit()</code>?<a class="anchor" aria-label="anchor" href="#what-is-cram_bandit"></a>
 </h2>
-<p>The <code><a href="../reference/cram_bandit.html">cram_bandit()</a></code> function performs <strong>on-policy
-statistical evaluation</strong> of contextual bandit policies using the
-<strong>CRAM method</strong>.</p>
-<p>Given: - <code>pi</code>: A 3D array where each entry
-<code>pi[j, t, a]</code> is the probability of choosing arm
-<code>a</code> at time <code>t</code> for context <code>j</code> -
-<code>arm</code>: The vector of actions chosen at each timestep -
-<code>reward</code>: The observed rewards - <code>alpha</code>:
-Confidence level for inference</p>
-<p>It returns: - A point estimate of the policy value<br>
-- Standard error and confidence interval<br>
-- Results in both tabular and interactive format</p>
+<p>The <code><a href="../reference/cram_bandit.html">cram_bandit()</a></code> function implements the Cram
+methodology for <strong>on-policy statistical evaluation</strong> of
+contextual bandit algorithms. Unlike traditional off-policy approaches,
+Cram uses the <em>same adaptively collected data</em> for both learning
+and evaluation, delivering more <strong>efficient, consistent</strong>,
+and <strong>asymptotically normal</strong> policy value estimates.</p>
+</div>
+<div class="section level2">
+<h2 id="introduction-bandits-policies-and-cram">Introduction: Bandits, Policies, and Cram<a class="anchor" aria-label="anchor" href="#introduction-bandits-policies-and-cram"></a>
+</h2>
+<p>In many machine learning settings, decisions must be made
+sequentially under uncertainty — for instance, recommending content,
+personalizing treatments, or allocating resources. These problems are
+often modeled as <strong>contextual bandits</strong>, where an
+agent:</p>
+<ol style="list-style-type: decimal">
+<li>Observes context (features of the situation)</li>
+<li>Chooses an action (e.g., recommend an article)</li>
+<li>Observes a reward (e.g., targeted user clicks on the article or
+not)</li>
+</ol>
+<p>A <strong>policy</strong> is a function that maps context to a
+probability distribution over actions, with the goal of
+<strong>maximizing expected cumulative reward over time</strong>.
+Learning an optimal policy and evaluating its performance using the same
+data is difficult due to the adaptive nature of the data collection.</p>
+<p>This challenge becomes evident when comparing to supervised learning:
+in supervised learning, the outcome or label
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+is observed for every input
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>,
+allowing direct minimization of prediction error. In contrast, in a
+bandit setting, the outcome (reward) is only observed for the single
+action chosen by the agent. The agent must therefore select an action in
+order to reveal the reward associated with it, making data collection
+and learning inherently intertwined.</p>
+<p>The <strong>Cram</strong> method addresses this as being a general
+statistical framework for evaluating the final learned policy from a
+multi-armed contextual bandit algorithm, using the dataset generated by
+the same bandit algorithm. Notably, Cram is able to leverage this
+setting to return an estimate of how well the learned policy would
+perform <em>if deployed on the entire population</em> (policy value),
+along with a confidence interval at desired significance level.</p>
+</div>
+<div class="section level2">
+<h2 id="understanding-the-inputs">Understanding the inputs<a class="anchor" aria-label="anchor" href="#understanding-the-inputs"></a>
+</h2>
+<p>Many contextual bandit algorithms update their policies every few
+rounds instead of at every step — this is known as the <strong>batched
+setting</strong>. For example, if the batch size is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">B = 5</annotation></semantics></math>,
+the algorithm collects 5 new samples before updating its policy. This
+results in a sequence of policies
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>π</mi><mo accent="true">̂</mo></mover><mn>1</mn></msub><mo>,</mo><msub><mover><mi>π</mi><mo accent="true">̂</mo></mover><mn>2</mn></msub><mo>,</mo><mi>.</mi><mi>.</mi><mi>.</mi><mo>,</mo><msub><mover><mi>π</mi><mo accent="true">̂</mo></mover><mi>T</mi></msub></mrow><annotation encoding="application/x-tex">\hat{\pi}_1, \hat{\pi}_2, ..., \hat{\pi}_T</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+is the number of batches.</p>
+<p>In total, we observe
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>×</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">T \times B</annotation></semantics></math>
+data points, each consisting of:</p>
+<ul>
+<li><p>A context</p></li>
+<li><p>An action selected by the policy active at the time</p></li>
+<li><p>A reward</p></li>
+</ul>
+<p>Cram supports the batched setting of bandit algorithms to allow for
+flexible use. Note that one can still set
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">B = 1</annotation></semantics></math>
+if performing policy updates after each observation.</p>
+<p>Thus, Cram bandit takes as inputs:</p>
+<ul>
+<li>
+<p><code>pi</code>: An array of shape <strong>(T × B, T, K)</strong>
+or <strong>(T × B, T)</strong>, where:</p>
+<ul>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+is the number of learning steps (or policy updates)</p></li>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>
+is the batch size</p></li>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>
+is the number of arms</p></li>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>×</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">T \times B</annotation></semantics></math>
+is the total number of contexts</p></li>
+<li><p>In the natural 3D version, <code>pi[j, t, a]</code> gives the
+probability that the policy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>π</mi><mo accent="true">̂</mo></mover><mi>t</mi></msub><annotation encoding="application/x-tex">\hat{\pi}_t</annotation></semantics></math>
+assigns arm <code>a</code> to context
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>j</mi></msub><annotation encoding="application/x-tex">X_j</annotation></semantics></math></p></li>
+<li><p>Users may still use the 2D version as internally, we actually
+only need the probabilities assigned to the <strong>chosen arm</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>j</mi></msub><annotation encoding="application/x-tex">A_j</annotation></semantics></math>
+for each context
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>j</mi></msub><annotation encoding="application/x-tex">X_j</annotation></semantics></math>
+in the historical data - and not the probabilities for all of the arms
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>
+under each context
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>j</mi></msub><annotation encoding="application/x-tex">X_j</annotation></semantics></math>,
+which allows us to remove the last dimension (“arm dimension”) of the 3D
+array. In other words, this compact form omits the full distribution
+over arms and assumes you are only providing the realized action
+probabilities.</p></li>
+</ul>
+<blockquote>
+<p>🛠️ If you need to compute this probability array from a trained
+policy or historical data, the <code>cramR</code> package provides
+helper utilities in the <code>cramR:::</code> namespace (see “Bandit
+Helpers” vignette). Note that the exact method may depend on how your
+bandit logs and models are structured.</p>
+</blockquote>
+</li>
+<li><p><code>arm</code>: A vector of length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>×</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">T \times B</annotation></semantics></math>
+indicating which arm was selected in each context.</p></li>
+<li><p><code>reward</code>: A vector of observed rewards of length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>×</mo><mi>B</mi></mrow><annotation encoding="application/x-tex">T \times B</annotation></semantics></math>.</p></li>
+<li><p><code>batch</code>: (optional) Integer batch size
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>.
+Default is 1.</p></li>
+<li><p><code>alpha</code>: Significance level for confidence
+intervals.</p></li>
+</ul>
+<p>Cram bandit returns:</p>
+<ul>
+<li><p>Estimated policy value</p></li>
+<li><p>Estimated standard error</p></li>
+<li><p>Confidence interval at level alpha</p></li>
+</ul>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="example-simulated-contextual-bandit-evaluation">Example: Simulated Contextual Bandit Evaluation<a class="anchor" aria-label="anchor" href="#example-simulated-contextual-bandit-evaluation"></a>
+<h2 id="example-use-cram_bandit-on-simulated-data-with-batch-size-of-1">Example: Use <code>cram_bandit()</code> on simulated data with batch
+size of 1<a class="anchor" aria-label="anchor" href="#example-use-cram_bandit-on-simulated-data-with-batch-size-of-1"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Set random seed for reproducibility</span></span>
@@ -207,20 +323,8 @@ Confidence level for inference</p>
 <span><span class="co"># Simulate rewards (assume normally distributed rewards)</span></span>
 <span><span class="va">reward</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="cn">T</span>, mean <span class="op">=</span> <span class="fl">1</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span></code></pre></div>
 <hr>
-<div class="section level3">
-<h3 id="run-the-cram-bandit-method">Run the CRAM Bandit method<a class="anchor" aria-label="anchor" href="#run-the-cram-bandit-method"></a>
-</h3>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_bandit.html">cram_bandit</a></span><span class="op">(</span><span class="va">pi</span>, <span class="va">arm</span>, <span class="va">reward</span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="results">Results<a class="anchor" aria-label="anchor" href="#results"></a>
-</h2>
-<div class="section level3">
-<h3 id="summary-table">Summary Table<a class="anchor" aria-label="anchor" href="#summary-table"></a>
-</h3>
+<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_bandit.html">cram_bandit</a></span><span class="op">(</span><span class="va">pi</span>, <span class="va">arm</span>, <span class="va">reward</span>, batch<span class="op">=</span><span class="fl">1</span>, alpha<span class="op">=</span><span class="fl">0.05</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span><span class="op">$</span><span class="va">raw_results</span></span>
 <span><span class="co">#&gt;                        Metric   Value</span></span>
@@ -228,44 +332,20 @@ Confidence level for inference</p>
 <span><span class="co">#&gt; 2 Policy Value Standard Error 0.04394</span></span>
 <span><span class="co">#&gt; 3       Policy Value CI Lower 0.59008</span></span>
 <span><span class="co">#&gt; 4       Policy Value CI Upper 0.76234</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="interactive-table">Interactive Table<a class="anchor" aria-label="anchor" href="#interactive-table"></a>
-</h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span><span class="op">$</span><span class="va">interactive_table</span></span></code></pre></div>
 <div class="datatables html-widget html-fill-item" id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:100%;height:auto;"></div>
 <script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"filter":"none","vertical":false,"caption":"<caption>CRAM Bandit Policy Evaluation Results<\/caption>","data":[["1","2","3","4"],["Policy Value Estimate","Policy Value Standard Error","Policy Value CI Lower","Policy Value CI Upper"],[0.67621,0.04394,0.59008,0.76234]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Metric<\/th>\n      <th>Value<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":5,"columnDefs":[{"className":"dt-right","targets":2},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"Metric","targets":1},{"name":"Value","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[5,10,25,50,100]}},"evals":[],"jsHooks":[]}</script><hr>
 </div>
-</div>
-<div class="section level2">
-<h2 id="notes">Notes<a class="anchor" aria-label="anchor" href="#notes"></a>
-</h2>
-<ul>
-<li>The array <code>pi</code> should have shape <strong>(T × T ×
-K)</strong>, with each slice along the third dimension representing the
-probability distribution over arms at a given time.</li>
-<li>The method assumes the policy used to collect the data is
-<strong>the same</strong> as the one being evaluated
-(<em>on-policy</em>).</li>
-<li>Confidence intervals are based on asymptotic theory using influence
-functions.</li>
-</ul>
-<hr>
-</div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>This method builds on:</p>
 <ul>
-<li>On-policy evaluation in contextual bandits<br>
-</li>
-<li>Influence-function-based variance estimation</li>
-</ul>
-<p>See also:</p>
-<ul>
-<li>
-<code><a href="https://rdrr.io/pkg/DT/man/datatable.html" class="external-link">DT::datatable()</a></code> for interactive result viewing</li>
+<li>Jia, Z., Imai, K., &amp; Li, M. L. (2024). The Cram Method for
+Efficient Simultaneous Learning and Evaluation. arXiv preprint
+arXiv:2403.07031.</li>
+<li>Zhan et al. (2021). <em>Off-policy evaluation via adaptive weighting
+with data from contextual bandits.</em> KDD.</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

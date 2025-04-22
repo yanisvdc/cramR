@@ -24,81 +24,257 @@ library(caret)
 
 The **Cram** package provides a unified framework for:
 
-- 🧠 **Cram Policy (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using CRAM. Offers flexible model choices, including causal forests and custom learners.
+- 🧠 **Cram Policy (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using Cram. Offers flexible model choices, including causal forests and custom learners.
 
-- 📈 **Cram ML (`cram_ml`)**: Learn and evaluate ML models using CRAM. Supports flexible model training (via `caret` or user-defined functions) and custom loss functions.
+- 📈 **Cram ML (`cram_ml`)**: Learn and evaluate ML models using Cram. Supports flexible model training (via `caret` and user-defined functions) and custom loss functions.
 
-- 🎰 **Cram Bandit (`cram_bandit`)**: Learn and perform on-policy evaluation of contextual bandit algorithms using CRAM. Supports both real data and simulation environments with built-in policies.
+- 🎰 **Cram Bandit (`cram_bandit`)**: Learn and perform on-policy evaluation of contextual bandit algorithms using Cram. Supports both real data and simulation environments with built-in policies.
 
 This vignette walks through these **three core modules**.
 
 ---
 
-## 3. CRAM Bandit
+## Cram User file
 
-This section illustrates how to use the `cram_bandit()` function to **evaluate the final learned policy of a contextual bandit algorithm using the same data collected by the algorithm itself**. 
+For reproducible use cases, see the example script provided in the Cram GitHub repository:
 
-To demonstrate the method, we assume a contextual bandit sequence has been run and has produced:
+[View `user_cram.R` on GitHub](https://github.com/yanisvdc/cramR/blob/master/inst/examples/user_cram.R)
 
-- a sequence of learned policies (encoded as arrays of probabilities `π_t(x, a)`),
-- the arms actually chosen (`arm`),
-- the corresponding rewards observed (`reward`).
+---
 
-The `cram_bandit()` function requires a policy probability array `pi`, which captures how the learned policies assign probability mass across actions over time.
+## 1. `cram_policy()` — Binary Policy Learning & Evaluation
 
-This array can be specified in one of two formats:
-
-1. **3D Array**: An array of shape `(n, T, K)`, where:
-
-   - `T` is the number of time steps (i.e., policy updates),
-   - `K` is the number of available arms,
-   - `n = T × batch`, where `batch` is the batch size i.e. the number of actions taken between each policy update.
-
-Each element `pi[j, t, k]` represents the probability that the policy at time `t` assigns arm `k` to context `x_j`.
-
-2. **2D Array**: An array of shape `(n, T)`:
-
-   - Each entry represents the probability assigned by the policy at time `t` to the arm that was actually chosen under context `x_j`.
-
-This compact form omits the full distribution over arms and assumes you are only tracking the realized action probabilities.
-
-> 🛠️ If you need to compute this probability array from a trained policy or historical data, the `cramR` package provides helper utilities in the `cramR:::` namespace (see “Bandit Helpers” vignette). Note that the exact method may depend on how your bandit logs and models are structured.
+### Generate Simulated Data
 
 ```{r}
-# Assume pi is a 3D array: observations x time x arms
-# Assume arm and reward are vectors of length = nrow(pi)
-set.seed(42)
-T <- 100
-K <- 4
-pi <- array(runif(T * T * K, 0.1, 1), dim = c(T, T, K))
-for (t in 1:T) {
-  for (j in 1:T) {
-    pi[j, t, ] <- pi[j, t, ] / sum(pi[j, t, ])
-  }
+generate_data <- function(n) {
+  X <- data.table(
+    binary = rbinom(n, 1, 0.5),
+    discrete = sample(1:5, n, replace = TRUE),
+    continuous = rnorm(n)
+  )
+  D <- rbinom(n, 1, 0.5)
+  treatment_effect <- ifelse(X$binary == 1 & X$discrete <= 2, 1,
+                       ifelse(X$binary == 0 & X$discrete >= 4, -1, 0.1))
+  Y <- D * (treatment_effect + rnorm(n)) + (1 - D) * rnorm(n)
+  list(X = X, D = D, Y = Y)
 }
-arm <- sample(1:K, T, replace = TRUE)
-reward <- rnorm(T, mean = 1, sd = 0.5)
-cram_results <- cram_bandit(pi, arm, reward, batch=1)
 
-# View summary of the evaluation
-print(cram_results$raw_results)
-
-# View interactive summary table
-cram_results$interactive_table
+set.seed(123)
+data <- generate_data(1000)
+X <- data$X; D <- data$D; Y <- data$Y
 ```
 
-The returned object includes both a raw numerical summary and an interactive table showing:
+### Run `cram_policy()` with causal forest
 
-- the estimated policy value,
-- its standard error,
-- and the 95% confidence interval bounds.
+```{r}
+res <- cram_policy(
+  X, D, Y,
+  batch = 20,
+  model_type = "causal_forest",
+  learner_type = NULL,
+  baseline_policy = as.list(rep(0, nrow(X))),
+  alpha = 0.05
+)
+print(res)
+```
+
+
+### Case of categorical target Y
+
+  Use `caret` and choose a classification method outputting probabilities i.e. using the key word `classProbs = TRUE` in `trainControl`, see the following as an example with a Random Forest Classifier:
+  
+  ```r
+  model_params <- list(formula = Y ~ ., caret_params = list(method = "rf", trControl = trainControl(method = "none", classProbs = TRUE)))
+  ```
+  Also note that all data inputs needs to be of numeric types, hence for `Y` categorical, it should contain numeric values representing the class of each observation. No need to use the type `factor` for `cram_policy()`. 
+
+### Custom Models with `cram_policy()`
+
+Set `model_params` to `NULL` and specify `custom_fit` and `custom_predict`.
+
+```{r}
+custom_fit <- function(X, Y, D, n_folds = 5) {
+  treated <- which(D == 1); control <- which(D == 0)
+  m1 <- cv.glmnet(as.matrix(X[treated, ]), Y[treated], alpha = 0, nfolds = n_folds)
+  m0 <- cv.glmnet(as.matrix(X[control, ]), Y[control], alpha = 0, nfolds = n_folds)
+  tau1 <- predict(m1, as.matrix(X[control, ]), s = "lambda.min") - Y[control]
+  tau0 <- Y[treated] - predict(m0, as.matrix(X[treated, ]), s = "lambda.min")
+  tau <- c(tau0, tau1); X_all <- rbind(X[treated, ], X[control, ])
+  final_model <- cv.glmnet(as.matrix(X_all), tau, alpha = 0)
+  final_model
+}
+
+custom_predict <- function(model, X, D) {
+  as.numeric(predict(model, as.matrix(X), s = "lambda.min") > 0)
+}
+
+res <- cram_policy(
+  X, D, Y,
+  batch = 20,
+  model_type = NULL,
+  custom_fit = custom_fit,
+  custom_predict = custom_predict
+)
+print(res)
+```
+
+---
+
+## 2. `cram_ml()` — ML Learning & Evaluation
+
+### Regression with `cram_ml()`
+
+Specify `formula` and `caret_params`conforming to the popular `caret::train()` and set an individual loss under `loss_name`.
+
+```{r}
+set.seed(42)
+data_df <- data.frame(
+  x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100), Y = rnorm(100)
+)
+
+caret_params <- list(
+  method = "lm",
+  trControl = trainControl(method = "none")
+)
+
+res <- cram_ml(
+  data = data_df,
+  formula = Y ~ .,
+  batch = 5,
+  loss_name = "se",
+  caret_params = caret_params
+)
+print(res)
+```
+
+### Classification with `cram_ml()`
+
+All data inputs needs to be of numeric types, hence for `Y` categorical, it should contain numeric values representing the class of each observation. No need to use the type `factor` for `cram_ml()`. 
+
+#### Case 1: Predicting Class labels
+
+In this case, the model outputs hard predictions (labels, e.g. 0, 1, 2 etc.), and the metric used is **classification accuracy**—the proportion of correctly predicted labels.
+
+- Use `loss_name = "accuracy"`
+- Set `classProbs = FALSE` in `trainControl`
+- Set `classify = TRUE` in `cram_ml()`
+
+
+```{r}
+set.seed(42)
+
+# Generate binary classification dataset
+X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
+Y_data <- rbinom(nrow(X_data), 1, 0.5)
+data_df <- data.frame(X_data, Y = Y_data)
+
+# Define caret parameters: predict labels (default behavior)
+caret_params_rf <- list(
+  method = "rf",
+  trControl = trainControl(method = "none")
+)
+
+# Run CRAM ML with accuracy as loss
+result <- cram_ml(
+  data = data_df,
+  formula = Y ~ .,
+  batch = 5,
+  loss_name = "accuracy",
+  caret_params = caret_params_rf,
+  classify = TRUE
+)
+
+print(result)
+```
+
+
+#### Case 2: Predicting Class Probabilities
+
+In this setup, the model outputs **class probabilities**, and the loss is evaluated using **logarithmic loss (`logloss`)**—a standard metric for probabilistic classification.
+
+- Use `loss_name = "logloss"`
+- Set `classProbs = TRUE` in `trainControl`
+- Set `classify = TRUE` in `cram_ml()`
+
+```{r}
+set.seed(42)
+
+# Generate binary classification dataset
+X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
+Y_data <- rbinom(nrow(X_data), 1, 0.5)
+data_df <- data.frame(X_data, Y = Y_data)
+
+# Define caret parameters for probability output
+caret_params_rf_probs <- list(
+  method = "rf",
+  trControl = trainControl(method = "none", classProbs = TRUE)
+)
+
+# Run CRAM ML with logloss as the evaluation loss
+result <- cram_ml(
+  data = data_df,
+  formula = Y ~ .,
+  batch = 5,
+  loss_name = "logloss",
+  caret_params = caret_params_rf_probs,
+  classify = TRUE
+)
+
+print(result)
+```
+
+In addition to using built-in learners via `caret`, `cram_ml()` also supports **fully custom model workflows**. You can specify your own:
+
+- Model fitting function (`custom_fit`)
+- Prediction function (`custom_predict`)
+- Loss function (`custom_loss`)
+
+See the vignette "Cram ML" for more details.
+
+---
+
+## 3. `cram_bandit()` — Contextual Bandits for On-policy Statistical Evaluation
+
+Specify:
+
+- `pi`: An array of shape **(T × B, T, K)** or **(T × B, T)**, where:
+
+  - \( T \) is the number of learning steps (or policy updates)
+  
+  - \( B \) is the batch size
+  
+  - \( K \) is the number of arms
+  
+  - \( T \times B \) is the total number of contexts
+  
+  - In the natural 3D version, `pi[j, t, a]` gives the probability that the policy \( \hat{\pi}_t \) assigns arm `a` to context \( X_j \). In the 2D version, we only keep the probabilities assigned to the **chosen arm** \( A_j \) for each context \( X_j \) in the historical data - and not the probabilities for all of the arms \( a \) under each context \( X_j \).
+  
+- `arm`: A vector of length \( T \times B \) indicating which arm was selected in each context.
+
+- `reward`: A vector of observed rewards of length \( T \times B \).
+
+- `batch`: (optional) Integer batch size \( B \). Default is 1.
+
+- `alpha`: Significance level for confidence intervals.
+
+
+```{r}
+set.seed(42)
+T <- 100; K <- 4
+pi <- array(runif(T * T * K, 0.1, 1), dim = c(T, T, K))
+for (t in 1:T) for (j in 1:T) pi[j, t, ] <- pi[j, t, ] / sum(pi[j, t, ])
+arm <- sample(1:K, T, replace = TRUE)
+reward <- rnorm(T, 1, 0.5)
+
+res <- cram_bandit(pi, arm, reward, batch=1, alpha=0.05)
+print(res)
+```
 
 ---
 
 ## Summary
 
-- **cram_policy**: Learn and evaluate decision rules from batch data.
-- **cram_ml**: Evaluate ML models with customizable losses.
-- **cram_bandit**: Evaluate contextual bandits using on-policy evaluation.
-
-This flexible, unified framework supports both standard modeling and complex experimentation.
+- `cram_policy()`: Learn and evaluate a binary policy.
+- `cram_ml()`: Learn and evaluate ML models.
+- `cram_bandit()`: Cramming contextual bandits for on-policy statistical evaluation.

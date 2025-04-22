@@ -357,6 +357,10 @@ arguments and options.</p>
 class probabilities. This is controlled via the <code>classify</code>
 argument and <code>loss_name</code>. Below, we demonstrate two typical
 use cases.</p>
+<p>Also note that all data inputs needs to be of numeric types, hence
+for <code>Y</code> categorical, it should contain numeric values
+representing the class of each observation. No need to use the type
+<code>factor</code> for <code><a href="../reference/cram_ml.html">cram_ml()</a></code>.</p>
 <div class="section level5">
 <h5 id="case-1-predicting-class-labels">Case 1: Predicting Class Labels<a class="anchor" aria-label="anchor" href="#case-1-predicting-class-labels"></a>
 </h5>
