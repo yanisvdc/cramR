@@ -52,7 +52,11 @@ Common examples include:
 
 - 🎰 **Cram Bandit (`cram_bandit`)**: Learn and perform on-policy evaluation of contextual bandit algorithms using Cram. Supports both real data and simulation environments with built-in policies. 
 
-  For users with an ML background, it may be informative to compare with supervised learning to introduce the contextual bandit setting. In supervised learning, each data point comes with a known label. In contrast, the contextual bandit setting involves a context (feature vector), a choice among multiple actions, and a reward observed for the chosen action. Thus, the label (reward) is at first unknown and is only revealed after an action is chosen - note that the labels (rewards) associated with the non-chosen action will remain unknown (partial feedback), which makes learning and evaluation more challenging. Contextual bandits arise in many real-world applications, such as showing one ad and observing if it’s clicked or recommending one product and seeing if it’s purchased. Contextual bandit algorithms aim to learn a policy that chooses the best action for each context to maximize expected reward.
+  For users with an ML background, it may be informative to compare with supervised learning to introduce the contextual bandit setting. In supervised learning, each data point comes with a known label. 
+  In contrast, the contextual bandit setting involves a context (feature vector), a choice among multiple actions, and a reward observed for the chosen action. 
+  Thus, the label (reward) is at first unknown and is only revealed after an action is chosen - note that the labels (rewards) associated with the non-chosen actions will remain unknown (partial feedback), which makes learning and evaluation more challenging. 
+  
+  Contextual bandits appear in applications where an online system selects actions based on context to maximize outcomes—like showing ads or recommendations and observing user clicks or purchases. Contextual bandit algorithms aim to learn a policy that chooses the best action for each context to maximize expected reward, such as engagement (clicks) or conversion.
 
 ---
 
