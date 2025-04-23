@@ -50,13 +50,14 @@ Common examples include:
 
 - 📈 **Cram ML (`cram_ml`)**: Learn and evaluate standard machine learning models using Cram. It estimates the expected loss at the population level, giving you a reliable measure of how well the final model is likely to generalize to new data. Supports flexible training via caret or custom learners, and allows evaluation with user-defined loss metrics. Ideal for classification, regression, and other predictive tasks.
 
-- 🎰 **Cram Bandit (`cram_bandit`)**: Learn and perform on-policy evaluation of contextual bandit algorithms using Cram. Supports both real data and simulation environments with built-in policies. 
+- 🎰 **Cram Bandit (`cram_bandit`)**: Perform on-policy evaluation of contextual bandit algorithms using Cram. Supports both real data and simulation environments with built-in policies. 
 
   For users with an ML background, it may be informative to compare with supervised learning to introduce the contextual bandit setting. In supervised learning, each data point comes with a known label. 
   In contrast, the contextual bandit setting involves a context (feature vector), a choice among multiple actions, and a reward observed for the chosen action. 
   Thus, the label (reward) is at first unknown and is only revealed after an action is chosen - note that the labels (rewards) associated with the non-chosen actions will remain unknown (partial feedback), which makes learning and evaluation more challenging. 
   
-  Contextual bandits appear in applications where an online system selects actions based on context to maximize outcomes—like showing ads or recommendations and observing user clicks or purchases. Contextual bandit algorithms aim to learn a policy that chooses the best action for each context to maximize expected reward, such as engagement (clicks) or conversion.
+  Contextual bandits appear in applications where an online system selects actions based on context to maximize outcomes—like showing ads or recommendations and observing user clicks or purchases. Contextual bandit algorithms aim to learn a policy that chooses the best action for each context to maximize expected reward, such as engagement (clicks) or conversion. 
+  Cram Bandit estimates how well the final learned policy would perform if deployed on the entire population, based on data collected by the same policy.
 
 ---
 
