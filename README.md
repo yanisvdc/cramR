@@ -26,7 +26,15 @@
 
 ## 📚 What is Cram?
 
-The **Cram method** is a powerful approach for **simultaneously learning and evaluating decision rules**—such as individualized treatment rules (ITRs)—from data. It is particularly relevant in high-stakes applications where decisions must be both personalized and statistically reliable.
+The **Cram method** is an efficient approach to simultaneous learning and evaluation using a generic machine learning (ML) algorithm. 
+In a single pass of batched data, the proposed method repeatedly trains an ML algorithm and tests its empirical performance. 
+Because it utilizes the entire sample for both learning and evaluation, cramming is significantly more data-efficient than sample-splitting, which reserves a portion of the data purely for evaluation.
+Also, a key distinction from **cross-validation** is that Cram evaluates the **final learned model** directly, rather than using as a proxy the average performance of multiple fold-specific models trained on different data subsets—resulting in sharper inference and better alignment with real-world deployment.
+
+The Cram method naturally applies to the policy learning setting, which is a popular subfield of ML focused on learning a decision rule (also called treatment rule or policy) that assigns treatments or actions to individuals based on their features, with the goal of maximizing an expected outcome (e.g., health, profit, welfare).
+Cramming allows users to both learn an individualized decision rule and estimate the average outcome that would result if the learned decision rule were to be deployed to the entire population beyond the data sample.
+
+It is particularly relevant in high-stakes applications where decisions must be both personalized and statistically reliable.
 
 Common examples include:
 
@@ -34,20 +42,15 @@ Common examples include:
 - **Advertising and pricing**: setting optimal prices to maximize revenue  
 - **Policy interventions**: deciding which individuals or regions should receive targeted support to improve outcomes
 
-Unlike traditional approaches like **sample splitting** or **cross-validation**, which reserve a portion of the data purely for evaluation, **Cram reuses all available data** efficiently during both training and evaluation.
-
-A key distinction from **cross-validation** is that Cram evaluates the **final learned model** directly, rather than averaging the performance of multiple models trained on different data subsets—resulting in sharper inference and better alignment with real-world deployment.
-
 ---
 
 ## 🎯 Key Features
 
-- 🧠 **Cram Policy (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using Cram. Offers flexible model choices, including causal forests and custom learners.
+- 🧠 **Cram Policy (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using Cram. Supports flexible models, including causal forests and custom learners. Common examples include whether to treat a patient, send a discount offer, or provide financial aid based on estimated benefit.
 
-- 📈 **Cram ML (`cram_ml`)**: Learn and evaluate ML models using Cram. Supports flexible model training (via `caret` and user-defined functions) and custom loss functions.
+- 📈 **Cram ML (`cram_ml`)**: Learn and evaluate standard machine learning models using Cram. It estimates the expected loss at the population level, giving you a reliable measure of how well the final model is likely to generalize to new data. Supports flexible training via caret or custom learners, and allows evaluation with user-defined loss metrics. Ideal for classification, regression, and other predictive tasks.
 
-- 🎰 **Cram Bandit (`cram_bandit`)**: Learn and perform on-policy evaluation of contextual bandit algorithms using Cram. Supports both real data and simulation environments with built-in policies.
-
+- 🎰 **Cram Bandit (`cram_bandit`)**: Learn and perform on-policy evaluation of contextual bandit algorithms using Cram. Supports both real data and simulation environments with built-in policies. For users with an ML background, it may be informative to compare with supervised learning to introduce the contextual bandit setting. In supervised learning, each data point comes with a known label. In contrast, the contextual bandit setting involves a context (feature vector), a choice among multiple actions, and a reward observed for the chosen action. Thus, the label (reward) is at first unknown and is only revealed after an action is chosen - note that the labels (rewards) associated with the non-chosen action will remain unknown (partial feedback), which makes learning and evaluation more challenging. Contextual bandits arise in many real-world applications, such as showing one ad and observing if it’s clicked or recommending one product and seeing if it’s purchased. Contextual bandit algorithms aim to learn a policy that chooses the best action for each context to maximize expected reward.
 
 ---
 
