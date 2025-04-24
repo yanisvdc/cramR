@@ -24,11 +24,11 @@ library(caret)
 
 The **Cram** package provides a unified framework for:
 
-- 🧠 **Cram Policy (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using Cram. Offers flexible model choices, including causal forests and custom learners.
+- 🧠 **Cram Policy (`cram_policy`)**: Learn and evaluate individualized binary treatment rules using Cram. Supports flexible models, including causal forests and custom learners. Common examples include whether to treat a patient, send a discount offer, or provide financial aid based on estimated benefit.
 
-- 📈 **Cram ML (`cram_ml`)**: Learn and evaluate ML models using Cram. Supports flexible model training (via `caret` and user-defined functions) and custom loss functions.
+- 📈 **Cram ML (`cram_ml`)**: Learn and evaluate standard machine learning models using Cram. It estimates the expected loss at the population level, giving you a reliable measure of how well the final model is likely to generalize to new data. Supports flexible training via caret or custom learners, and allows evaluation with user-defined loss metrics. Ideal for classification, regression, and other predictive tasks.
 
-- 🎰 **Cram Bandit (`cram_bandit`)**: Learn and perform on-policy evaluation of contextual bandit algorithms using Cram. Supports both real data and simulation environments with built-in policies.
+- 🎰 **Cram Bandit (`cram_bandit`)**: Perform on-policy evaluation of contextual bandit algorithms using Cram. Supports both real data and simulation environments with built-in policies.
 
 This vignette walks through these **three core modules**.
 

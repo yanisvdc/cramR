@@ -163,16 +163,20 @@
 for:</p>
 <ul>
 <li><p>🧠 <strong>Cram Policy (<code>cram_policy</code>)</strong>: Learn
-and evaluate individualized binary treatment rules using Cram. Offers
-flexible model choices, including causal forests and custom
-learners.</p></li>
+and evaluate individualized binary treatment rules using Cram. Supports
+flexible models, including causal forests and custom learners. Common
+examples include whether to treat a patient, send a discount offer, or
+provide financial aid based on estimated benefit.</p></li>
 <li><p>📈 <strong>Cram ML (<code>cram_ml</code>)</strong>: Learn and
-evaluate ML models using Cram. Supports flexible model training (via
-<code>caret</code> and user-defined functions) and custom loss
-functions.</p></li>
-<li><p>🎰 <strong>Cram Bandit (<code>cram_bandit</code>)</strong>: Learn
-and perform on-policy evaluation of contextual bandit algorithms using
-Cram. Supports both real data and simulation environments with built-in
+evaluate standard machine learning models using Cram. It estimates the
+expected loss at the population level, giving you a reliable measure of
+how well the final model is likely to generalize to new data. Supports
+flexible training via caret or custom learners, and allows evaluation
+with user-defined loss metrics. Ideal for classification, regression,
+and other predictive tasks.</p></li>
+<li><p>🎰 <strong>Cram Bandit (<code>cram_bandit</code>)</strong>:
+Perform on-policy evaluation of contextual bandit algorithms using Cram.
+Supports both real data and simulation environments with built-in
 policies.</p></li>
 </ul>
 <p>This vignette walks through these <strong>three core
@@ -570,12 +574,11 @@ intervals.</p></li>
 </h2>
 <ul>
 <li>
-<strong>cram_policy</strong>: Learn and evaluate a binary
-policy.</li>
+<code><a href="../reference/cram_policy.html">cram_policy()</a></code>: Learn and evaluate a binary policy.</li>
 <li>
-<strong>cram_ml</strong>: Learn and evaluate ML models.</li>
+<code><a href="../reference/cram_ml.html">cram_ml()</a></code>: Learn and evaluate ML models.</li>
 <li>
-<strong>cram_bandit</strong>: Cramming contextual bandits for
+<code><a href="../reference/cram_bandit.html">cram_bandit()</a></code>: Cramming contextual bandits for
 on-policy statistical evaluation.</li>
 </ul>
 </div>

@@ -12,7 +12,7 @@
     <img src="https://img.shields.io/badge/View%20on-GitHub-black?logo=github" alt="View on GitHub">
   </a>
   <a href="https://codecov.io/github/yanisvdc/cramR" > 
- <img src="https://codecov.io/github/yanisvdc/cramR/graph/badge.svg?token=7MX98QJ7Y0"/> 
+ <img src="https://codecov.io/github/yanisvdc/cramR/graph/badge.svg?token=7MX98QJ7Y0" alt="Coverage"/>
  </a>
   <a href="https://github.com/yanisvdc/cramR/issues">
     <img src="https://img.shields.io/badge/Report%20a%20Bug-red?logo=bugatti" alt="Report a Bug">
@@ -28,6 +28,7 @@
 
 The **Cram method** is an efficient approach to simultaneous learning and evaluation using a generic machine learning (ML) algorithm. 
 In a single pass of batched data, the proposed method repeatedly trains an ML algorithm and tests its empirical performance. 
+
 Because it utilizes the entire sample for both learning and evaluation, cramming is significantly more data-efficient than sample-splitting, which reserves a portion of the data purely for evaluation.
 Also, a key distinction from **cross-validation** is that Cram evaluates the **final learned model** directly, rather than using as a proxy the average performance of multiple fold-specific models trained on different data subsets—resulting in sharper inference and better alignment with real-world deployment.
 
