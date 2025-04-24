@@ -237,6 +237,10 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D, dgp_Y, batch,
       big_X
     }
 
+    # FIX ------------------------------------
+    # model_predict(final_policy_model, X, D, model_type, learner_type, model_params)
+
+
     true_results <- pop_X[, {
       X_matrix2 <- as.matrix(.SD[, !c("Y", "D"), with = FALSE])  # Exclude Y and D dynamically
       # Extract D and Y for the current group

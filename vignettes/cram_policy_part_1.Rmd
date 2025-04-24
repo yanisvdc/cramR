@@ -33,7 +33,8 @@ Cram:
 
 - Estimates the expected outcome across the entire population as if the policy learned on a data sample were applied to everyone in the population, and not just to the data sample (statistical quantity called "policy value"), which allows the user to assess how the learned policy would generalize beyond the data sample.
 
-> Think of Cram like a cram school: learn a bit, test a bit, repeat — getting better while constantly self-evaluating.
+  > 🛠️ Think of Cram like a cram school: learn a bit, test a bit, repeat — getting better while constantly self-evaluating.
+  
 
 ## The Cram Workflow
 

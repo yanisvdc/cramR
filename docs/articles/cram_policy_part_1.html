@@ -117,8 +117,6 @@
     <li><a class="dropdown-item" href="../articles/cram_ml.html">Cram ML</a></li>
     <li><a class="dropdown-item" href="../articles/cram_bandit.html">Cram Bandit</a></li>
     <li><a class="dropdown-item" href="../articles/cram_bandit_helpers.html">Cram Bandit Helpers</a></li>
-    <li><a class="dropdown-item" href="../articles/cram_learning.html">Cram Policy Learning</a></li>
-    <li><a class="dropdown-item" href="../articles/cram_ml_learning.html">Cram ML Learning</a></li>
     <li><a class="dropdown-item" href="../articles/cram_policy_simulation.html">Cram Policy Simulation</a></li>
     <li><a class="dropdown-item" href="../articles/cram_bandit_simulation.html">Cram Bandit Simulation</a></li>
   </ul>
@@ -184,16 +182,18 @@ part of the data for evaluation only.</p></li>
 <li><p>Learns in cumulative batches, using each new round of data to
 refine the model and check whether it’s actually improving—ensuring that
 learning translates into meaningful gains.</p></li>
-<li><p>Estimates the expected outcome across the entire population as if
+<li>
+<p>Estimates the expected outcome across the entire population as if
 the policy learned on a data sample were applied to everyone in the
 population, and not just to the data sample (statistical quantity called
 “policy value”), which allows the user to assess how the learned policy
-would generalize beyond the data sample.</p></li>
-</ul>
+would generalize beyond the data sample.</p>
 <blockquote>
-<p>Think of Cram like a cram school: learn a bit, test a bit, repeat —
-getting better while constantly self-evaluating.</p>
+<p>🛠️ Think of Cram like a cram school: learn a bit, test a bit, repeat
+— getting better while constantly self-evaluating.</p>
 </blockquote>
+</li>
+</ul>
 </div>
 <div class="section level2">
 <h2 id="the-cram-workflow">The Cram Workflow<a class="anchor" aria-label="anchor" href="#the-cram-workflow"></a>

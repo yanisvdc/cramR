@@ -122,10 +122,6 @@ navbar:
           href: articles/cram_bandit.html
         - text: "Cram Bandit Helpers"
           href: articles/cram_bandit_helpers.html
-        - text: "Cram Policy Learning"
-          href: articles/cram_learning.html
-        - text: "Cram ML Learning"
-          href: articles/cram_ml_learning.html
         - text: "Cram Policy Simulation"
           href: articles/cram_policy_simulation.html
         - text: "Cram Bandit Simulation"
@@ -171,9 +167,3 @@ articles:
       - cram_bandit
       - cram_bandit_simulation
       - cram_bandit_helpers
-
-  - title: "Advanced Topics"
-    subtitle: "Implementation details"
-    contents:
-      - cram_learning
-      - cram_ml_learning

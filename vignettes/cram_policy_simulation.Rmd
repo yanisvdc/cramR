@@ -1,8 +1,8 @@
 ---
-title: "Using cram_simulation() for CRAM with Known DGP"
+title: "Cram Policy Simulation"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Using cram_simulation() for CRAM with Known DGP}
+  %\VignetteIndexEntry{Cram Policy Simulation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -17,13 +17,15 @@ library(data.table)
 library(DT)
 ```
 
+This vignettes are not necessarily intended for usage by users in their applications but they allow users to reproduce simulations to test the cram method on examples reproduce from paper and may give an example of how cram performs.
+
 ## 🎯 What is `cram_simulation()`?
 
 The `cram_simulation()` function performs **simultaneous policy learning and evaluation** under a **known data-generating process (DGP)**. It is useful for:
 
-- Benchmarking CRAM on simulated datasets
+- Benchmarking Cram on simulated datasets
 - Measuring empirical **bias**, **variance**, and **confidence interval coverage**
-- Supporting both synthetic (`dgp_X`) and empirical (`X`) covariate generation
+- Supporting both synthetic (`dgp_X`) and empirical (`X`) covariates generation
 
 ---
 
@@ -43,12 +45,15 @@ You must also define:
 ## 📘 Example: Simulated Data with Binary, Discrete, and Continuous Covariates
 
 ```{r}
-# Define data generation process (DGP) functions
-X_data <- data.table::data.table(
-  binary = rbinom(100, 1, 0.5),                 # Binary variable (0 or 1)
-  discrete = sample(1:5, 100, replace = TRUE),  # Discrete variable (1 to 5)
-  continuous = rnorm(100)                       # Continuous variable
-)
+set.seed(123)
+
+dgp_X <- function(n) {
+  data.table::data.table(
+    binary     = rbinom(n, 1, 0.5),
+    discrete   = sample(1:5, n, replace = TRUE),
+    continuous = rnorm(n)
+  )
+}
 
 dgp_D <- function(X) rbinom(nrow(X), 1, 0.5)
 
@@ -56,7 +61,7 @@ dgp_Y <- function(D, X) {
   theta <- ifelse(
     X[, binary] == 1 & X[, discrete] <= 2,  # Group 1: High benefit
     1,
-    ifelse(X[, binary] == 0 & X[, discrete] >= 4,  # Group 3: High adverse effect
+    ifelse(X[, binary] == 0 & X[, discrete] >= 4,  # Group 3: Negative benefit
            -1,
            0.1)  # Group 2: Neutral effect
   )
@@ -66,19 +71,19 @@ dgp_Y <- function(D, X) {
 }
 
 # Parameters
-nb_simulations <- 10
-nb_simulations_truth <- 2
+nb_simulations <- 100
+nb_simulations_truth <- 20
 batch <- 5
 
 # Perform CRAM simulation
 result <- cram_simulation(
-  X = X_data,
+  dgp_X = dgp_X,
   dgp_D = dgp_D,
   dgp_Y = dgp_Y,
   batch = batch,
   nb_simulations = nb_simulations,
   nb_simulations_truth = nb_simulations_truth,
-  sample_size = 50
+  sample_size = 100
 )
 
 # Access results

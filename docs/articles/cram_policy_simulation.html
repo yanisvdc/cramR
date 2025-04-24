@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Using cram_simulation() for CRAM with Known DGP • cramR</title>
+<title>Cram Policy Simulation • cramR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Using cram_simulation() for CRAM with Known DGP">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Cram Policy Simulation">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <!-- Load Inter font --><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet">
 <style>
@@ -117,8 +117,6 @@
     <li><a class="dropdown-item" href="../articles/cram_ml.html">Cram ML</a></li>
     <li><a class="dropdown-item" href="../articles/cram_bandit.html">Cram Bandit</a></li>
     <li><a class="dropdown-item" href="../articles/cram_bandit_helpers.html">Cram Bandit Helpers</a></li>
-    <li><a class="dropdown-item" href="../articles/cram_learning.html">Cram Policy Learning</a></li>
-    <li><a class="dropdown-item" href="../articles/cram_ml_learning.html">Cram ML Learning</a></li>
     <li><a class="dropdown-item" href="../articles/cram_policy_simulation.html">Cram Policy Simulation</a></li>
     <li><a class="dropdown-item" href="../articles/cram_bandit_simulation.html">Cram Bandit Simulation</a></li>
   </ul>
@@ -151,7 +149,7 @@
 <script src="cram_policy_simulation_files/crosstalk-1.2.1/js/crosstalk.min.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Using cram_simulation() for CRAM with Known DGP</h1>
+      <h1>Cram Policy Simulation</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/yanisvdc/cramR/blob/HEAD/vignettes/cram_policy_simulation.Rmd" class="external-link"><code>vignettes/cram_policy_simulation.Rmd</code></a></small>
@@ -160,6 +158,10 @@
 
     
     
+<p>This vignettes are not necessarily intended for usage by users in
+their applications but they allow users to reproduce simulations to test
+the cram method on examples reproduce from paper and may give an example
+of how cram performs.</p>
 <div class="section level2">
 <h2 id="what-is-cram_simulation">🎯 What is <code>cram_simulation()</code>?<a class="anchor" aria-label="anchor" href="#what-is-cram_simulation"></a>
 </h2>
@@ -168,13 +170,13 @@
 <strong>known data-generating process (DGP)</strong>. It is useful
 for:</p>
 <ul>
-<li>Benchmarking CRAM on simulated datasets</li>
+<li>Benchmarking Cram on simulated datasets</li>
 <li>Measuring empirical <strong>bias</strong>,
 <strong>variance</strong>, and <strong>confidence interval
 coverage</strong>
 </li>
 <li>Supporting both synthetic (<code>dgp_X</code>) and empirical
-(<code>X</code>) covariate generation</li>
+(<code>X</code>) covariates generation</li>
 </ul>
 <hr>
 </div>
@@ -194,12 +196,15 @@ function<br>
 Covariates<a class="anchor" aria-label="anchor" href="#example-simulated-data-with-binary-discrete-and-continuous-covariates"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Define data generation process (DGP) functions</span></span>
-<span><span class="va">X_data</span> <span class="op">&lt;-</span> <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
-<span>  binary <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span>,                 <span class="co"># Binary variable (0 or 1)</span></span>
-<span>  discrete <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="fl">100</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,  <span class="co"># Discrete variable (1 to 5)</span></span>
-<span>  continuous <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>                       <span class="co"># Continuous variable</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">dgp_X</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu">data.table</span><span class="fu">::</span><span class="fu"><a href="https://rdatatable.gitlab.io/data.table/reference/data.table.html" class="external-link">data.table</a></span><span class="op">(</span></span>
+<span>    binary     <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span>,</span>
+<span>    discrete   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="va">n</span>, replace <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    continuous <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">}</span></span>
 <span></span>
 <span><span class="va">dgp_D</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">X</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, <span class="fl">1</span>, <span class="fl">0.5</span><span class="op">)</span></span>
 <span></span>
@@ -207,7 +212,7 @@ Covariates<a class="anchor" aria-label="anchor" href="#example-simulated-data-wi
 <span>  <span class="va">theta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span></span>
 <span>    <span class="va">X</span><span class="op">[</span>, <span class="va">binary</span><span class="op">]</span> <span class="op">==</span> <span class="fl">1</span> <span class="op">&amp;</span> <span class="va">X</span><span class="op">[</span>, <span class="va">discrete</span><span class="op">]</span> <span class="op">&lt;=</span> <span class="fl">2</span>,  <span class="co"># Group 1: High benefit</span></span>
 <span>    <span class="fl">1</span>,</span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">X</span><span class="op">[</span>, <span class="va">binary</span><span class="op">]</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">X</span><span class="op">[</span>, <span class="va">discrete</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="fl">4</span>,  <span class="co"># Group 3: High adverse effect</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">X</span><span class="op">[</span>, <span class="va">binary</span><span class="op">]</span> <span class="op">==</span> <span class="fl">0</span> <span class="op">&amp;</span> <span class="va">X</span><span class="op">[</span>, <span class="va">discrete</span><span class="op">]</span> <span class="op">&gt;=</span> <span class="fl">4</span>,  <span class="co"># Group 3: Negative benefit</span></span>
 <span>           <span class="op">-</span><span class="fl">1</span>,</span>
 <span>           <span class="fl">0.1</span><span class="op">)</span>  <span class="co"># Group 2: Neutral effect</span></span>
 <span>  <span class="op">)</span></span>
@@ -217,19 +222,19 @@ Covariates<a class="anchor" aria-label="anchor" href="#example-simulated-data-wi
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="co"># Parameters</span></span>
-<span><span class="va">nb_simulations</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
-<span><span class="va">nb_simulations_truth</span> <span class="op">&lt;-</span> <span class="fl">2</span></span>
+<span><span class="va">nb_simulations</span> <span class="op">&lt;-</span> <span class="fl">100</span></span>
+<span><span class="va">nb_simulations_truth</span> <span class="op">&lt;-</span> <span class="fl">20</span></span>
 <span><span class="va">batch</span> <span class="op">&lt;-</span> <span class="fl">5</span></span>
 <span></span>
 <span><span class="co"># Perform CRAM simulation</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_simulation.html">cram_simulation</a></span><span class="op">(</span></span>
-<span>  X <span class="op">=</span> <span class="va">X_data</span>,</span>
+<span>  dgp_X <span class="op">=</span> <span class="va">dgp_X</span>,</span>
 <span>  dgp_D <span class="op">=</span> <span class="va">dgp_D</span>,</span>
 <span>  dgp_Y <span class="op">=</span> <span class="va">dgp_Y</span>,</span>
 <span>  batch <span class="op">=</span> <span class="va">batch</span>,</span>
 <span>  nb_simulations <span class="op">=</span> <span class="va">nb_simulations</span>,</span>
 <span>  nb_simulations_truth <span class="op">=</span> <span class="va">nb_simulations_truth</span>,</span>
-<span>  sample_size <span class="op">=</span> <span class="fl">50</span></span>
+<span>  sample_size <span class="op">=</span> <span class="fl">100</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Access results</span></span>
@@ -244,22 +249,22 @@ Covariates<a class="anchor" aria-label="anchor" href="#example-simulated-data-wi
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span><span class="op">$</span><span class="va">raw_results</span></span>
-<span><span class="co">#&gt;                                  Metric    Value</span></span>
-<span><span class="co">#&gt; 1            Average Proportion Treated  0.60000</span></span>
-<span><span class="co">#&gt; 2                Average Delta Estimate -0.00705</span></span>
-<span><span class="co">#&gt; 3          Average Delta Standard Error  0.23362</span></span>
-<span><span class="co">#&gt; 4                  Delta Empirical Bias  0.12369</span></span>
-<span><span class="co">#&gt; 5              Delta Empirical Coverage  1.00000</span></span>
-<span><span class="co">#&gt; 6         Variance Delta Empirical Bias  0.42625</span></span>
-<span><span class="co">#&gt; 7         Average Policy Value Estimate -0.00444</span></span>
-<span><span class="co">#&gt; 8   Average Policy Value Standard Error  0.24662</span></span>
-<span><span class="co">#&gt; 9           Policy Value Empirical Bias  0.06418</span></span>
-<span><span class="co">#&gt; 10      Policy Value Empirical Coverage  0.90000</span></span>
-<span><span class="co">#&gt; 11 Variance Policy Value Empirical Bias  0.33513</span></span></code></pre></div>
+<span><span class="co">#&gt;                                  Metric   Value</span></span>
+<span><span class="co">#&gt; 1            Average Proportion Treated 0.60290</span></span>
+<span><span class="co">#&gt; 2                Average Delta Estimate 0.06371</span></span>
+<span><span class="co">#&gt; 3          Average Delta Standard Error 0.23493</span></span>
+<span><span class="co">#&gt; 4                  Delta Empirical Bias 0.03217</span></span>
+<span><span class="co">#&gt; 5              Delta Empirical Coverage 0.93000</span></span>
+<span><span class="co">#&gt; 6         Variance Delta Empirical Bias 0.27997</span></span>
+<span><span class="co">#&gt; 7         Average Policy Value Estimate 0.05109</span></span>
+<span><span class="co">#&gt; 8   Average Policy Value Standard Error 0.20543</span></span>
+<span><span class="co">#&gt; 9           Policy Value Empirical Bias 0.01633</span></span>
+<span><span class="co">#&gt; 10      Policy Value Empirical Coverage 0.76000</span></span>
+<span><span class="co">#&gt; 11 Variance Policy Value Empirical Bias 0.21551</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">result</span><span class="op">$</span><span class="va">interactive_table</span></span></code></pre></div>
 <div class="datatables html-widget html-fill-item" id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:100%;height:auto;"></div>
-<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"filter":"none","vertical":false,"caption":"<caption>CRAM Simulation Results<\/caption>","data":[["1","2","3","4","5","6","7","8","9","10","11"],["Average Proportion Treated","Average Delta Estimate","Average Delta Standard Error","Delta Empirical Bias","Delta Empirical Coverage","Variance Delta Empirical Bias","Average Policy Value Estimate","Average Policy Value Standard Error","Policy Value Empirical Bias","Policy Value Empirical Coverage","Variance Policy Value Empirical Bias"],[0.6,-0.00705,0.23362,0.12369,1,0.42625,-0.00444,0.24662,0.06418,0.9,0.33513]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Metric<\/th>\n      <th>Value<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":5,"columnDefs":[{"className":"dt-right","targets":2},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"Metric","targets":1},{"name":"Value","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[5,10,25,50,100]}},"evals":[],"jsHooks":[]}</script><p>Returns a list containing:</p>
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"filter":"none","vertical":false,"caption":"<caption>CRAM Simulation Results<\/caption>","data":[["1","2","3","4","5","6","7","8","9","10","11"],["Average Proportion Treated","Average Delta Estimate","Average Delta Standard Error","Delta Empirical Bias","Delta Empirical Coverage","Variance Delta Empirical Bias","Average Policy Value Estimate","Average Policy Value Standard Error","Policy Value Empirical Bias","Policy Value Empirical Coverage","Variance Policy Value Empirical Bias"],[0.6029,0.06371,0.23493,0.03217,0.93,0.27997,0.05109,0.20543,0.01633,0.76,0.21551]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Metric<\/th>\n      <th>Value<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":5,"columnDefs":[{"className":"dt-right","targets":2},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"Metric","targets":1},{"name":"Value","targets":2}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[5,10,25,50,100]}},"evals":[],"jsHooks":[]}</script><p>Returns a list containing:</p>
 <ul>
 <li>
 <code>raw_results</code>: A summary of key averaged metrics<br>
