@@ -47,13 +47,22 @@ You must also define:
 ```{r}
 set.seed(123)
 
-dgp_X <- function(n) {
-  data.table::data.table(
+# dgp_X <- function(n) {
+#   data.table::data.table(
+#     binary     = rbinom(n, 1, 0.5),
+#     discrete   = sample(1:5, n, replace = TRUE),
+#     continuous = rnorm(n)
+#   )
+# }
+
+n <- 100
+
+X_data <- data.table::data.table(
     binary     = rbinom(n, 1, 0.5),
     discrete   = sample(1:5, n, replace = TRUE),
     continuous = rnorm(n)
   )
-}
+
 
 dgp_D <- function(X) rbinom(nrow(X), 1, 0.5)
 
@@ -72,18 +81,18 @@ dgp_Y <- function(D, X) {
 
 # Parameters
 nb_simulations <- 100
-nb_simulations_truth <- 20
+nb_simulations_truth <- 200
 batch <- 5
 
 # Perform CRAM simulation
 result <- cram_simulation(
-  dgp_X = dgp_X,
+  X = X_data,
   dgp_D = dgp_D,
   dgp_Y = dgp_Y,
   batch = batch,
   nb_simulations = nb_simulations,
   nb_simulations_truth = nb_simulations_truth,
-  sample_size = 100
+  sample_size = 500
 )
 
 # Access results

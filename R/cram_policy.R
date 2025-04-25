@@ -89,7 +89,8 @@ cram_policy <- function(X, D, Y, batch, model_type = "causal_forest",
   # variance
   delta_asymptotic_variance <- cram_variance_estimator(X, Y, D, policies, batch_indices, propensity = propensity)
   delta_asymptotic_sd <- sqrt(delta_asymptotic_variance)  # v_T, the asymptotic standard deviation
-  delta_standard_error <- delta_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
+  # delta_standard_error <- delta_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
+  delta_standard_error <- delta_asymptotic_sd
 
   # confidence interval
   z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
@@ -110,7 +111,8 @@ cram_policy <- function(X, D, Y, batch, model_type = "causal_forest",
                                                                            batch_indices,
                                                                            propensity = propensity)
   policy_value_asymptotic_sd <- sqrt(policy_value_asymptotic_variance)
-  policy_value_standard_error <- policy_value_asymptotic_sd / sqrt(nb_batch)
+  # policy_value_standard_error <- policy_value_asymptotic_sd / sqrt(nb_batch)
+  policy_value_standard_error <- policy_value_asymptotic_sd
 
   # confidence interval
   z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level

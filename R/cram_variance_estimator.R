@@ -64,7 +64,8 @@ cram_variance_estimator <- function(X, Y, D, pi, batch_indices, propensity = NUL
   total_variance <- sum(column_variances)
 
   # Final variance estimator, scaled by T / B
-  total_variance <- (nb_batch / batch_size) * total_variance
+  # total_variance <- (nb_batch / batch_size) * total_variance
+  total_variance <- (1 / batch_size) * total_variance
 
   return(total_variance)
 }
