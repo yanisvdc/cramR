@@ -5,12 +5,12 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Using cram_bandit_sim() with Contextual Bandit Policies • cramR</title>
+<title>Cram Bandit Helpers • cramR</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Using cram_bandit_sim() with Contextual Bandit Policies">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Cram Bandit Helpers">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <!-- Load Inter font --><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet">
 <style>
@@ -145,7 +145,7 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
-      <h1>Using cram_bandit_sim() with Contextual Bandit Policies</h1>
+      <h1>Cram Bandit Helpers</h1>
             
       
       <small class="dont-index">Source: <a href="https://github.com/yanisvdc/cramR/blob/HEAD/vignettes/cram_bandit_helpers.Rmd" class="external-link"><code>vignettes/cram_bandit_helpers.Rmd</code></a></small>
@@ -155,53 +155,29 @@
     
     
 <div class="section level2">
-<h2 id="what-is-cram_bandit_sim">🎯 What is <code>cram_bandit_sim()</code>?<a class="anchor" aria-label="anchor" href="#what-is-cram_bandit_sim"></a>
+<h2 id="what-is-this-article-about">🌟 What is this article about?<a class="anchor" aria-label="anchor" href="#what-is-this-article-about"></a>
 </h2>
-<p>The function <code><a href="../reference/cram_bandit_sim.html">cram_bandit_sim()</a></code> evaluates contextual
-bandit algorithms using the <strong>CRAM method</strong>. It is built on
-top of the <a href="https://github.com/Nth-iteration-labs/contextual" class="external-link"><code>contextual</code></a>
-package, with several extensions for batch-aware evaluation and
-high-precision probability tracking.</p>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="how-it-works">🧩 How it works<a class="anchor" aria-label="anchor" href="#how-it-works"></a>
-</h2>
-<p>CRAM for contextual bandits relies on <strong>accurately estimating
-the action probabilities</strong>
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>t</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\pi_t(X_t, a_t)</annotation></semantics></math>.
-These are essential for computing unbiased on-policy estimators:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>V</mi><mo accent="true">̂</mo></mover><mi>π</mi></msub><mo>=</mo><mfrac><mn>1</mn><mi>T</mi></mfrac><munderover><mo>∑</mo><mrow><mi>t</mi><mo>=</mo><mn>1</mn></mrow><mi>T</mi></munderover><mfrac><mrow><msub><mi>r</mi><mi>t</mi></msub><mo>⋅</mo><msub><mn>𝟙</mn><mrow><msub><mi>a</mi><mi>t</mi></msub><mo>=</mo><msub><mi>π</mi><mi>t</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msub></mrow><mrow><msub><mi>π</mi><mi>t</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac></mrow><annotation encoding="application/x-tex">
-\hat{V}_\pi = \frac{1}{T} \sum_{t=1}^T \frac{r_t \cdot \mathbb{1}_{a_t = \pi_t(X_t)}}{\pi_t(X_t, a_t)}
-</annotation></semantics></math></p>
-<p>To do this, we:</p>
-<ol style="list-style-type: decimal">
-<li>Use custom subclasses of <code><a href="https://rdrr.io/pkg/contextual/man/Policy.html" class="external-link">contextual::Policy</a></code> and
-<code><a href="https://rdrr.io/pkg/contextual/man/Bandit.html" class="external-link">contextual::Bandit</a></code>
-</li>
-<li>Store and update model parameters (<code>A</code>, <code>b</code>,
-etc.)</li>
-<li>Reconstruct the probability that the selected arm was chosen</li>
-</ol>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="custom-bandit-contextuallinearbandit">🧠 Custom Bandit: <code>ContextualLinearBandit</code><a class="anchor" aria-label="anchor" href="#custom-bandit-contextuallinearbandit"></a>
-</h2>
-<p>We extend the standard linear bandit to <strong>explicitly expose the
-underlying beta matrix</strong> used in reward generation. This allows
-us to compute the <strong>true expected rewards</strong> and compare
-against estimated values.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">bandit</span> <span class="op">&lt;-</span> <span class="va">ContextualLinearBandit</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>k <span class="op">=</span> <span class="fl">3</span>, d <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="batch-aware-policies">🏗️ Batch-Aware Policies<a class="anchor" aria-label="anchor" href="#batch-aware-policies"></a>
-</h2>
-<p>To allow CRAM’s learning-evaluation cycles, we implement
-<strong>batch versions</strong> of common policies:</p>
+<p>In order to use <code><a href="../reference/cram_bandit.html">cram_bandit()</a></code>, users must supply a
+matrix of <strong>action selection probabilities</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>t</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>j</mi></msub><mo>,</mo><msub><mi>A</mi><mi>j</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\pi_t(X_j, A_j)</annotation></semantics></math>
+for each combination of policy update
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+and context
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
+in the historical dataset.</p>
+<p>While some environments log these probabilities directly, many
+contextual bandit libraries (such as <a href="https://github.com/Nth-iteration-labs/contextual" class="external-link"><code>contextual</code></a>)
+only store <strong>policy parameters</strong> (e.g., regression
+coefficients) without explicit probability tracking.</p>
+<p>This article explains how <strong>Cram Bandit Helpers</strong>
+reconstruct
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>t</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>j</mi></msub><mo>,</mo><msub><mi>A</mi><mi>j</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\pi_t(X_j, A_j)</annotation></semantics></math>
+from these parameters for common policies:</p>
 <table class="table">
+<colgroup>
+<col width="30%">
+<col width="70%">
+</colgroup>
 <thead><tr class="header">
 <th>Policy Type</th>
 <th>Class Name</th>
@@ -212,7 +188,9 @@ against estimated values.</p>
 <td><code>BatchContextualEpsilonGreedyPolicy</code></td>
 </tr>
 <tr class="even">
-<td>LinUCB</td>
+<td>LinUCB Disjoint with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>-greedy
+exploration</td>
 <td><code>BatchLinUCBDisjointPolicyEpsilon</code></td>
 </tr>
 <tr class="odd">
@@ -221,127 +199,286 @@ against estimated values.</p>
 </tr>
 </tbody>
 </table>
-<p>Each batch policy only updates its internal parameters <strong>every
-<code>batch_size</code> steps</strong>, enabling stable, evaluable
-policies.</p>
+<p>Both <strong>theoretical formulas</strong> and <strong>practical code
+snippets</strong> are provided.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="how-probabilities-are-computed">🔢 How Probabilities Are Computed<a class="anchor" aria-label="anchor" href="#how-probabilities-are-computed"></a>
+<h2 id="policy-parameters-explained">🛠️Policy parameters explained<a class="anchor" aria-label="anchor" href="#policy-parameters-explained"></a>
 </h2>
-<p>We use custom logic to reconstruct the selection probabilities
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mi>t</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo>,</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\pi_t(X_t, a_t)</annotation></semantics></math>
-for <strong>each algorithm</strong> from its internal model state:</p>
-<div class="section level3">
-<h3 id="epsilon-greedy">✅ Epsilon-Greedy<a class="anchor" aria-label="anchor" href="#epsilon-greedy"></a>
-</h3>
-<p>With exploration probability <code>ε</code>, the probability of
-selecting a greedy arm is:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>ϵ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><mfrac><mn>1</mn><mrow><mi>#</mi><mtext mathvariant="normal">greedy arms</mtext></mrow></mfrac><mo>+</mo><mfrac><mi>ϵ</mi><mi>K</mi></mfrac></mrow><annotation encoding="application/x-tex">
-P(a_t | X_t) = \left(1 - \epsilon\right) \cdot \frac{1}{\#\text{greedy arms}} + \frac{\epsilon}{K}
-</annotation></semantics></math></p>
-<p>We detect which arms are greedy by computing
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>k</mi></msub><mo>=</mo><msubsup><mi>A</mi><mi>k</mi><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><msub><mi>b</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\theta_k = A_k^{-1} b_k</annotation></semantics></math>
-and evaluating expected rewards.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">get_proba_c_eps_greedy</span><span class="op">(</span><span class="va">eps</span>, <span class="va">A_list</span>, <span class="va">b_list</span>, <span class="va">contexts</span>, <span class="va">chosen_arms</span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="linucb-disjoint">✅ LinUCB Disjoint<a class="anchor" aria-label="anchor" href="#linucb-disjoint"></a>
-</h3>
-<p>LinUCB selects arms by adding an <strong>exploration bonus</strong>
-based on uncertainty:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>ϵ</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><mfrac><mn>1</mn><mrow><mi>#</mi><mtext mathvariant="normal">best arms</mtext></mrow></mfrac><mo>+</mo><mfrac><mi>ϵ</mi><mi>K</mi></mfrac></mrow><annotation encoding="application/x-tex">
-P(a_t | X_t) = \left(1 - \epsilon \right) \cdot \frac{1}{\#\text{best arms}} + \frac{\epsilon}{K}
-</annotation></semantics></math></p>
-<p>This accounts for confidence intervals using
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>k</mi></msub><mo>+</mo><mi>α</mi><mo>⋅</mo><msub><mi>σ</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\mu_k + \alpha \cdot \sigma_k</annotation></semantics></math>.
-CRAM tracks this precisely using:</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">get_proba_ucb_disjoint</span><span class="op">(</span><span class="va">alpha</span>, <span class="va">eps</span>, <span class="va">A_list</span>, <span class="va">b_list</span>, <span class="va">contexts</span>, <span class="va">chosen_arms</span><span class="op">)</span></span></code></pre></div>
-<hr>
-</div>
-<div class="section level3">
-<h3 id="thompson-sampling">✅ Thompson Sampling<a class="anchor" aria-label="anchor" href="#thompson-sampling"></a>
-</h3>
-<p>This is more subtle: we integrate over the probability that the
-chosen arm <strong>outperforms all others</strong> given posterior
-uncertainty:</p>
-<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>ℙ</mi><mrow><mo stretchy="true" form="prefix">[</mo><msubsup><mi>θ</mi><msub><mi>a</mi><mi>t</mi></msub><mi>T</mi></msubsup><msub><mi>X</mi><mi>t</mi></msub><mo>&gt;</mo><msubsup><mi>θ</mi><mi>k</mi><mi>T</mi></msubsup><msub><mi>X</mi><mi>t</mi></msub><mspace width="1.0em"></mspace><mo>∀</mo><mi>k</mi><mo>≠</mo><msub><mi>a</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">
-P(a_t | X_t) = \mathbb{P}\left[\theta_{a_t}^T X_t &gt; \theta_k^T X_t \quad \forall k \neq a_t\right]
-</annotation></semantics></math></p>
-<p>We perform <strong>numerical integration</strong> over these
-multivariate Gaussians using:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">get_proba_thompson</span><span class="op">(</span><span class="va">sigma</span>, <span class="va">A_list</span>, <span class="va">b_list</span>, <span class="va">contexts</span>, <span class="va">chosen_arms</span><span class="op">)</span></span></code></pre></div>
-<p>This is computationally expensive but precise.</p>
-<hr>
-</div>
-</div>
-<div class="section level2">
-<h2 id="estimand-calculation">🧪 Estimand Calculation<a class="anchor" aria-label="anchor" href="#estimand-calculation"></a>
-</h2>
-<p>Once policies are reconstructed, we compute their <strong>true
-expected value</strong> using independent contexts and the known reward
-function:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">compute_estimand</span><span class="op">(</span><span class="va">data_group</span>, <span class="va">list_betas</span>, <span class="va">policy</span>, <span class="va">policy_name</span>, <span class="va">batch_size</span>, <span class="va">bandit</span><span class="op">)</span></span></code></pre></div>
-<p>This is essential to evaluate <strong>bias</strong> and
-<strong>coverage</strong> of the CRAM estimators.</p>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="optimizations">🔥 Optimizations<a class="anchor" aria-label="anchor" href="#optimizations"></a>
-</h2>
+<p>When using linear bandit algorithms like Epsilon-Greedy, LinUCB, or
+Thompson Sampling, each arm
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+maintains <strong>summary statistics</strong> (parameters) to estimate
+the expected reward:</p>
 <ul>
-<li>Probabilities are <strong>vectorized</strong> across timesteps and
-batches</li>
-<li>We use <strong>Sherman-Morrison</strong> updates for fast matrix
-inverses</li>
-<li>The function <code>extract_2d_from_3d()</code> performs efficient 3D
-slicing to isolate selected arm probabilities</li>
-<li>Confidence intervals are calculated using <strong>asymptotic
-variance estimates</strong>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>k</mi></msub><annotation encoding="application/x-tex">A_k</annotation></semantics></math>
+is the <strong>Gram matrix</strong>:<br><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>k</mi></msub><mo>=</mo><msubsup><mi>X</mi><mi>k</mi><mi>T</mi></msubsup><msub><mi>X</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">
+A_k = X_k^T X_k
+</annotation></semantics></math> where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>k</mi></msub><annotation encoding="application/x-tex">X_k</annotation></semantics></math>
+is the matrix of feature vectors (contexts) for all rounds where arm
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+was selected.<br>
+➔ <strong>Interpretation</strong>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>k</mi></msub><annotation encoding="application/x-tex">A_k</annotation></semantics></math>
+captures the amount of information (and correlation structure) about the
+features for arm
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>.
+It plays the role of a “feature covariance matrix.”</p></li>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>b</mi><mi>k</mi></msub><annotation encoding="application/x-tex">b_k</annotation></semantics></math>
+is the <strong>response vector</strong>:<br><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>b</mi><mi>k</mi></msub><mo>=</mo><msubsup><mi>X</mi><mi>k</mi><mi>T</mi></msubsup><msub><mi>y</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">
+b_k = X_k^T y_k
+</annotation></semantics></math> where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>y</mi><mi>k</mi></msub><annotation encoding="application/x-tex">y_k</annotation></semantics></math>
+are the observed rewards for arm
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>.<br>
+➔ <strong>Interpretation</strong>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>b</mi><mi>k</mi></msub><annotation encoding="application/x-tex">b_k</annotation></semantics></math>
+captures the relationship between the observed rewards and the contexts
+for arm
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>.</p></li>
+</ul>
+<p>These sufficient statistics allow the policy to compute the
+<strong>Least Squares estimate</strong> for the reward model:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>k</mi></msub><mo>=</mo><msubsup><mi>A</mi><mi>k</mi><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><msub><mi>b</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">
+\theta_k = A_k^{-1} b_k
+</annotation></semantics></math></p>
+<p>where:</p>
+<ul>
+<li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\theta_k</annotation></semantics></math>
+is the estimated coefficient vector that predicts the expected reward of
+arm
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+as a function of the context.</li>
+</ul>
+<p>Thus:</p>
+<ul>
+<li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>k</mi></msub><annotation encoding="application/x-tex">A_k</annotation></semantics></math>
+tells us <strong>how confident</strong> we are about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\theta_k</annotation></semantics></math>
+(smaller eigenvalues of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>k</mi></msub><annotation encoding="application/x-tex">A_k</annotation></semantics></math>
+imply more uncertainty).</li>
+<li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>b</mi><mi>k</mi></msub><annotation encoding="application/x-tex">b_k</annotation></semantics></math>
+provides the <strong>observed signal</strong> (reward-weighted context
+features) to fit
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\theta_k</annotation></semantics></math>.</li>
+</ul>
+<p>The policy selects an action based on the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\theta_k</annotation></semantics></math>
+of each arm
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+and then observe the reward associated with this choice, which is used
+to update the parameters
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>k</mi></msub><annotation encoding="application/x-tex">A_k</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>b</mi><mi>k</mi></msub><annotation encoding="application/x-tex">b_k</annotation></semantics></math>
+of the policy.</p>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="epsilon-greedy-policy">✨ Epsilon-Greedy Policy<a class="anchor" aria-label="anchor" href="#epsilon-greedy-policy"></a>
+</h2>
+<div class="section level4">
+<h4 id="theoretical-computation">🤖 Theoretical computation<a class="anchor" aria-label="anchor" href="#theoretical-computation"></a>
+</h4>
+<p>In Epsilon-Greedy, with exploration rate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>,
+the probability of selecting one of the best arms is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>A</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>ε</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>×</mo><mfrac><mn>1</mn><mrow><mi>#</mi><mtext mathvariant="normal">best arms</mtext></mrow></mfrac><mo>+</mo><mi>ε</mi><mo>×</mo><mfrac><mn>1</mn><mi>K</mi></mfrac></mrow><annotation encoding="application/x-tex"> P(A_t | X_t) = (1 - \varepsilon) \times \frac{1}{\# \text{best arms}} + \varepsilon \times \frac{1}{K} </annotation></semantics></math></p>
+<p>While the probability of selecting an arm that is not among the best
+arms is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>A</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>ε</mi><mo>×</mo><mfrac><mn>1</mn><mi>K</mi></mfrac></mrow><annotation encoding="application/x-tex"> P(A_t | X_t) = \varepsilon \times \frac{1}{K} </annotation></semantics></math></p>
+<p>where:</p>
+<ul>
+<li>Best arms are those with maximal estimated rewards.</li>
+<li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>
+is the total number of available arms.</li>
+</ul>
+<p>Best arms are identified via the estimated expected reward:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>k</mi></msub><mo>=</mo><msubsup><mi>A</mi><mi>k</mi><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><msub><mi>b</mi><mi>k</mi></msub><mspace width="1.0em"></mspace><mtext mathvariant="normal">(Least Squares estimate)</mtext></mrow><annotation encoding="application/x-tex"> \theta_k = A_k^{-1} b_k \quad \text{(Least Squares estimate)} </annotation></semantics></math></p>
+<p>where:</p>
+<ul>
+<li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>k</mi></msub><annotation encoding="application/x-tex">A_k</annotation></semantics></math>
+is the Gram matrix
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>X</mi><mi>k</mi><mi>T</mi></msubsup><msub><mi>X</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">X_k^T X_k</annotation></semantics></math>
+</li>
+<li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>b</mi><mi>k</mi></msub><annotation encoding="application/x-tex">b_k</annotation></semantics></math>
+is the vector
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>X</mi><mi>k</mi><mi>T</mi></msubsup><msub><mi>Y</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">X_k^T Y_k</annotation></semantics></math>
 </li>
 </ul>
+</div>
+<div class="section level4">
+<h4 id="code-helper">📊 Code helper<a class="anchor" aria-label="anchor" href="#code-helper"></a>
+</h4>
+<p>In <code>cramR</code>, this is implemented by:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">get_proba_c_eps_greedy</span><span class="op">(</span><span class="va">eps</span>, <span class="va">A_list</span>, <span class="va">b_list</span>, <span class="va">contexts</span>, <span class="va">chosen_arms</span><span class="op">)</span></span></code></pre></div>
+<p>This function:</p>
+<ul>
+<li>Computes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\theta_k</annotation></semantics></math>
+for each arm</li>
+<li>Calculates expected rewards
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>X</mi><mi>t</mi><mi>T</mi></msubsup><msub><mi>θ</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">X_t^T \theta_k</annotation></semantics></math>
+</li>
+<li>Identifies the best arms</li>
+<li>Applies the above formula</li>
+</ul>
 <hr>
 </div>
+</div>
 <div class="section level2">
-<h2 id="example">📦 Example<a class="anchor" aria-label="anchor" href="#example"></a>
+<h2 id="linucb-disjoint-policy-with-varepsilon-greedy">🔢 LinUCB Disjoint Policy with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>-Greedy<a class="anchor" aria-label="anchor" href="#linucb-disjoint-policy-with-varepsilon-greedy"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Set up bandit and policy</span></span>
-<span><span class="va">bandit</span> <span class="op">&lt;-</span> <span class="va">ContextualLinearBandit</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>k <span class="op">=</span> <span class="fl">3</span>, d <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
-<span><span class="va">policy</span> <span class="op">&lt;-</span> <span class="va">BatchLinUCBDisjointPolicyEpsilon</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>alpha <span class="op">=</span> <span class="fl">1.0</span>, epsilon <span class="op">=</span> <span class="fl">0.1</span>, batch_size <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Run CRAM Bandit simulation</span></span>
-<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_bandit_sim.html">cram_bandit_sim</a></span><span class="op">(</span></span>
-<span>  horizon <span class="op">=</span> <span class="fl">100</span>,</span>
-<span>  simulations <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  bandit <span class="op">=</span> <span class="va">bandit</span>,</span>
-<span>  policy <span class="op">=</span> <span class="va">policy</span>,</span>
-<span>  alpha <span class="op">=</span> <span class="fl">0.05</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span></code></pre></div>
+<div class="section level4">
+<h4 id="theoretical-computation-1">🤖 Theoretical computation<a class="anchor" aria-label="anchor" href="#theoretical-computation-1"></a>
+</h4>
+<p>LinUCB selects arms based on <strong>Upper Confidence Bounds
+(UCBs)</strong>:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">UCB</mtext><mi>k</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mi>μ</mi><mi>k</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><mi>α</mi><msub><mi>σ</mi><mi>k</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex"> \text{UCB}_k(X_t) = \mu_k(X_t) + \alpha \sigma_k(X_t) </annotation></semantics></math></p>
+<p>where:</p>
+<ul>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>k</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msubsup><mi>X</mi><mi>t</mi><mi>T</mi></msubsup><msub><mi>θ</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">\mu_k(X_t) = X_t^T \theta_k</annotation></semantics></math></li>
+<li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>k</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msqrt><mrow><msubsup><mi>X</mi><mi>t</mi><mi>T</mi></msubsup><msubsup><mi>A</mi><mi>k</mi><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><msub><mi>X</mi><mi>t</mi></msub></mrow></msqrt></mrow><annotation encoding="application/x-tex">\sigma_k(X_t) = \sqrt{X_t^T A_k^{-1} X_t}</annotation></semantics></math>
+measures uncertainty</li>
+<li>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
+controls the exploration strength</li>
+</ul>
+<p>The action probabilities follow the same structure as Epsilon-Greedy
+but with UCB scores instead of plain expected rewards i.e. the
+probability to select one of the best arms is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>A</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mi>ε</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>×</mo><mfrac><mn>1</mn><mrow><mi>#</mi><mtext mathvariant="normal">best arms</mtext></mrow></mfrac><mo>+</mo><mi>ε</mi><mo>×</mo><mfrac><mn>1</mn><mi>K</mi></mfrac></mrow><annotation encoding="application/x-tex"> P(A_t | X_t) = (1 - \varepsilon) \times \frac{1}{\# \text{best arms}} + \varepsilon \times \frac{1}{K} </annotation></semantics></math></p>
+<p>While the probability to select an arm that is not among the best
+arms is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>A</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>ε</mi><mo>×</mo><mfrac><mn>1</mn><mi>K</mi></mfrac></mrow><annotation encoding="application/x-tex"> P(A_t | X_t) = \varepsilon \times \frac{1}{K} </annotation></semantics></math></p>
+<p>where “best arms” are those with highest UCB scores.</p>
+</div>
+<div class="section level4">
+<h4 id="code-helper-1">📊 Code helper<a class="anchor" aria-label="anchor" href="#code-helper-1"></a>
+</h4>
+<p>In <code>cramR</code>, this is implemented by:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">get_proba_ucb_disjoint</span><span class="op">(</span><span class="va">alpha</span>, <span class="va">eps</span>, <span class="va">A_list</span>, <span class="va">b_list</span>, <span class="va">contexts</span>, <span class="va">chosen_arms</span><span class="op">)</span></span></code></pre></div>
+<p>This function:</p>
+<ul>
+<li>Computes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\theta_k</annotation></semantics></math>
+</li>
+<li>Computes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>k</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mu_k(X_t)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mi>k</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\sigma_k(X_t)</annotation></semantics></math>
+</li>
+<li>Identifies arms maximizing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mtext mathvariant="normal">UCB</mtext><mi>k</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{UCB}_k(X_t)</annotation></semantics></math>
+</li>
+<li>Applies the Epsilon-Greedy selection formula</li>
+</ul>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="thompson-sampling-lints">🤓 Thompson Sampling (LinTS)<a class="anchor" aria-label="anchor" href="#thompson-sampling-lints"></a>
+</h2>
+<div class="section level4">
+<h4 id="theoretical-computation-2">🤖 Theoretical computation<a class="anchor" aria-label="anchor" href="#theoretical-computation-2"></a>
+</h4>
+<p>In Thompson Sampling, actions are sampled according to posterior
+draws and the action associated with the maximum value is chosen. The
+probability that the arm
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>t</mi></msub><annotation encoding="application/x-tex">A_t</annotation></semantics></math>
+is optimal is:</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>A</mi><mi>t</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>X</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>ℙ</mi><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>θ</mi><msub><mi>A</mi><mi>t</mi></msub><mi>T</mi></msubsup><msub><mi>X</mi><mi>t</mi></msub><mo>&gt;</mo><msubsup><mi>θ</mi><mi>k</mi><mi>T</mi></msubsup><msub><mi>X</mi><mi>t</mi></msub><mspace width="1.0em"></mspace><mo>∀</mo><mi>k</mi><mo>≠</mo><msub><mi>A</mi><mi>t</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex"> P(A_t | X_t) = \mathbb{P}\left( \theta_{A_t}^T X_t &gt; \theta_{k}^T X_t \quad \forall k \neq A_t \right) </annotation></semantics></math></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>k</mi></msub><mo>∼</mo><mi>𝒩</mi><mrow><mo stretchy="true" form="prefix">(</mo><msubsup><mi>A</mi><mi>k</mi><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><msub><mi>b</mi><mi>k</mi></msub><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><msubsup><mi>A</mi><mi>k</mi><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\theta_k \sim \mathcal{N}(A_k^{-1} b_k, \sigma^2 A_k^{-1})</annotation></semantics></math>.</p>
+<p>This requires <strong>computing a multivariate probability</strong>,
+which we approximate via <strong>adaptive numerical
+integration</strong>.</p>
+</div>
+<div class="section level4">
+<h4 id="code-helper-2">📊 Code helper<a class="anchor" aria-label="anchor" href="#code-helper-2"></a>
+</h4>
+<p>In <code>cramR</code>, this is implemented by:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">get_proba_thompson</span><span class="op">(</span><span class="va">sigma</span>, <span class="va">A_list</span>, <span class="va">b_list</span>, <span class="va">contexts</span>, <span class="va">chosen_arms</span><span class="op">)</span></span></code></pre></div>
+<p>This function:</p>
+<ul>
+<li>Computes posterior means and variances</li>
+<li>Integrates over the space where chosen arm
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>t</mi></msub><annotation encoding="application/x-tex">A_t</annotation></semantics></math>
+has the highest sampled reward</li>
+<li>Returns clipped probabilities for numerical stability</li>
+</ul>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="practical-workflow">👨‍💻 Practical Workflow<a class="anchor" aria-label="anchor" href="#practical-workflow"></a>
+</h2>
+<p>When using your bandit policy in practice:</p>
+<ol style="list-style-type: decimal">
+<li>Record action choices, contexts, and policy parameters (e.g.,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>)</li>
+<li>Calculate the action selection probabilities. If your policy is
+within the ones presented above, please feel free to rely on our helper
+functions to build
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>.</li>
+<li>Feed <code>pi</code>, <code>arm</code>, and <code>reward</code> into
+<code><a href="../reference/cram_bandit.html">cram_bandit()</a></code> for evaluation of your policy.</li>
+</ol>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="see-also">📚 See Also<a class="anchor" aria-label="anchor" href="#see-also"></a>
+<h2 id="estimand-calculation-in-cram_bandit_sim">🧪 Estimand Calculation in <code>cram_bandit_sim()</code><a class="anchor" aria-label="anchor" href="#estimand-calculation-in-cram_bandit_sim"></a>
+</h2>
+<p>The following only concerns the simulation framework we implemented
+for benchmarking purposes.</p>
+<p>Once the policies are reconstructed, we compute their true expected
+value — referred to as the estimand — by applying the learned policy to
+independent contexts and evaluating it against the known reward function
+used in the simulation.</p>
+<p>This is done via:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">compute_estimand</span><span class="op">(</span><span class="va">data_group</span>, <span class="va">list_betas</span>, <span class="va">policy</span>, <span class="va">policy_name</span>, <span class="va">batch_size</span>, <span class="va">bandit</span><span class="op">)</span></span></code></pre></div>
+<p>Accurately computing the estimand is critical for properly assessing
+the bias and confidence interval coverage of the Cram estimate in our
+simulations.</p>
+</div>
+<div class="section level2">
+<h2 id="useful-links">📂 Useful Links<a class="anchor" aria-label="anchor" href="#useful-links"></a>
 </h2>
 <ul>
 <li>
-<a href="https://github.com/Nth-iteration-labs/contextual" class="external-link"><code>contextual</code></a>:
-Bandit simulation framework</li>
+<a href="https://github.com/Nth-iteration-labs/contextual" class="external-link"><code>contextual</code></a>
+package: original framework</li>
 <li>
-<code><a href="../reference/cram_bandit.html">cram_bandit()</a></code> — to compute value/CI for one policy
-trajectory</li>
+<code><a href="../reference/cram_bandit.html">cram_bandit()</a></code>: Cram evaluation for contextual
+bandits</li>
 <li>
-<code>compute_probas()</code> — probability matrix reconstruction
-engine</li>
+<code><a href="../reference/cram_bandit_sim.html">cram_bandit_sim()</a></code>: Full simulation engine with
+automatic pi estimation</li>
 </ul>
 <hr>
+</div>
+<div class="section level2">
+<h2 id="acknowledgments">🌟 Acknowledgments<a class="anchor" aria-label="anchor" href="#acknowledgments"></a>
+</h2>
+<p>These helper functions were designed to faithfully reconstruct action
+probabilities for the policies implemented in <a href="https://github.com/Nth-iteration-labs/contextual" class="external-link"><code>contextual</code></a>,
+while enabling reproducible Cram-based evaluation.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

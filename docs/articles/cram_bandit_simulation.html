@@ -229,14 +229,14 @@ We recommend keeping <code>do_parallel = FALSE</code> unless necessary,
 as parallel execution can make it harder for the underlying <a href="https://github.com/Nth-iteration-labs/contextual" class="external-link"><code>contextual</code></a>
 package to reliably track simulation history.<br>
 In particular, parallel runs may cause missing or incomplete entries in
-the recorded history, which are then discarded during analysis..
-—</p></li>
+the recorded history, which are then discarded during analysis.</p></li>
 </ul>
 </li>
 </ul>
+<hr>
 </div>
 <div class="section level2">
-<h2 id="example-cram-bsndit-simulation">Example: Cram Bsndit Simulation<a class="anchor" aria-label="anchor" href="#example-cram-bsndit-simulation"></a>
+<h2 id="example-cram-bandit-simulation">Example: Cram Bandit Simulation<a class="anchor" aria-label="anchor" href="#example-cram-bandit-simulation"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Number of time steps</span></span>
@@ -271,9 +271,9 @@ the recorded history, which are then discarded during analysis..
 <span><span class="co">#&gt; Number of batches: 1</span></span>
 <span><span class="co">#&gt; Starting main loop.</span></span>
 <span><span class="co">#&gt; Finished main loop.</span></span>
-<span><span class="co">#&gt; Completed simulation in 0:00:04.620</span></span>
+<span><span class="co">#&gt; Completed simulation in 0:00:04.718</span></span>
 <span><span class="co">#&gt; Computing statistics.</span></span></code></pre></div>
-<p><img src="cram_bandit_simulation_files/figure-html/unnamed-chunk-1-1.png" width="700"></p>
+<p><img src="cram_bandit_simulation_files/figure-html/unnamed-chunk-1-1.png" alt="Cumulative regret curve over time for the selected policy" width="700"></p>
 <hr>
 </div>
 <div class="section level2">
