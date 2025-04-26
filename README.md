@@ -26,12 +26,16 @@
 
 ## 📚 What is Cram?
 
+<br>
+
 ##### Overview
 
 - 🎯 **Train & Evaluate ML Models**
 - 🔁  **Cram vs. Sample-Splitting & Cross-Validation**
 - 🧠 **Typical use case: Policy Learning**
 - 🌍 **Real-World Applications**
+
+<br>
 
 ##### 🎯 Train & Evaluate ML models
 
