@@ -4,14 +4,14 @@ Title: The Cram Method for Efficient Simultaneous Learning and Evaluation
 Version: 0.1.0
 Date: 2025-04-02
 Authors@R: c(
-    person("Yanis", "Vandecasteele", , "yanisvdc.ensae@gmail.com", role = c("cre", "aut")),
-    person("Michael Lingzhi", "Li", , "mili@hbs.edu", role = "aut"),
-    person("Kosuke", "Imai", , "imai@harvard.edu", role = "aut"),
-    person("Zeyang", "Jia", , "zeyangjia@fas.harvard.edu", role = "aut"),
-    person("Longlin", "Wang", , "longlin_wang@g.harvard.edu", role = "aut")
+    person("Yanis", "Vandecasteele", email = "yanisvdc.ensae@gmail.com", role = c("cre", "aut")),
+    person("Michael Lingzhi", "Li", email = "mili@hbs.edu", role = "ctb"),
+    person("Kosuke", "Imai", email = "imai@harvard.edu", role = "ctb"),
+    person("Zeyang", "Jia", email = "zeyangjia@fas.harvard.edu", role = "ctb"),
+    person("Longlin", "Wang", email = "longlin_wang@g.harvard.edu", role = "ctb")
   )
 Maintainer: Yanis Vandecasteele <yanisvdc.ensae@gmail.com>
-Description: Performs the CRAM method, a general and efficient approach to simultaneous learning 
+Description: Performs the Cram method, a general and efficient approach to simultaneous learning 
     and evaluation using a generic machine learning (ML) algorithm. In a single pass of batched
     data, the proposed method repeatedly trains an ML algorithm and tests its empirical performance. 
     Because it utilizes the entire sample for both learning and evaluation, cramming is 

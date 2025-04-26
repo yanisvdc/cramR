@@ -317,7 +317,7 @@ model training and tuning</a> for the complete list of supported
 arguments and options.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">caret_params_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  method <span class="op">=</span> <span class="st">"rf"</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"lm"</span>,</span>
 <span>  trControl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/trainControl.html" class="external-link">trainControl</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -331,15 +331,15 @@ arguments and options.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $raw_results</span></span>
 <span><span class="co">#&gt;                         Metric    Value</span></span>
-<span><span class="co">#&gt; 1       Expected Loss Estimate  0.99089</span></span>
-<span><span class="co">#&gt; 2 Expected Loss Standard Error  0.73586</span></span>
-<span><span class="co">#&gt; 3       Expected Loss CI Lower -0.45136</span></span>
-<span><span class="co">#&gt; 4       Expected Loss CI Upper  2.43314</span></span>
+<span><span class="co">#&gt; 1       Expected Loss Estimate  0.86429</span></span>
+<span><span class="co">#&gt; 2 Expected Loss Standard Error  0.73665</span></span>
+<span><span class="co">#&gt; 3       Expected Loss CI Lower -0.57952</span></span>
+<span><span class="co">#&gt; 4       Expected Loss CI Upper  2.30809</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $interactive_table</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $final_ml_model</span></span>
-<span><span class="co">#&gt; Random Forest </span></span>
+<span><span class="co">#&gt; Linear Regression </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; 100 samples</span></span>
 <span><span class="co">#&gt;   3 predictor</span></span>
@@ -615,7 +615,7 @@ that were used for built-in functionalities are now
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Yanis Vandecasteele, Michael Lingzhi Li, Kosuke Imai, Zeyang Jia, Longlin Wang.</p>
+  <p>Developed by Yanis Vandecasteele.</p>
 </div>
 
 <div class="pkgdown-footer-right">
