@@ -158,40 +158,8 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D, dgp_Y, batch,
   big_X[, D := dgp_D(.SD), by = sim_id]
   big_X[, Y := dgp_Y(D, .SD), by = sim_id]
 
-  # # NB SIMULATIONS TRUTH
-  # # ----------------------------------------------
-  # if (!is.null(nb_simulations_truth)) {
-  #   # Generate additional samples for true results
-  #   if (!is.null(dgp_X)) {
-  #     # Generate new samples
-  #     new_big_X <- dgp_X(nb_simulations_truth * sample_size)
-  #   } else {
-  #     # Use the provided dataset for additional sampling
-  #     new_sampled_indices <- sample(1:X_size, size = nb_simulations_truth * sample_size, replace = TRUE)
-  #     new_big_X <- X_dt[new_sampled_indices]
-  #   }
-  #
-  #   # Set sim_id for the extended dataset
-  #   max_sim_id <- max(big_X$sim_id)  # Find the maximum sim_id in the original big_X
-  #   new_sim_ids <- rep((max_sim_id + 1):(max_sim_id + nb_simulations_truth), each = sample_size)
-  #   new_big_X[, sim_id := new_sim_ids]  # Assign new sim_ids to the extended dataset
-  #
-  #   # Add D and Y columns to the extended dataset
-  #   #new_big_X[, D := dgp_D(.SD), by = sim_id]
-  #   #new_big_X[, Y := dgp_Y(D, .SD), by = sim_id]
-  #   new_D <- new_big_X[, .(D = dgp_D(.SD)), by = sim_id][, D]
-  #
-  #   # Combine original and new datasets for true results
-  #   # combined_big_X <- rbind(big_X, new_big_X)
-  #   # setkey(combined_big_X, sim_id)
-  #   setkey(new_big_X, sim_id)
-  # }
-  # ----------------------------------------------
-
-
   # Set key for fast grouping and operations
   setkey(big_X, sim_id)
-
 
   z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
 
@@ -209,18 +177,11 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D, dgp_Y, batch,
     }
 
     # Set sim_id for the extended dataset
-    # max_sim_id <- max(big_X$sim_id)  # Find the maximum sim_id in the original big_X
     new_sim_ids <- rep(1:nb_simulations_truth, each = sample_size)
     new_big_X[, sim_id := new_sim_ids]  # Assign new sim_ids to the extended dataset
 
-    # Add D and Y columns to the extended dataset
-    #new_big_X[, D := dgp_D(.SD), by = sim_id]
-    #new_big_X[, Y := dgp_Y(D, .SD), by = sim_id]
     new_D <- new_big_X[, .(D = dgp_D(.SD)), by = sim_id][, D]
 
-    # Combine original and new datasets for true results
-    # combined_big_X <- rbind(big_X, new_big_X)
-    # setkey(combined_big_X, sim_id)
     setkey(new_big_X, sim_id)
   } else {
     message("Please set nb_simulations_truth; number of simulations to calculate the estimands")
@@ -263,12 +224,6 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D, dgp_Y, batch,
                                                          policies,
                                                          batch_indices, propensity = propensity)
 
-    # Step 5 TRUE: Estimate true delta and true policy value
-    # pop_X <- if (!is.null(nb_simulations_truth)) {
-    #   combined_big_X
-    # } else {
-    #   big_X
-    # }
 
     # FIX ------------------------------------
     X_pred <- as.matrix(new_big_X[, !c("sim_id"), with = FALSE])
@@ -295,29 +250,6 @@ cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D, dgp_Y, batch,
     baseline_policy_vec <- rep(unlist(baseline_policy), times = nb_simulations_truth)
 
     true_delta <- mean((Y_1 - Y_0) * (pred_policies_sim_truth - baseline_policy_vec))
-
-    # true_results <- pop_X[, {
-    #   X_matrix2 <- as.matrix(.SD[, !c("Y", "D"), with = FALSE])  # Exclude Y and D dynamically
-    #   # Extract D and Y for the current group
-    #   D_slice <- D
-    #   Y_slice <- Y
-    #
-    #   true_delta_estimate <- cram_estimator(X_matrix2, Y_slice, D_slice, policies,
-    #                                         batch_indices, propensity = propensity)
-    #   true_policy_value_estimate <- cram_policy_value_estimator(X_matrix2, Y_slice, D_slice,
-    #                                                        policies,
-    #                                                        batch_indices,
-    #                                                        propensity = propensity)
-    #
-    #   .(
-    #     true_delta_estimate,
-    #     true_policy_value_estimate
-    #   )
-    #
-    # }, by = sim_id]
-    #
-    # true_delta <- mean(true_results$true_delta_estimate)
-    # true_policy_value <- mean(true_results$true_policy_value_estimate)
 
     # Step 6: Calculate the proportion of treated individuals under the final policy
     final_policy <- policies[, nb_batch + 1]

@@ -64,8 +64,5 @@ cram_var_expected_loss <- function(loss, batch_indices) {
 
   total_variance <- sum(column_variances)
 
-  # Final variance estimator, scaled by T
-  total_variance <- nb_batch * total_variance
-
   return(total_variance)
 }

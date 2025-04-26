@@ -26,14 +26,22 @@
 
 ## 📚 What is Cram?
 
+##### 🎯 Train & Evaluate ML models
+
 The **Cram method** is an efficient approach to simultaneous learning and evaluation using a generic machine learning (ML) algorithm. 
-In a single pass of batched data, the proposed method repeatedly trains an ML algorithm and tests its empirical performance. 
+In a single pass of batched data, the proposed method repeatedly trains an ML algorithm and tests its empirical performance.
+
+##### 🔁 Cram vs. Sample-Splitting vs. Cross-Validation
 
 Because it utilizes the entire sample for both learning and evaluation, cramming is significantly more data-efficient than sample-splitting, which reserves a portion of the data purely for evaluation.
 Also, a key distinction from **cross-validation** is that Cram evaluates the **final learned model** directly, rather than using as a proxy the average performance of multiple fold-specific models trained on different data subsets—resulting in sharper inference and better alignment with real-world deployment.
 
+##### 🧠 Typical use case: Policy Learning
+
 The Cram method naturally applies to the policy learning setting, which is a popular subfield of ML focused on learning a decision rule (also called treatment rule or policy) that assigns treatments or actions to individuals based on their features, with the goal of maximizing an expected outcome (e.g., health, profit, welfare).
 Cramming allows users to both learn an individualized decision rule and estimate the average outcome that would result if the learned decision rule were to be deployed to the entire population beyond the data sample.
+
+##### 🌍 Real-World Applications
 
 It is particularly relevant in high-stakes applications where decisions must be both personalized and statistically reliable.
 

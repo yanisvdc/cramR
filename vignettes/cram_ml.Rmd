@@ -275,6 +275,11 @@ custom_loss <- function(predictions, data) {
 Once you have defined your custom training, prediction, and loss functions, you can pass them directly to `cram_ml()` as shown below, note that `caret_params` and `loss_name` that were used for built-in functionalities are now `NULL`:
 
 ```{r}
+set.seed(42)
+X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
+Y_data <- rnorm(100)
+data_df <- data.frame(X_data, Y = Y_data)
+
 result <- cram_ml(
   data = data_df,
   formula = Y ~ .,

@@ -151,9 +151,24 @@ The Cram Method for Efficient Simultaneous Learning and Evaluation
 <div class="section level2">
 <h2 id="id_-what-is-cram">📚 What is Cram?<a class="anchor" aria-label="anchor" href="#id_-what-is-cram"></a>
 </h2>
+<div class="section level5">
+<h5 id="id_-train--evaluate-ml-models">🎯 Train &amp; Evaluate ML models<a class="anchor" aria-label="anchor" href="#id_-train--evaluate-ml-models"></a>
+</h5>
 <p>The <strong>Cram method</strong> is an efficient approach to simultaneous learning and evaluation using a generic machine learning (ML) algorithm. In a single pass of batched data, the proposed method repeatedly trains an ML algorithm and tests its empirical performance.</p>
+</div>
+<div class="section level5">
+<h5 id="id_-cram-vs-sample-splitting-vs-cross-validation">🔁 Cram vs. Sample-Splitting vs. Cross-Validation<a class="anchor" aria-label="anchor" href="#id_-cram-vs-sample-splitting-vs-cross-validation"></a>
+</h5>
 <p>Because it utilizes the entire sample for both learning and evaluation, cramming is significantly more data-efficient than sample-splitting, which reserves a portion of the data purely for evaluation. Also, a key distinction from <strong>cross-validation</strong> is that Cram evaluates the <strong>final learned model</strong> directly, rather than using as a proxy the average performance of multiple fold-specific models trained on different data subsets—resulting in sharper inference and better alignment with real-world deployment.</p>
+</div>
+<div class="section level5">
+<h5 id="id_-typical-use-case-policy-learning">🧠 Typical use case: Policy Learning<a class="anchor" aria-label="anchor" href="#id_-typical-use-case-policy-learning"></a>
+</h5>
 <p>The Cram method naturally applies to the policy learning setting, which is a popular subfield of ML focused on learning a decision rule (also called treatment rule or policy) that assigns treatments or actions to individuals based on their features, with the goal of maximizing an expected outcome (e.g., health, profit, welfare). Cramming allows users to both learn an individualized decision rule and estimate the average outcome that would result if the learned decision rule were to be deployed to the entire population beyond the data sample.</p>
+</div>
+<div class="section level5">
+<h5 id="id_-real-world-applications">🌍 Real-World Applications<a class="anchor" aria-label="anchor" href="#id_-real-world-applications"></a>
+</h5>
 <p>It is particularly relevant in high-stakes applications where decisions must be both personalized and statistically reliable.</p>
 <p>Common examples include:</p>
 <ul>
@@ -167,6 +182,7 @@ The Cram Method for Efficient Simultaneous Learning and Evaluation
 <strong>Policy interventions</strong>: deciding which individuals or regions should receive targeted support to improve outcomes</li>
 </ul>
 <hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="id_-key-features">🎯 Key Features<a class="anchor" aria-label="anchor" href="#id_-key-features"></a>

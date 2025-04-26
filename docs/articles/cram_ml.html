@@ -317,7 +317,7 @@ model training and tuning</a> for the complete list of supported
 arguments and options.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">caret_params_lm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  method <span class="op">=</span> <span class="st">"lm"</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"rf"</span>,</span>
 <span>  trControl <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/trainControl.html" class="external-link">trainControl</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -331,15 +331,15 @@ arguments and options.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $raw_results</span></span>
 <span><span class="co">#&gt;                         Metric    Value</span></span>
-<span><span class="co">#&gt; 1       Expected Loss Estimate  0.86429</span></span>
-<span><span class="co">#&gt; 2 Expected Loss Standard Error  0.73665</span></span>
-<span><span class="co">#&gt; 3       Expected Loss CI Lower -0.57952</span></span>
-<span><span class="co">#&gt; 4       Expected Loss CI Upper  2.30809</span></span>
+<span><span class="co">#&gt; 1       Expected Loss Estimate  0.99089</span></span>
+<span><span class="co">#&gt; 2 Expected Loss Standard Error  0.73586</span></span>
+<span><span class="co">#&gt; 3       Expected Loss CI Lower -0.45136</span></span>
+<span><span class="co">#&gt; 4       Expected Loss CI Upper  2.43314</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $interactive_table</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $final_ml_model</span></span>
-<span><span class="co">#&gt; Linear Regression </span></span>
+<span><span class="co">#&gt; Random Forest </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; 100 samples</span></span>
 <span><span class="co">#&gt;   3 predictor</span></span>
@@ -573,7 +573,12 @@ below, note that <code>caret_params</code> and <code>loss_name</code>
 that were used for built-in functionalities are now
 <code>NULL</code>:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_ml.html">cram_ml</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">X_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, x2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, x3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">Y_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span></span>
+<span><span class="va">data_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">X_data</span>, Y <span class="op">=</span> <span class="va">Y_data</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_ml.html">cram_ml</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">data_df</span>,</span>
 <span>  formula <span class="op">=</span> <span class="va">Y</span> <span class="op">~</span> <span class="va">.</span>,</span>
 <span>  batch <span class="op">=</span> <span class="fl">5</span>,</span>
@@ -583,11 +588,11 @@ that were used for built-in functionalities are now
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="co">#&gt; $raw_results</span></span>
-<span><span class="co">#&gt;                         Metric   Value</span></span>
-<span><span class="co">#&gt; 1       Expected Loss Estimate 0.24315</span></span>
-<span><span class="co">#&gt; 2 Expected Loss Standard Error 0.05615</span></span>
-<span><span class="co">#&gt; 3       Expected Loss CI Lower 0.13309</span></span>
-<span><span class="co">#&gt; 4       Expected Loss CI Upper 0.35321</span></span>
+<span><span class="co">#&gt;                         Metric    Value</span></span>
+<span><span class="co">#&gt; 1       Expected Loss Estimate  0.86429</span></span>
+<span><span class="co">#&gt; 2 Expected Loss Standard Error  0.73665</span></span>
+<span><span class="co">#&gt; 3       Expected Loss CI Lower -0.57952</span></span>
+<span><span class="co">#&gt; 4       Expected Loss CI Upper  2.30809</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $interactive_table</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -598,7 +603,7 @@ that were used for built-in functionalities are now
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Coefficients:</span></span>
 <span><span class="co">#&gt; (Intercept)           x1           x2           x3  </span></span>
-<span><span class="co">#&gt;   0.4625378    0.0418039   -0.0696723   -0.0007469</span></span></code></pre></div>
+<span><span class="co">#&gt;    0.031503     0.057754     0.008829    -0.031611</span></span></code></pre></div>
 <hr>
 </div>
 </div>

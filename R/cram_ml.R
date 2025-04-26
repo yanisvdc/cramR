@@ -114,7 +114,8 @@ cram_ml <- function(data, batch, formula=NULL, caret_params = NULL,
   # variance
   expected_loss_asymptotic_variance <- cram_var_expected_loss(losses, batch_indices)
   expected_loss_asymptotic_sd <- sqrt(expected_loss_asymptotic_variance)  # v_T, the asymptotic standard deviation
-  expected_loss_standard_error <- expected_loss_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
+  # expected_loss_standard_error <- expected_loss_asymptotic_sd / sqrt(nb_batch)  # Standard error based on T (number of batches)
+  expected_loss_standard_error <- expected_loss_asymptotic_sd
 
   # confidence interval
   z_value <- qnorm(1 - alpha / 2)  # Critical z-value based on the alpha level
