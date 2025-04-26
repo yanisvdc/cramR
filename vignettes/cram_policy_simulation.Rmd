@@ -17,15 +17,15 @@ library(data.table)
 library(DT)
 ```
 
-This vignettes are not necessarily intended for usage by users in their applications but they allow users to reproduce simulations to test the cram method on examples reproduce from paper and may give an example of how cram performs.
+This vignette demonstrates the simulation capabilities included in the cramR package. The simulation code is primarily intended for reproducing experimental results from the associated theoretical papers and for validating the performance of the Cram method under controlled data-generating processes. While not intended for direct use in practical applications, these simulations allow users to benchmark and understand the empirical behavior of the method in synthetic environments.
 
 ## 🎯 What is `cram_simulation()`?
 
 The `cram_simulation()` function performs **simultaneous policy learning and evaluation** under a **known data-generating process (DGP)**. It is useful for:
 
-- Benchmarking Cram on simulated datasets
-- Measuring empirical **bias**, **variance**, and **confidence interval coverage**
-- Supporting both synthetic (`dgp_X`) and empirical (`X`) covariates generation
+- Benchmarking the performance of the Cram method on controlled simulated datasets
+- Measuring empirical bias, variance, and confidence interval coverage of the estimates
+- Supporting both synthetic covariate generation from a known DGP provided by the user (`dgp_X`), and empirical covariate generation based on an input dataset (`X`) using row-wise bootstrapping, which approximates the empirical distribution of the observed covariates.
 
 ---
 
@@ -37,12 +37,12 @@ You must supply either:
 - `dgp_X`: a function that simulates covariates  
 
 You must also define:
-- `dgp_D(X)`: treatment assignment function  
-- `dgp_Y(D, X)`: outcome generation function  
+- `dgp_D(X)`: treatment assignment function given `X`  
+- `dgp_Y(D, X)`: outcome generation function given `D` and `X`
 
 ---
 
-## 📘 Example: Simulated Data with Binary, Discrete, and Continuous Covariates
+## 📘 Example: Cram Policy Simulation
 
 ```{r}
 set.seed(123)
@@ -94,10 +94,6 @@ result <- cram_simulation(
   nb_simulations_truth = nb_simulations_truth,
   sample_size = 500
 )
-
-# Access results
-result$avg_delta_estimate
-result$delta_empirical_bias
 ```
 
 ---
@@ -129,17 +125,3 @@ Returns a list containing:
 
 ---
 
-## 💡 Notes
-
-- Uses **batch splitting** for honest policy learning
-- Variance estimates use **influence-function-based asymptotics**
-- Simulations are grouped by `sim_id` and averaged
-- You can plug in `custom_fit` and `custom_predict` if needed
-
----
-
-## 📚 See Also
-
-- `cram_policy()` — for CRAM on real experimental/observational data  
-- `cram_bandit_sim()` — for contextual bandits  
-- `cram_ml()` — for general supervised or unsupervised ML  

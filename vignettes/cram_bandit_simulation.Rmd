@@ -1,8 +1,8 @@
 ---
-title: "Using cram_bandit_sim() for On-Policy Simulation and Evaluation"
+title: "Cram Bandit Simulation"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Using cram_bandit_sim() for On-Policy Simulation and Evaluation}
+  %\VignetteIndexEntry{Cram Bandit Simulation}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -17,78 +17,99 @@ library(data.table)
 library(DT)
 ```
 
+
+This vignette demonstrates the simulation capabilities included in the cramR package. The simulation code is primarily intended for reproducing experimental results from the associated theoretical papers and for validating the performance of the Cram method under controlled data-generating processes. While not intended for direct use in practical applications, these simulations allow users to benchmark and understand the empirical behavior of the method in synthetic environments.
+
 ## What is `cram_bandit_sim()`?
 
-The `cram_bandit_sim()` function runs **on-policy simulation** for contextual bandit algorithms using the CRAM method. It evaluates the statistical properties of policy value estimates such as:
+The `cram_bandit_sim()` function runs **on-policy simulation** for contextual bandit algorithms using the Cram method. It evaluates the statistical properties of policy value estimates such as:
 
-- **Prediction error**  
-- **Variance estimation error**  
-- **Empirical coverage of confidence intervals**
+- **Empirical Bias on Policy Value**
+- **Average relative error on Policy Value**
+- **RMSE using relative errors on Policy Value**
+- **Empirical Coverage of Confidence Intervals**
+
 
 This is useful for benchmarking bandit policies under controlled, simulated environments.
 
 ---
 
-## Requirements
+## 📋 Inputs
 
 You need to provide:
 
-- `bandit`: a contextual bandit environment object (e.g. `ContextualLinearBandit`)  
-- `policy`: a policy object (e.g. `BatchContextualLinTSPolicy`)  
-- `horizon`: number of time steps  
-- `simulations`: number of repeated simulations  
-- Optional: `alpha`, `seed`, `do_parallel`
+- `bandit`:  
+  A **contextual bandit environment object** that generates contexts (feature vectors) and rewards for each arm.  
+  Example: `ContextualLinearBandit`, or any object following the [contextual package](https://github.com/Nth-iteration-labs/contextual) interface.
 
+- `policy`:  
+  A **policy object** that takes in a context and selects an arm (action) at each timestep.  
+  Example: `BatchContextualLinTSPolicy`, or any compatible [contextual package](https://github.com/Nth-iteration-labs/contextual) policy.
+
+- `horizon`:  
+  An **integer** specifying the number of timesteps (rounds) per simulation.  
+  Each simulation will run for exactly `horizon` steps.
+
+- `simulations`:  
+  An **integer** specifying the number of independent Monte Carlo simulations to perform.  
+  Each simulation will independently reset the environment and policy.
+
+- Optional Parameters:
+  - `alpha`:  
+    A **numeric value** between 0 and 1 specifying the significance level for confidence intervals when calculating empirical coverage.  
+    Default: `0.05` (for 95% confidence intervals).
+  
+  - `seed`:  
+    An optional **integer** to set the random seed for reproducibility.  
+    If `NULL`, no seed is set.
+
+  - `do_parallel`:  
+    A **logical** value indicating whether to parallelize the simulations across available CPU cores.  
+  Default: `FALSE` (parallelization disabled).  
+  We recommend keeping `do_parallel = FALSE` unless necessary, as parallel execution can make it harder for the underlying [`contextual`](https://github.com/Nth-iteration-labs/contextual) package to reliably track simulation history.  
+  In particular, parallel runs may cause missing or incomplete entries in the recorded history, which are then discarded during analysis..
 ---
 
-## Example: CRAM Simulation with LinTS Policy
-
-```{r, eval=FALSE}
-# Setup
-library(contextual)
-
-# Define a bandit
-bandit <- ContextualLinearBandit$new(k = 3, d = 5, sigma = 0.1)
-
-# Define a policy
-policy <- BatchContextualLinTSPolicy$new(v = 0.2, batch_size = 5)
-
-# Run simulation
-result <- cram_bandit_sim(
-  horizon = 100,
-  simulations = 10,
-  bandit = bandit,
-  policy = policy,
-  alpha = 0.05,
-  do_parallel = FALSE,
-  seed = 123
-)
-```
-
-### Bandit Simulation
+## Example: Cram Bsndit Simulation
 
 ```{r}
-horizon     <- 500L
-simulations <- 100L
-k <- 4
-d <- 3
-list_betas <- cramR:::get_betas(simulations, d, k)
-bandit     <- cramR:::ContextualLinearBandit$new(k = k, d = d, list_betas = list_betas, sigma = 0.3)
-policy     <- cramR:::BatchContextualEpsilonGreedyPolicy$new(epsilon = 0.1, batch_size = 5)
+# Number of time steps
+horizon       <- 500L
 
-sim <- cram_bandit_sim(
-  horizon, simulations,
-  bandit, policy,
-  alpha = 0.05, do_parallel = FALSE
-)
-print(sim)
+# Number of simulations 
+simulations   <- 100L
+
+# Number of arms
+k = 4
+
+# Number of context features
+d= 3
+
+# Reward beta parameters of linear model (the outcome generation models, one for each arm, are linear with arm-specific parameters betas)
+list_betas <- cramR:::get_betas(simulations, d, k)
+
+# Define the contextual linear bandit, where sigma is the scale of the noise in the outcome linear model
+bandit        <- cramR:::ContextualLinearBandit$new(k = k, d = d, list_betas = list_betas, sigma = 0.3)
+
+# Define the policy object (choose between Contextual Epsilon Greedy, UCB Disjoint and Thompson Sampling)
+policy <- cramR:::BatchContextualEpsilonGreedyPolicy$new(epsilon=0.1, batch_size=5)
+# policy <- cramR:::BatchLinUCBDisjointPolicyEpsilon$new(alpha=1.0, epsilon=0.1, batch_size=1)
+# policy <- cramR:::BatchContextualLinTSPolicy$new(v = 0.1, batch_size=1)
+
+
+sim <- cram_bandit_sim(horizon, simulations,
+                            bandit, policy,
+                            alpha=0.05, do_parallel = FALSE)
+
 ```
 
 ---
 
 ## What Does It Return?
 
-The output is a `data.table` with one row per simulation, and includes:
+The output contains:
+
+A `data.table` with one row per simulation, including:
 
 - `estimate`: estimated policy value  
 - `variance_est`: estimated variance  
@@ -98,30 +119,32 @@ The output is a `data.table` with one row per simulation, and includes:
 - `variance_prediction_error`: relative error on variance  
 - `ci_lower`, `ci_upper`: bounds of the confidence interval  
 - `std_error`: standard error  
-- Plus summary metrics like average prediction error and empirical coverage
+
+Result tables (raw and interactive), reporting:
+
+- **Empirical Bias on Policy Value**
+- **Average relative error on Policy Value**
+- **RMSE using relative errors on Policy Value**
+- **Empirical Coverage of Confidence Intervals**
 
 ---
 
 ## Example Output Preview
 
-```{r, eval=FALSE}
-head(result)
+```{r}
+head(sim$estimates)
 ```
 
-Expected columns:
-
-- `sim`, `estimate`, `variance_est`, `estimand`,  
-- `prediction_error`, `est_rel_error`,  
-- `variance_prediction_error`, `std_error`,  
-- `ci_lower`, `ci_upper`
+```{r}
+sim$interactive_table
+```
 
 ---
 
 ## Notes
 
 - `list_betas` is updated internally to track the true parameters per simulation  
-- The first simulation is discarded by design (due to writing issues in `contextual`)  
-- Approximately 20% of simulations are excluded from final error summaries (robustness against outliers)
+- The first simulation is discarded by design (due to writing issues in `contextual`) even when `do_parallel = FALSE`.
 
 ---
 
@@ -139,12 +162,4 @@ Expected columns:
 This simulation builds on:
 
 - Contextual bandits (`contextual` package)  
-- On-policy CRAM estimation  
-- Influence-function-based CI construction
-
-See also:
-
-- `cram_policy()` for off-policy CRAM  
-- `cram_bandit()` for single-run evaluation  
-- `BatchContextualLinTSPolicy`, `LinUCBDisjointPolicyEpsilon`, etc.
-
+- On-policy Cram estimation  

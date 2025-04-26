@@ -169,7 +169,7 @@ cram_bandit_sim <- function(horizon, simulations,
   summary_table <- data.frame(
     Metric = c("Empirical Bias on Policy Value",
                "Average relative error on Policy Value",
-               "RMSE of errors on Policy Value",
+               "RMSE using relative errors on Policy Value",
                "Empirical Coverage of Confidence Intervals"),
     Value = round(c(empirical_bias, rel_empirical_bias, relative_rmse, empirical_coverage), 5)
   )
