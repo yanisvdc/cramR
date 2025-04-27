@@ -1,4 +1,4 @@
-#' Cram Policy
+#' Cram Policy: Efficient Simultaneous Policy Learning and Evaluation
 #'
 #' This function performs the cram method (simultaneous policy learning and evaluation)
 #' for binary policies on data including covariates (X), binary treatment indicator (D) and outcomes (Y).

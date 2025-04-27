@@ -60,6 +60,7 @@
 #'
 #' result <- cram_bandit(pi, arm, reward, batch=1, alpha=0.05)
 #' result$raw_results
+#' result$interactive_table
 #'
 #' @importFrom caret train
 #' @importFrom DT datatable

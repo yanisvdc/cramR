@@ -2,7 +2,7 @@
 % Please edit documentation in R/cram_policy.R
 \name{cram_policy}
 \alias{cram_policy}
-\title{Cram Policy}
+\title{Cram Policy: Efficient Simultaneous Policy Learning and Evaluation}
 \usage{
 cram_policy(
   X,

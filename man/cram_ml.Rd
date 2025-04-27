@@ -88,6 +88,10 @@ result <- cram_ml(
   loss_name = 'se',
   caret_params = caret_params_lm
 )
+
+result$raw_results
+result$interactive_table
+result$final_ml_model
 }
 \seealso{
 \code{\link[caret]{train}} for model training parameters

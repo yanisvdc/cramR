@@ -73,5 +73,6 @@ reward <- rnorm(T, mean = 1, sd = 0.5)
 
 result <- cram_bandit(pi, arm, reward, batch=1, alpha=0.05)
 result$raw_results
+result$interactive_table
 
 }
