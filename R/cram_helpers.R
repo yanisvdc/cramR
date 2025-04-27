@@ -6,19 +6,6 @@
 #'                        policy of zeros is created.
 #' @param n An integer specifying the number of individuals in the population.
 #' @return A validated or default baseline policy as a list of numeric values.
-#' @examples
-#' # Example: Default baseline policy
-#' baseline_policy <- test_baseline_policy(NULL, n = 10)
-#'
-#' # Example: Valid baseline policy
-#' valid_policy <- as.list(rep(1, 10))
-#' baseline_policy <- test_baseline_policy(valid_policy, n = 10)
-#'
-#' # Example: Invalid baseline policy
-#' \dontrun{
-#' invalid_policy <- c(1, 0, 1, 0)
-#' baseline_policy <- test_baseline_policy(invalid_policy, n = 10)
-#' }
 #' @export
 
 test_baseline_policy <- function(baseline_policy, n) {
@@ -52,21 +39,6 @@ test_baseline_policy <- function(baseline_policy, n) {
 #'     \item{\code{batches}}{A list where each element contains the indices of individuals assigned to a specific batch.}
 #'     \item{\code{nb_batch}}{The total number of batches.}
 #'   }
-#' @examples
-#' # Example: Generate random batch assignments
-#' result <- test_batch(3, n = 9)
-#' print(result)
-#'
-#' # Example: Validate a batch assignment vector
-#' batch_vector <- c(1, 1, 2, 2, 3, 3, 1, 2, 3)
-#' result <- test_batch(batch_vector, n = 9)
-#' print(result)
-#'
-#' # Example: Invalid batch assignment
-#' \dontrun{
-#' invalid_batch <- c(1, 1, 2)
-#' result <- test_batch(invalid_batch, n = 9)
-#' }
 #' @export
 test_batch <- function(batch, n) {
   if (is.numeric(batch) && length(batch) == 1) {

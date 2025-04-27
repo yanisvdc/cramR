@@ -18,17 +18,3 @@ A validated or default baseline policy as a list of numeric values.
 \description{
 This function validates a provided baseline policy or sets a default baseline policy of zeros for all individuals.
 }
-\examples{
-# Example: Default baseline policy
-baseline_policy <- test_baseline_policy(NULL, n = 10)
-
-# Example: Valid baseline policy
-valid_policy <- as.list(rep(1, 10))
-baseline_policy <- test_baseline_policy(valid_policy, n = 10)
-
-# Example: Invalid baseline policy
-\dontrun{
-invalid_policy <- c(1, 0, 1, 0)
-baseline_policy <- test_baseline_policy(invalid_policy, n = 10)
-}
-}

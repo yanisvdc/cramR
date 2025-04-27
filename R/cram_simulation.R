@@ -1,7 +1,7 @@
 # Declare global variables to suppress devtools::check warnings
 utils::globalVariables(c("X", "D", "Y", "sim_id", "."))
 
-#' CRAM Simulation
+#' Cram Policy Simulation
 #'
 #' This function performs the cram method (simultaneous learning and evaluation)
 #' on simulation data, for which the data generation process (DGP) is known.
@@ -63,44 +63,58 @@ utils::globalVariables(c("X", "D", "Y", "sim_id", "."))
 #' }
 #'
 #' @examples
-#' # Define data generation process (DGP) functions
-#' X_data <- data.table::data.table(
-#'   binary = rbinom(100, 1, 0.5),                 # Binary variable (0 or 1)
-#'   discrete = sample(1:5, 100, replace = TRUE),  # Discrete variable (1 to 5)
-#'   continuous = rnorm(100)                       # Continuous variable
-#' )
-#' dgp_D <- function(X) rbinom(nrow(X), 1, 0.5)
-#' dgp_Y <- function(D, X) { theta <- ifelse(
-#' X[, binary] == 1 & X[, discrete] <= 2,  # Group 1: High benefit
-#' 1,
-#' ifelse(X[, binary] == 0 & X[, discrete] >= 4,  # Group 3: High adverse effect
-#' -1,
-#' 0.1)  # Group 2: Neutral effect
-#' )
-#' Y <- D * (theta + rnorm(length(D), mean = 0, sd = 1)) +
-#'   (1 - D) * rnorm(length(D))  # Outcome for untreated
+#' set.seed(123)
 #'
-#' return(Y)
+#' # dgp_X <- function(n) {
+#' #   data.table::data.table(
+#' #     binary     = rbinom(n, 1, 0.5),
+#' #     discrete   = sample(1:5, n, replace = TRUE),
+#' #     continuous = rnorm(n)
+#' #   )
+#' # }
+#'
+#' n <- 100
+#'
+#' X_data <- data.table::data.table(
+#'   binary     = rbinom(n, 1, 0.5),
+#'   discrete   = sample(1:5, n, replace = TRUE),
+#'   continuous = rnorm(n)
+#' )
+#'
+#'
+#' dgp_D <- function(X) rbinom(nrow(X), 1, 0.5)
+#'
+#' dgp_Y <- function(D, X) {
+#'   theta <- ifelse(
+#'     X[, binary] == 1 & X[, discrete] <= 2,  # Group 1: High benefit
+#'     1,
+#'     ifelse(X[, binary] == 0 & X[, discrete] >= 4,  # Group 3: Negative benefit
+#'            -1,
+#'            0.1)  # Group 2: Neutral effect
+#'   )
+#'   Y <- D * (theta + rnorm(length(D), mean = 0, sd = 1)) +
+#'     (1 - D) * rnorm(length(D))  # Outcome for untreated
+#'   return(Y)
 #' }
 #'
-#'# Parameters:
-#' nb_simulations <- 10
-#' nb_simulations_truth <- 2
+#' # Parameters
+#' nb_simulations <- 100
+#' nb_simulations_truth <- 200
 #' batch <- 5
 #'
 #' # Perform CRAM simulation
-#' result <- cram_simulation(X = X_data, dgp_D = dgp_D, dgp_Y = dgp_Y,
-#'                           batch = batch, nb_simulations = nb_simulations,
-#'                           nb_simulations_truth = nb_simulations_truth,
-#'                           sample_size=50)
-#'
-#' # Access results
-#' result$avg_delta_estimate
-#' result$delta_empirical_bias
+#' result <- cram_simulation(
+#'   X = X_data,
+#'   dgp_D = dgp_D,
+#'   dgp_Y = dgp_Y,
+#'   batch = batch,
+#'   nb_simulations = nb_simulations,
+#'   nb_simulations_truth = nb_simulations_truth,
+#'   sample_size = 500
+#' )
 #'
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}
 #' @export
-
 
 # Combined simulation function with empirical bias calculation
 cram_simulation <- function(X = NULL, dgp_X = NULL, dgp_D, dgp_Y, batch,

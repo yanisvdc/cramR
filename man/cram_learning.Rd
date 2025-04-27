@@ -2,7 +2,7 @@
 % Please edit documentation in R/cram_learning.R
 \name{cram_learning}
 \alias{cram_learning}
-\title{CRAM Learning}
+\title{Cram Policy Learning}
 \usage{
 cram_learning(
   X,
@@ -54,22 +54,7 @@ A list containing:
   \item{batch_indices}{The indices for each batch, either as generated (if \code{batch} is an integer) or as provided by the user.}
 }
 \description{
-This function performs the learning part of the cram method.
-}
-\examples{
-# Example usage
-X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)
-D_data <- sample(c(0, 1), 100, replace = TRUE)
-Y_data <- rnorm(100)
-nb_batch <- 5
-
-# Perform CRAM learning
-result <- cram_learning(X = X_data, D = D_data, Y = Y_data, batch = nb_batch)
-
-# Access the learned policies and final model
-policies_matrix <- result$policies
-final_model <- result$final_policy_model
-batch_indices <- result$batch_indices
+This function performs the learning part of the Cram Policy method.
 }
 \seealso{
 \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}

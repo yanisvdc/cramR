@@ -58,3 +58,4 @@ LazyData: true
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Config/Needs/citation: yes

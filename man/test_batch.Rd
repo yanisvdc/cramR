@@ -21,19 +21,3 @@ A list containing:
 \description{
 This function validates a provided batch assignment or generates random batch assignments for individuals.
 }
-\examples{
-# Example: Generate random batch assignments
-result <- test_batch(3, n = 9)
-print(result)
-
-# Example: Validate a batch assignment vector
-batch_vector <- c(1, 1, 2, 2, 3, 3, 1, 2, 3)
-result <- test_batch(batch_vector, n = 9)
-print(result)
-
-# Example: Invalid batch assignment
-\dontrun{
-invalid_batch <- c(1, 1, 2)
-result <- test_batch(invalid_batch, n = 9)
-}
-}

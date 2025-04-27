@@ -1,0 +1,17 @@
+
+citHeader("To cite cramR, please use:")
+
+bibentry(
+  "Manual",
+  title = "cramR: The Cram Method for Efficient Simultaneous Learning and Evaluation",
+  author = c(
+    person("Yanis", "Vandecasteele", role = c("aut", "cre")),
+    person("Michael Lingzhi", "Li", role = "ctb"),
+    person("Kosuke", "Imai", role = "ctb"),
+    person("Zeyang", "Jia", role = "ctb"),
+    person("Longlin", "Wang", role = "ctb")
+  ),
+  year = "2025",
+  note = "Package developed and maintained by Yanis Vandecasteele.",
+  url = "https://github.com/yanisvdc/cramR"
+)

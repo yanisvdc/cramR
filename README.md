@@ -137,14 +137,12 @@ You can also cite the R package:
 
 ```bibtex
 @Manual{,
-    title = {cramR: The Cram Method for Efficient Simultaneous Learning and
-Evaluation},
-    author = {Yanis Vandecasteele},
-    year = {2025},
-    note = {R package version 0.1.0, 
-https://yanisvdc.github.io/cramR},
-    url = {https://github.com/yanisvdc/cramR},
-  }
+  title = {cramR: The Cram Method for Efficient Simultaneous Learning and Evaluation},
+  author = {Yanis Vandecasteele and Michael Lingzhi Li and Kosuke Imai and Zeyang Jia and Longlin Wang},
+  year = {2025},
+  note = {Package developed and maintained by Yanis Vandecasteele.},
+  url = {https://github.com/yanisvdc/cramR},
+}
 ```
 
 ### 🤝 How to Contribute

@@ -2,7 +2,7 @@
 % Please edit documentation in R/cram_ml.R
 \name{cram_ml}
 \alias{cram_ml}
-\title{CRAM ML - Simultaneous Machine Learning and Evaluation}
+\title{Cram ML: Simultaneous Machine Learning and Evaluation}
 \usage{
 cram_ml(
   data,
@@ -20,15 +20,14 @@ cram_ml(
 }
 \arguments{
 \item{data}{A matrix or data frame of covariates. For supervised learning,
-must include the target variable specified in `formula`.}
+must include the target variable specified in formula.}
 
 \item{batch}{Integer specifying number of batches or vector of pre-defined
 batch assignments.}
 
-\item{formula}{Optional formula for supervised learning (e.g., y ~ .).
-Use NULL for unsupervised methods like clustering.}
+\item{formula}{Formula for supervised learning (e.g., y ~ .).}
 
-\item{caret_params}{List of parameters for `caret::train()` containing:
+\item{caret_params}{List of parameters for caret::train() containing:
 \itemize{
   \item{method: Model type (e.g., "rf", "glm", "xgbTree" for supervised learning)}
   \item{Additional method-specific parameters}
@@ -54,24 +53,12 @@ processing (default = FALSE).}
 A list containing:
 \itemize{
   \item{raw_results: Data frame with performance metrics}
-  \item{interactive_table: DT::datatable interactive view}
+  \item{interactive_table: The same performance metrics in a user-friendly interface}
   \item{final_ml_model: Trained model object}
 }
 }
 \description{
-Performs the CRAM method (Causal Regularization via Approximate Models) for
-simultaneous machine learning and evaluation in experimental or observational
-studies with unknown data generating processes.
-}
-\details{
-The CRAM method implements a novel approach for simultaneous model
-training and evaluation under unknown data distributions. Key features:
-\itemize{
-  \item{Automated batch-wise model training}
-  \item{Cross-validation compatible}
-  \item{Supports both supervised and unsupervised learning}
-  \item{Provides confidence intervals for loss estimates}
-}
+Performs the Cram method for simultaneous machine learning and evaluation.
 }
 \examples{
 # Load necessary libraries
@@ -104,6 +91,4 @@ result <- cram_ml(
 }
 \seealso{
 \code{\link[caret]{train}} for model training parameters
-\code{\link[stats]{kmeans}} for unsupervised clustering
-\code{\link[DT]{datatable}} for interactive tables
 }

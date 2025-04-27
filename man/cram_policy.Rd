@@ -2,7 +2,7 @@
 % Please edit documentation in R/cram_policy.R
 \name{cram_policy}
 \alias{cram_policy}
-\title{CRAM Policy}
+\title{Cram Policy}
 \usage{
 cram_policy(
   X,
@@ -73,7 +73,7 @@ for binary policies on data including covariates (X), binary treatment indicator
 \examples{
 # Example data
 X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)
-D_data <- D_data <- as.integer(sample(c(0, 1), 100, replace = TRUE))
+D_data <- as.integer(sample(c(0, 1), 100, replace = TRUE))
 Y_data <- rnorm(100)
 nb_batch <- 5
 

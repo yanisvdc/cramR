@@ -2,38 +2,21 @@
 % Please edit documentation in R/cram_expected_loss.R
 \name{cram_expected_loss}
 \alias{cram_expected_loss}
-\title{CRAM Expected Loss Estimation}
+\title{Cram ML Expected Loss Estimate}
 \usage{
 cram_expected_loss(loss, batch_indices)
 }
 \arguments{
-\item{loss}{A matrix of loss values with \eqn{N} rows (data points) and \eqn{K+1} columns (batches).
+\item{loss}{A matrix of loss values with N rows (data points) and K+1 columns (batches).
 We assume that the first column of the loss matrix contains only zeros.
 The following nb_batch columns contain the losses of each trained model for each individual.}
 
-\item{batch_indices}{A list where each element is a vector of indices corresponding to a batch.
-For example: \code{split(1:N, rep(1:nb_batch, each = N / nb_batch))}.}
+\item{batch_indices}{A list where each element is a vector of indices corresponding to a batch.}
 }
 \value{
-The estimated Cram expected loss \eqn{\hat{R}_{\mathrm{cram}}}.
+The Cram ML expected loss estimate
 }
 \description{
-This function computes the Cram expected loss estimator \eqn{\hat{R}_{\mathrm{cram}}}
+This function computes the Cram ML expected loss estimator
 based on the given loss matrix and batch indices.
-}
-\examples{
-# Example usage
-set.seed(123)
-N <- 100  # Number of data points
-K <- 10   # Number of batches
-
-# Generate a loss matrix with K+1 columns, first column as zeros
-loss <- matrix(rnorm(N * (K+1)), nrow = N, ncol = K+1)
-loss[, 1] <- 0  # Ensure first column is zero
-
-# Create batch indices dynamically
-batch_indices <- split(1:N, rep(1:K, length.out = N))
-
-# Compute Cram Expected Loss
-cram_expected_loss(loss, batch_indices)
 }

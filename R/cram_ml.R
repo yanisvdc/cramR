@@ -1,16 +1,13 @@
-#' CRAM ML - Simultaneous Machine Learning and Evaluation
+#' Cram ML: Simultaneous Machine Learning and Evaluation
 #'
-#' Performs the CRAM method (Causal Regularization via Approximate Models) for
-#' simultaneous machine learning and evaluation in experimental or observational
-#' studies with unknown data generating processes.
+#' Performs the Cram method for simultaneous machine learning and evaluation.
 #'
 #' @param data A matrix or data frame of covariates. For supervised learning,
-#'   must include the target variable specified in `formula`.
+#'   must include the target variable specified in formula.
 #' @param batch Integer specifying number of batches or vector of pre-defined
 #'   batch assignments.
-#' @param formula Optional formula for supervised learning (e.g., y ~ .).
-#'   Use NULL for unsupervised methods like clustering.
-#' @param caret_params List of parameters for `caret::train()` containing:
+#' @param formula Formula for supervised learning (e.g., y ~ .).
+#' @param caret_params List of parameters for caret::train() containing:
 #' \itemize{
 #'   \item{method: Model type (e.g., "rf", "glm", "xgbTree" for supervised learning)}
 #'   \item{Additional method-specific parameters}
@@ -28,17 +25,8 @@
 #' @return A list containing:
 #' \itemize{
 #'   \item{raw_results: Data frame with performance metrics}
-#'   \item{interactive_table: DT::datatable interactive view}
+#'   \item{interactive_table: The same performance metrics in a user-friendly interface}
 #'   \item{final_ml_model: Trained model object}
-#' }
-#'
-#' @details The CRAM method implements a novel approach for simultaneous model
-#' training and evaluation under unknown data distributions. Key features:
-#' \itemize{
-#'   \item{Automated batch-wise model training}
-#'   \item{Cross-validation compatible}
-#'   \item{Supports both supervised and unsupervised learning}
-#'   \item{Provides confidence intervals for loss estimates}
 #' }
 #'
 #' @examples
@@ -71,8 +59,6 @@
 #' )
 #' @seealso
 #' \code{\link[caret]{train}} for model training parameters
-#' \code{\link[stats]{kmeans}} for unsupervised clustering
-#' \code{\link[DT]{datatable}} for interactive tables
 #'
 #' @importFrom caret train
 #' @importFrom DT datatable

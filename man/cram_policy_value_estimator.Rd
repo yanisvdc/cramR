@@ -2,7 +2,7 @@
 % Please edit documentation in R/cram_policy_value_estimator.R
 \name{cram_policy_value_estimator}
 \alias{cram_policy_value_estimator}
-\title{Cram Estimator for Policy Value (Psi)}
+\title{Cram Policy: Estimator for Policy Value (Psi)}
 \usage{
 cram_policy_value_estimator(X, Y, D, pi, batch_indices, propensity = NULL)
 }
@@ -26,5 +26,5 @@ The first column represents the baseline policy.}
 The estimated policy value.
 }
 \description{
-This function returns the cram estimator for the policy value (psi).
+Cram Policy: this function returns the cram estimator for the policy value (psi).
 }

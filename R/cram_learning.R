@@ -8,9 +8,9 @@ library(foreach)
 # Declare global variables to suppress devtools::check warnings
 utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 
-#' CRAM Learning
+#' Cram Policy Learning
 #'
-#' This function performs the learning part of the cram method.
+#' This function performs the learning part of the Cram Policy method.
 #'
 #' @param X A matrix or data frame of covariates for each sample.
 #' @param D A vector of binary treatment indicators (1 for treated, 0 for untreated).
@@ -29,20 +29,6 @@ utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "."))
 #'   \item{final_policy_model}{The final fitted policy model, depending on \code{model_type} and \code{learner_type}.}
 #'   \item{policies}{A matrix of learned policies, where each column represents a batch's learned policy and the first column is the baseline policy.}
 #'   \item{batch_indices}{The indices for each batch, either as generated (if \code{batch} is an integer) or as provided by the user.}
-#' @examples
-#' # Example usage
-#' X_data <- matrix(rnorm(100 * 5), nrow = 100, ncol = 5)
-#' D_data <- sample(c(0, 1), 100, replace = TRUE)
-#' Y_data <- rnorm(100)
-#' nb_batch <- 5
-#'
-#' # Perform CRAM learning
-#' result <- cram_learning(X = X_data, D = D_data, Y = Y_data, batch = nb_batch)
-#'
-#' # Access the learned policies and final model
-#' policies_matrix <- result$policies
-#' final_model <- result$final_policy_model
-#' batch_indices <- result$batch_indices
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}
 #' @importFrom grf causal_forest
 #' @importFrom glmnet cv.glmnet
