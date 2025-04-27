@@ -2,7 +2,7 @@
 % Please edit documentation in R/cram_estimate.R
 \name{cram_estimator}
 \alias{cram_estimator}
-\title{Cram Estimator for Policy Value Difference (Delta)}
+\title{Cram Policy Estimator for Policy Value Difference (Delta)}
 \usage{
 cram_estimator(X, Y, D, pi, batch_indices, propensity = NULL)
 }
@@ -23,8 +23,8 @@ The first column represents the baseline policy.}
 \item{propensity}{The propensity score function}
 }
 \value{
-The estimated policy value difference \(\eqn{\hat{\Delta}}(\eqn{\hat{\pi}}_T; \eqn{\pi}_0)\).
+The estimated policy value difference (Delta).
 }
 \description{
-This function returns the cram estimator for the policy value difference (delta).
+This function returns the cram policy estimator for the policy value difference (delta).
 }

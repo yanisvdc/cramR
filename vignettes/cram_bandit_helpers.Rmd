@@ -91,7 +91,7 @@ where:
 - Best arms are those with maximal estimated rewards.
 - \( K \) is the total number of available arms.
 
-Best arms are identified via the estimated expected reward:
+We define the least squares estimate as:
 
 \[ \theta_k = A_k^{-1} b_k \quad \text{(Least Squares estimate)} \]
 
@@ -99,6 +99,10 @@ where:
 
 - \( A_k \) is the Gram matrix \( X_k^T X_k \)
 - \( b_k \) is the vector \( X_k^T Y_k \)
+
+Best arms are identified via the estimated expected reward:
+
+\[ \text{(Expected reward)} = \( X_t^T \theta_k \) \]
 
 
 ### 📊 Code helper

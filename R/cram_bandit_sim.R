@@ -6,24 +6,32 @@ utils::globalVariables(c(
 ))
 
 
-#' On-policy CRAM Bandit
+#' Cram Bandit Simulation
 #'
-#' This function performs simulation for cram bandit policy learning and evaluation.
+#' This function runs on-policy simulation for contextual bandit algorithms using the Cram method.
+#' It evaluates the statistical properties of policy value estimates.
 #'
-#' @param horizon The number of timesteps
-#' @param simulations The number of simulations
-#' @param bandit The bandit, generating contextual features and observed rewards
-#' @param policy The policy, choosing the arm at each timestep
-#' @param alpha Significance level for confidence intervals for calculating the empirical coverage. Default is 0.05 (95\% confidence).
+#' @param horizon An integer specifying the number of timesteps (rounds) per simulation.
+#' @param simulations  An integer specifying the number of independent Monte Carlo simulations to perform.
+#' @param bandit A contextual bandit environment object that generates contexts
+#' (feature vectors) and observed rewards for each arm chosen.
+#' @param policy A policy object that takes in a context
+#' and selects an arm (action) at each timestep.
+#' @param alpha Significance level for confidence intervals for calculating the empirical coverage.
+#' Default is 0.05 (95\% confidence).
 #' @param do_parallel Whether to parallelize the simulations. Default to FALSE.
-#' @param seed Seed for simulation
+#' We recommend keeping to FALSE unless necessary, please see vignette.
+#' @param seed An optional integer to set the random seed for reproducibility.
+#' If NULL, no seed is set.
 #'
 #' @return A **list** containing:
+#'   \item{estimates}{A table containing the detailed history of estimates and errors for each simulation.}
 #'   \item{raw_results}{A data frame summarizing key metrics:
-#'   Average Prediction Error on the Policy Value Estimate,
-#'   Average Prediction Error on the Variance Estimate,
-#'   Empirical Coverage of the alpha level Confidence Interval.}
-#'   \item{interactive_table}{An interactive table summarizing key metrics for detailed exploration.}
+#'   Empirical Bias on Policy Value,
+#'   Average relative error on Policy Value,
+#'   RMSE using relative errors on Policy Value,
+#'   Empirical Coverage of Confidence Intervals.}
+#'   \item{interactive_table}{An interactive table summarizing the same key metrics in a user-friendly interface.}
 #'
 #' @import contextual
 #' @importFrom magrittr %>%
@@ -179,17 +187,6 @@ cram_bandit_sim <- function(horizon, simulations,
     options = list(pageLength = 5),
     caption = "Cram Bandit Simulation: Policy Evaluation Metrics"
   )
-
-  # PLOT -------------------------------------------------------------------------
-  # bias_plot <- ggplot(estimates, aes(x = sim, y = 100 * est_rel_error)) +
-  #   geom_point(shape = 1, color = "blue", size = 2, stroke = 1) +
-  #   geom_hline(yintercept = 0, linetype = "dashed", size = 1) +
-  #   labs(
-  #     x = "Simulation setup ID",
-  #     y = "Bias as percentage of policy value",
-  #     title = "Bias per Simulation Setup (Relative Error in %)"
-  #   ) +
-  #   theme_minimal(base_size = 13)
 
   # RETURN FULL RESULTS ----------------------------------------------------------
   return(list(

@@ -2,35 +2,76 @@
 % Please edit documentation in R/cram_bandit.R
 \name{cram_bandit}
 \alias{cram_bandit}
-\title{CRAM Bandit - On-policy Statistical Evaluation in Contextual Bandit}
+\title{Cram Bandit: On-policy Statistical Evaluation in Contextual Bandits}
 \usage{
 cram_bandit(pi, arm, reward, batch = 1, alpha = 0.05)
 }
 \arguments{
-\item{pi}{for each row j, column t, depth a, gives pi_t(Xj, a)}
+\item{pi}{An array of shape (T × B, T, K) or (T × B, T),
+where T is the number of learning steps (or policy updates),
+B is the batch size, K is the number of arms,
+T x B is the total number of contexts.
+If 3D, pi[j, t, a] gives the probability that
+the policy pi_t assigns arm a to context X_j.
+If 2D, pi[j, t] gives the probability that the policy pi_t
+assigns arm A_j (arm actually chosen under X_j in the history)
+to context X_j. Please see vignette for more details.}
 
-\item{arm}{arms selected at each time step}
+\item{arm}{A vector of length T x B indicating which arm was selected in each context}
 
-\item{reward}{rewards at each time step}
+\item{reward}{A vector of observed rewards of length T x B}
 
-\item{batch}{Batch size}
+\item{batch}{(Optional) A vector or integer. If a vector, gives the
+batch assignment for each context. If an integer, interpreted as the batch
+size and contexts are assigned to a batch in the order of the dataset.
+Default is 1.}
 
-\item{alpha}{Confidence level for intervals (default = 0.05).}
+\item{alpha}{Significance level for confidence intervals for calculating the empirical coverage.
+Default is 0.05 (95\% confidence).}
 }
 \value{
 A list containing:
-\itemize{
-  \item{raw_results: Data frame with performance metrics}
-  \item{interactive_table: DT::datatable interactive view}
-  \item{final_ml_model: Trained model object}
-}
+  \item{raw_results}{A data frame summarizing key metrics:
+  Empirical Bias on Policy Value,
+  Average relative error on Policy Value,
+  RMSE using relative errors on Policy Value,
+  Empirical Coverage of Confidence Intervals.}
+  \item{interactive_table}{An interactive table summarizing the same key metrics in a user-friendly interface.}
 }
 \description{
 Performs the Cram method for On-policy Statistical Evaluation
-in Contextual Bandit
+in Contextual Bandits
 }
-\seealso{
-\code{\link[caret]{train}} for model training parameters
-\code{\link[stats]{kmeans}} for unsupervised clustering
-\code{\link[DT]{datatable}} for interactive tables
+\examples{
+# Example with batch size of 1
+
+# Set random seed for reproducibility
+set.seed(42)
+
+# Define parameters
+T <- 100  # Number of timesteps
+K <- 4    # Number of arms
+
+# Simulate a 3D array pi of shape (T, T, K)
+# - First dimension: Individuals (context Xj)
+# - Second dimension: Time steps (pi_t)
+# - Third dimension: Arms (depth)
+pi <- array(runif(T * T * K, 0.1, 1), dim = c(T, T, K))
+
+# Normalize probabilities so that each row sums to 1 across arms
+for (t in 1:T) {
+  for (j in 1:T) {
+    pi[j, t, ] <- pi[j, t, ] / sum(pi[j, t, ])
+    }
+ }
+
+# Simulate arm selections (randomly choosing an arm)
+arm <- sample(1:K, T, replace = TRUE)
+
+# Simulate rewards (assume normally distributed rewards)
+reward <- rnorm(T, mean = 1, sd = 0.5)
+
+result <- cram_bandit(pi, arm, reward, batch=1, alpha=0.05)
+result$raw_results
+
 }

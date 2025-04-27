@@ -2,7 +2,7 @@
 % Please edit documentation in R/cram_bandit_sim.R
 \name{cram_bandit_sim}
 \alias{cram_bandit_sim}
-\title{On-policy CRAM Bandit}
+\title{Cram Bandit Simulation}
 \usage{
 cram_bandit_sim(
   horizon,
@@ -15,28 +15,36 @@ cram_bandit_sim(
 )
 }
 \arguments{
-\item{horizon}{The number of timesteps}
+\item{horizon}{An integer specifying the number of timesteps (rounds) per simulation.}
 
-\item{simulations}{The number of simulations}
+\item{simulations}{An integer specifying the number of independent Monte Carlo simulations to perform.}
 
-\item{bandit}{The bandit, generating contextual features and observed rewards}
+\item{bandit}{A contextual bandit environment object that generates contexts
+(feature vectors) and observed rewards for each arm chosen.}
 
-\item{policy}{The policy, choosing the arm at each timestep}
+\item{policy}{A policy object that takes in a context
+and selects an arm (action) at each timestep.}
 
-\item{alpha}{Significance level for confidence intervals for calculating the empirical coverage. Default is 0.05 (95\% confidence).}
+\item{alpha}{Significance level for confidence intervals for calculating the empirical coverage.
+Default is 0.05 (95\% confidence).}
 
-\item{do_parallel}{Whether to parallelize the simulations. Default to FALSE.}
+\item{do_parallel}{Whether to parallelize the simulations. Default to FALSE.
+We recommend keeping to FALSE unless necessary, please see vignette.}
 
-\item{seed}{Seed for simulation}
+\item{seed}{An optional integer to set the random seed for reproducibility.
+If NULL, no seed is set.}
 }
 \value{
 A **list** containing:
+  \item{estimates}{A table containing the detailed history of estimates and errors for each simulation.}
   \item{raw_results}{A data frame summarizing key metrics:
-  Average Prediction Error on the Policy Value Estimate,
-  Average Prediction Error on the Variance Estimate,
-  Empirical Coverage of the alpha level Confidence Interval.}
-  \item{interactive_table}{An interactive table summarizing key metrics for detailed exploration.}
+  Empirical Bias on Policy Value,
+  Average relative error on Policy Value,
+  RMSE using relative errors on Policy Value,
+  Empirical Coverage of Confidence Intervals.}
+  \item{interactive_table}{An interactive table summarizing the same key metrics in a user-friendly interface.}
 }
 \description{
-This function performs simulation for cram bandit policy learning and evaluation.
+This function runs on-policy simulation for contextual bandit algorithms using the Cram method.
+It evaluates the statistical properties of policy value estimates.
 }

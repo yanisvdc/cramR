@@ -2,22 +2,34 @@
 % Please edit documentation in R/armed_bandit_var.R
 \name{cram_bandit_var}
 \alias{cram_bandit_var}
-\title{Cram Bandit Variance}
+\title{Cram Bandit Variance of the Policy Value Estimate}
 \usage{
 cram_bandit_var(pi, reward, arm, batch = 1)
 }
 \arguments{
-\item{pi}{A 3-d array, for each row j, column t, depth a, gives pi_t(Xj, a)}
+\item{pi}{An array of shape (T × B, T, K) or (T × B, T),
+where T is the number of learning steps (or policy updates),
+B is the batch size, K is the number of arms,
+T x B is the total number of contexts.
+If 3D, pi[j, t, a] gives the probability that
+the policy pi_t assigns arm a to context X_j.
+If 2D, pi[j, t] gives the probability that the policy pi_t
+assigns arm A_j (arm actually chosen under X_j in the history)
+to context X_j. Please see vignette for more details.}
 
-\item{reward}{A vector of rewards}
+\item{reward}{A vector of observed rewards of length T x B}
 
-\item{arm}{A vector of arms chosen}
+\item{arm}{A vector of length T x B indicating which arm was selected in each context}
 
-\item{batch}{Batch size}
+\item{batch}{(Optional) A vector or integer. If a vector, gives the
+batch assignment for each context. If an integer, interpreted as the batch
+size and contexts are assigned to a batch in the order of the dataset.
+Default is 1.}
 }
 \value{
-The crammed variance estimate for bandit.
+The crammed variance estimate of the policy value estimate.
 }
 \description{
-This function implements the crammed variance estimator for bandit policy
+This function implements the crammed variance estimate of the policy value
+estimate for the contextual armed bandit on-policy evaluation setting.
 }

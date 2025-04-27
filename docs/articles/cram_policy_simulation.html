@@ -189,13 +189,22 @@ observed covariates.</li>
 <div class="section level2">
 <h2 id="inputs-overview">📦 Inputs Overview<a class="anchor" aria-label="anchor" href="#inputs-overview"></a>
 </h2>
-<p>You must supply either: - <code>X</code>: a dataset to bootstrap from
-(empirical DGP)<br><strong>or</strong> - <code>dgp_X</code>: a function that simulates
-covariates</p>
-<p>You must also define: - <code>dgp_D(X)</code>: treatment assignment
-function given <code>X</code><br>
-- <code>dgp_Y(D, X)</code>: outcome generation function given
-<code>D</code> and <code>X</code></p>
+<p>You must supply either:</p>
+<ul>
+<li><p><code>X</code>: a dataset to bootstrap from (empirical DGP)<br><strong>or</strong></p></li>
+<li><p><code>dgp_X</code>: a function that simulates covariates</p></li>
+</ul>
+<p>You must also define:</p>
+<ul>
+<li>
+<code>dgp_D(X)</code>: treatment assignment function given
+<code>X</code><br>
+</li>
+<li>
+<code>dgp_Y(D, X)</code>: outcome generation function given
+<code>D</code> and <code>X</code>
+</li>
+</ul>
 <hr>
 </div>
 <div class="section level2">

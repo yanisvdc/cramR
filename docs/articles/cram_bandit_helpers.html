@@ -300,7 +300,7 @@ arms is:</p>
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>K</mi><annotation encoding="application/x-tex">K</annotation></semantics></math>
 is the total number of available arms.</li>
 </ul>
-<p>Best arms are identified via the estimated expected reward:</p>
+<p>We define the least squares estimate as:</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mi>k</mi></msub><mo>=</mo><msubsup><mi>A</mi><mi>k</mi><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><msub><mi>b</mi><mi>k</mi></msub><mspace width="1.0em"></mspace><mtext mathvariant="normal">(Least Squares estimate)</mtext></mrow><annotation encoding="application/x-tex"> \theta_k = A_k^{-1} b_k \quad \text{(Least Squares estimate)} </annotation></semantics></math></p>
 <p>where:</p>
 <ul>
@@ -315,6 +315,9 @@ is the vector
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>X</mi><mi>k</mi><mi>T</mi></msubsup><msub><mi>Y</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">X_k^T Y_k</annotation></semantics></math>
 </li>
 </ul>
+<p>Best arms are identified via the estimated expected reward:</p>
+<p><span class="math display">$$ \text{(Expected reward)} = \( X_t^T
+\theta_k \) $$</span></p>
 </div>
 <div class="section level4">
 <h4 id="code-helper">📊 Code helper<a class="anchor" aria-label="anchor" href="#code-helper"></a>

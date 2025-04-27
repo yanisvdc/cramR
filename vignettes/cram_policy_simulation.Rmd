@@ -32,11 +32,14 @@ The `cram_simulation()` function performs **simultaneous policy learning and eva
 ## 📦 Inputs Overview
 
 You must supply either:
+
 - `X`: a dataset to bootstrap from (empirical DGP)  
 **or**
+
 - `dgp_X`: a function that simulates covariates  
 
 You must also define:
+
 - `dgp_D(X)`: treatment assignment function given `X`  
 - `dgp_Y(D, X)`: outcome generation function given `D` and `X`
 
