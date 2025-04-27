@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit_model_ml.R
 \name{fit_model_ml}
 \alias{fit_model_ml}
-\title{Fit Model ML}
+\title{Cram ML: Fit Model ML}
 \usage{
 fit_model_ml(data, formula, caret_params, classify)
 }

@@ -26,5 +26,5 @@ The first column represents the baseline policy.}
 The estimated policy value.
 }
 \description{
-Cram Policy: this function returns the cram estimator for the policy value (psi).
+This function returns the cram estimator for the policy value (psi).
 }

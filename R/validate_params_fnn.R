@@ -1,11 +1,11 @@
-#' Validate Parameters for Feedforward Neural Networks (FNNs)
+#' Cram Policy: Validate Parameters for Feedforward Neural Networks (FNNs)
 #'
 #' This function validates user-provided parameters for a Feedforward Neural Network (FNN) model.
 #' It ensures the correct structure for \code{input_layer}, \code{layers}, \code{output_layer},
 #' \code{compile_args} and \code{fit_params}.
 #'
-#' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
-#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.
+#' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}. Note: you can also set model_type to NULL and specify custom_fit and custom_predict to use your custom model.
+#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression, \code{"fnn"} for Feedforward Neural Network and \code{"caret"} for Caret. Default is \code{"ridge"}. if model_type is 'causal_forest', choose NULL, if model_type is 's_learner' or 'm_learner', choose between 'ridge', 'fnn' and 'caret'.
 #' @param model_params A named list of parameters provided by the user for configuring the FNN model.
 #' @param X A matrix or data frame of covariates for which the parameters are validated.
 #' @return A named list of validated parameters merged with defaults for any missing values.

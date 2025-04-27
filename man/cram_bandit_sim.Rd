@@ -35,7 +35,7 @@ We recommend keeping to FALSE unless necessary, please see vignette.}
 If NULL, no seed is set.}
 }
 \value{
-A **list** containing:
+A list containing:
   \item{estimates}{A table containing the detailed history of estimates and errors for each simulation.}
   \item{raw_results}{A data frame summarizing key metrics:
   Empirical Bias on Policy Value,

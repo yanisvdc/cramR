@@ -7,59 +7,27 @@ library(foreach)
 # Declare global variables to suppress devtools::check warnings
 utils::globalVariables(c("X_cumul", "D_cumul", "Y_cumul", "data_cumul", "."))
 
-#' Generalized ML Learning
+#' Cram ML: Generalized ML Learning
 #'
-#' This function performs batch-wise learning for both **supervised** and **unsupervised** machine learning models.
+#' This function performs batch-wise learning for machine learning models.
 #'
-#' @param data A matrix or data frame of features. If a supervised model is used, it should also include the target variable.
-#' @param formula Optional formula specifying the relationship between the target and predictors for **supervised learning** (use `NULL` for unsupervised learning).
+#' @param data A matrix or data frame of features. Must include the target variable.
+#' @param formula Formula specifying the relationship between the target and predictors for supervised learning.
 #' @param batch Either an integer specifying the number of batches (randomly sampled) or a vector of length equal to the sample size indicating batch assignment for each observation.
 #' @param parallelize_batch Logical. Whether to parallelize batch processing. Defaults to `FALSE`.
-#'  - If `TRUE`, batch models are trained in parallel.
-#'  - If `FALSE`, training is performed sequentially using `data.table` for efficiency.
 #' @param loss_name The name of the loss function to be used (e.g., `"se"`, `"logloss"`).
-#' @param caret_params A **list** of parameters to pass to the `caret::train()` function.
+#' @param caret_params A list of parameters to pass to the `caret::train()` function.
 #'   - Required: `method` (e.g., `"glm"`, `"rf"`).
-#' @param custom_fit A **custom function** for training user-defined models. Defaults to `NULL`.
-#' @param custom_predict A **custom function** for making predictions from user-defined models. Defaults to `NULL`.
-#' @param custom_loss Optional **custom function** for computing the loss of a trained model on the data. Should return a **vector** containing per-instance losses.
+#' @param custom_fit A custom function for training user-defined models. Defaults to `NULL`.
+#' @param custom_predict A custom function for making predictions from user-defined models. Defaults to `NULL`.
+#' @param custom_loss Optional custom function for computing the loss of a trained model on the data. Should return a vector containing per-instance losses.
 #' @param n_cores Number of CPU cores to use for parallel processing (`parallelize_batch = TRUE`). Defaults to `detectCores() - 1`.
 #' @param classify Indicate if this is a classification problem. Defaults to FALSE
 #'
-#' @return A **list** containing:
+#' @return A list containing:
 #'   \item{final_ml_model}{The final trained ML model.}
 #'   \item{losses}{A matrix of losses where each column represents a batch's trained model. The first column contains zeros (baseline model).}
 #'   \item{batch_indices}{The indices of observations in each batch.}
-#' @examples
-#' # Load necessary libraries
-#' library(caret)
-#'
-#' # Set seed for reproducibility
-#' set.seed(42)
-#'
-#' # Generate example dataset
-#' X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
-#' Y_data <- rnorm(100)  # Continuous target variable for regression
-#' data_df <- data.frame(X_data, Y = Y_data)  # Ensure target variable is included
-#'
-#' # Define caret parameters for simple linear regression (no cross-validation)
-#' caret_params_lm <- list(
-#'   method = "lm",
-#'   trControl = trainControl(method = "none")
-#' )
-#'
-#' # Define the batch count (not used in this simple example)
-#' nb_batch <- 5
-#'
-#' # Run ML learning function
-#' result_lm <- ml_learning(
-#'   data = data_df,
-#'   formula = Y ~ .,  # Linear regression model
-#'   batch = nb_batch,
-#'   loss_name = 'se',
-#'   caret_params = caret_params_lm
-#' )
-#' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}
 #' @importFrom grf causal_forest
 #' @importFrom glmnet cv.glmnet
 #' @importFrom keras keras_model_sequential layer_dense compile fit

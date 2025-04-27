@@ -1,4 +1,4 @@
-#' Cram Variance Estimator for Policy Value Difference (Delta)
+#' Cram Policy: Variance Estimate of the crammed Policy Value Difference (Delta)
 #'
 #' This function estimates the asymptotic variance of the cram estimator
 #' for the policy value difference (delta).
@@ -12,7 +12,7 @@
 #'           The first column represents the baseline policy.
 #' @param batch_indices A list where each element is a vector of indices corresponding to the individuals in each batch.
 #' @param propensity The propensity score function
-#' @return The estimated variance \eqn{\hat{v}^2_T}.
+#' @return The estimated variance of the policy value difference (Delta)
 #' @export
 cram_variance_estimator <- function(X, Y, D, pi, batch_indices, propensity = NULL) {
   # Determine number of batches
@@ -63,8 +63,6 @@ cram_variance_estimator <- function(X, Y, D, pi, batch_indices, propensity = NUL
 
   total_variance <- sum(column_variances)
 
-  # Final variance estimator, scaled by T / B
-  # total_variance <- (nb_batch / batch_size) * total_variance
   total_variance <- (1 / batch_size) * total_variance
 
   return(total_variance)

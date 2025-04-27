@@ -24,7 +24,7 @@ utils::globalVariables(c(
 #' @param seed An optional integer to set the random seed for reproducibility.
 #' If NULL, no seed is set.
 #'
-#' @return A **list** containing:
+#' @return A list containing:
 #'   \item{estimates}{A table containing the detailed history of estimates and errors for each simulation.}
 #'   \item{raw_results}{A data frame summarizing key metrics:
 #'   Empirical Bias on Policy Value,

@@ -2,7 +2,7 @@
 % Please edit documentation in R/fit_model.R
 \name{fit_model}
 \alias{fit_model}
-\title{Fit Model}
+\title{Cram Policy: Fit Model}
 \usage{
 fit_model(model, X, Y, D, model_type, learner_type, model_params, propensity)
 }
@@ -29,21 +29,4 @@ The fitted model object.
 \description{
 This function trains a given unfitted model with the provided data and parameters,
 according to model type and learner type.
-}
-\examples{
-# Example usage for Ridge Regression S-learner
-set.seed(123)
-X <- matrix(rnorm(1000), nrow = 100, ncol = 10)
-D <- sample(0:1, 100, replace = TRUE)
-Y <- rnorm(100)
-# Set up the model
-model <- set_model("s_learner", "ridge")
-# Define model parameters
-model_params <- list(alpha = 0)
-# Fit the model
-fitted_model <- fit_model(
-                        model, X, Y, D = D,
-                        model_type = "s_learner",
-                        learner_type = "ridge",
-                        model_params = model_params)
 }

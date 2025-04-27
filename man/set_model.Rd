@@ -2,14 +2,14 @@
 % Please edit documentation in R/set_model.R
 \name{set_model}
 \alias{set_model}
-\title{Set Model}
+\title{Cram Policy: Set Model}
 \usage{
 set_model(model_type, learner_type, model_params)
 }
 \arguments{
-\item{model_type}{The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.}
+\item{model_type}{The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}. Note: you can also set model_type to NULL and specify custom_fit and custom_predict to use your custom model.}
 
-\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.}
+\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression, \code{"fnn"} for Feedforward Neural Network and \code{"caret"} for Caret. Default is \code{"ridge"}. if model_type is 'causal_forest', choose NULL, if model_type is 's_learner' or 'm_learner', choose between 'ridge', 'fnn' and 'caret'.}
 
 \item{model_params}{A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
 For FNNs, the following elements are defined in the model params list:
@@ -48,8 +48,4 @@ The instantiated model object or the corresponding model function.
 }
 \description{
 This function maps the model type and learner type to the corresponding model function.
-}
-\examples{
-# Example: Causal Forest with default parameters
-set_model("causal_forest", NULL, model_params = list(num.trees = 100))
 }

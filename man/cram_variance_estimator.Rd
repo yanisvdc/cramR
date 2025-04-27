@@ -2,7 +2,7 @@
 % Please edit documentation in R/cram_variance_estimator.R
 \name{cram_variance_estimator}
 \alias{cram_variance_estimator}
-\title{Cram Variance Estimator for Policy Value Difference (Delta)}
+\title{Cram Policy: Variance Estimate of the crammed Policy Value Difference (Delta)}
 \usage{
 cram_variance_estimator(X, Y, D, pi, batch_indices, propensity = NULL)
 }
@@ -23,7 +23,7 @@ The first column represents the baseline policy.}
 \item{propensity}{The propensity score function}
 }
 \value{
-The estimated variance \eqn{\hat{v}^2_T}.
+The estimated variance of the policy value difference (Delta)
 }
 \description{
 This function estimates the asymptotic variance of the cram estimator

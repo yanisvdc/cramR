@@ -1,4 +1,4 @@
-#' Fit Model ML
+#' Cram ML: Fit Model ML
 #'
 #' This function trains a given unfitted model with the provided data and parameters,
 #' according to model type and learner type.

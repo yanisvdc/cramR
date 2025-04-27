@@ -1,4 +1,4 @@
-#' Cram Variance Estimator for Policy Value (Psi)
+#' Cram Policy: Variance Estimate of the crammed Policy Value estimate (Psi)
 #'
 #' This function estimates the asymptotic variance of the cram estimator
 #' for the policy value (psi).
@@ -12,7 +12,7 @@
 #'           The first column represents the baseline policy.
 #' @param batch_indices A list where each element is a vector of indices corresponding to the individuals in each batch.
 #' @param propensity Propensity score function
-#' @return The estimated variance \eqn{\hat{w}^2_T}.
+#' @return The variance estimate of the crammed Policy Value estimate (Psi)
 #' @export
 cram_variance_estimator_policy_value <- function(X, Y, D, pi, batch_indices, propensity = NULL) {
   # Determine number of batches
@@ -74,8 +74,6 @@ cram_variance_estimator_policy_value <- function(X, Y, D, pi, batch_indices, pro
 
   total_variance <- sum(column_variances)
 
-  # Final variance estimator, scaled by T / B
-  # total_variance <- (nb_batch / batch_size) * total_variance
   total_variance <- (1 / batch_size) * total_variance
 
   return(total_variance)

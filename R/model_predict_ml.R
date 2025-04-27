@@ -1,4 +1,4 @@
-#' Predict with the Specified Model
+#' Cram ML: Predict with the Specified Model
 #'
 #' This function performs inference using a trained model
 #'
@@ -7,8 +7,7 @@
 #' @param formula The formula
 #' @param caret_params The parameters of the caret model
 #' @param cram_policy_handle Internal use. Post-process predictions differently for cram policy use. Defaults to FALSE.
-#' @return A vector of predictions or CATE estimates, depending on the \code{model_type} and \code{learner_type}.
-#' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}
+#' @return Predictions of the model on the data
 #' @importFrom grf causal_forest
 #' @import glmnet
 #' @import keras

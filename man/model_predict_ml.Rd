@@ -2,7 +2,7 @@
 % Please edit documentation in R/model_predict_ml.R
 \name{model_predict_ml}
 \alias{model_predict_ml}
-\title{Predict with the Specified Model}
+\title{Cram ML: Predict with the Specified Model}
 \usage{
 model_predict_ml(
   model,
@@ -24,11 +24,8 @@ model_predict_ml(
 \item{cram_policy_handle}{Internal use. Post-process predictions differently for cram policy use. Defaults to FALSE.}
 }
 \value{
-A vector of predictions or CATE estimates, depending on the \code{model_type} and \code{learner_type}.
+Predictions of the model on the data
 }
 \description{
 This function performs inference using a trained model
-}
-\seealso{
-\code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}
 }

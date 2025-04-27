@@ -1,4 +1,4 @@
-#' Predict with the Specified Model
+#' Cram Policy: Predict with the Specified Model
 #'
 #' This function performs inference using a trained model, providing flexibility for different types of models
 #' such as Causal Forest, Ridge Regression, and Feedforward Neural Networks (FNNs).
@@ -9,20 +9,7 @@
 #' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
 #' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.
 #' @param model_params A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
-#' @return A vector of predictions or CATE estimates, depending on the \code{model_type} and \code{learner_type}.
-#' @examples
-#' # Load required library
-#' library(grf)
-#'
-#' # Example: Predicting with a Causal Forest model
-#' set.seed(123)
-#' X <- matrix(rnorm(1000), nrow = 100, ncol = 10)  # Covariates
-#' Y <- rnorm(100)                                 # Outcomes
-#' D <- sample(0:1, 100, replace = TRUE)           # Treatment indicators
-#' cf_model <- causal_forest(X, Y, D)             # Train Causal Forest
-#' new_X <- matrix(rnorm(100), nrow = 10, ncol = 10) # New data for predictions
-#' predictions <- model_predict(model = cf_model, X = new_X, model_type = "causal_forest")
-#' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}
+#' @return A vector of binary policy assignments, depending on the \code{model_type} and \code{learner_type}.
 #' @importFrom grf causal_forest
 #' @import glmnet
 #' @import keras

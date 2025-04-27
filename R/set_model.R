@@ -1,9 +1,9 @@
-#' Set Model
+#' Cram Policy: Set Model
 #'
 #' This function maps the model type and learner type to the corresponding model function.
 #'
-#' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.
-#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.
+#' @param model_type The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}. Note: you can also set model_type to NULL and specify custom_fit and custom_predict to use your custom model.
+#' @param learner_type The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression, \code{"fnn"} for Feedforward Neural Network and \code{"caret"} for Caret. Default is \code{"ridge"}. if model_type is 'causal_forest', choose NULL, if model_type is 's_learner' or 'm_learner', choose between 'ridge', 'fnn' and 'caret'.
 #' @param model_params A list of additional parameters to pass to the model, which can be any parameter defined in the model reference package. Defaults to \code{NULL}.
 #'                     For FNNs, the following elements are defined in the model params list:
 #'                     \describe{
@@ -36,9 +36,6 @@
 #'                     }
 #'                     For other learners (e.g., \code{"ridge"} or \code{"causal_forest"}), \code{model_params} can include relevant hyperparameters.
 #' @return The instantiated model object or the corresponding model function.
-#' @examples
-#' # Example: Causal Forest with default parameters
-#' set_model("causal_forest", NULL, model_params = list(num.trees = 100))
 #' @export
 
 set_model <- function(model_type, learner_type, model_params) {

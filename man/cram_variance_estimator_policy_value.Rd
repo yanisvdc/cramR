@@ -2,7 +2,7 @@
 % Please edit documentation in R/cram_variance_estimator_policy_value.R
 \name{cram_variance_estimator_policy_value}
 \alias{cram_variance_estimator_policy_value}
-\title{Cram Variance Estimator for Policy Value (Psi)}
+\title{Cram Policy: Variance Estimate of the crammed Policy Value estimate (Psi)}
 \usage{
 cram_variance_estimator_policy_value(
   X,
@@ -30,7 +30,7 @@ The first column represents the baseline policy.}
 \item{propensity}{Propensity score function}
 }
 \value{
-The estimated variance \eqn{\hat{w}^2_T}.
+The variance estimate of the crammed Policy Value estimate (Psi)
 }
 \description{
 This function estimates the asymptotic variance of the cram estimator

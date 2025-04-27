@@ -2,7 +2,7 @@
 % Please edit documentation in R/ml_learning.R
 \name{ml_learning}
 \alias{ml_learning}
-\title{Generalized ML Learning}
+\title{Cram ML: Generalized ML Learning}
 \usage{
 ml_learning(
   data,
@@ -19,70 +19,35 @@ ml_learning(
 )
 }
 \arguments{
-\item{data}{A matrix or data frame of features. If a supervised model is used, it should also include the target variable.}
+\item{data}{A matrix or data frame of features. Must include the target variable.}
 
-\item{formula}{Optional formula specifying the relationship between the target and predictors for **supervised learning** (use `NULL` for unsupervised learning).}
+\item{formula}{Formula specifying the relationship between the target and predictors for supervised learning.}
 
 \item{batch}{Either an integer specifying the number of batches (randomly sampled) or a vector of length equal to the sample size indicating batch assignment for each observation.}
 
-\item{parallelize_batch}{Logical. Whether to parallelize batch processing. Defaults to `FALSE`.
-- If `TRUE`, batch models are trained in parallel.
-- If `FALSE`, training is performed sequentially using `data.table` for efficiency.}
+\item{parallelize_batch}{Logical. Whether to parallelize batch processing. Defaults to `FALSE`.}
 
 \item{loss_name}{The name of the loss function to be used (e.g., `"se"`, `"logloss"`).}
 
-\item{caret_params}{A **list** of parameters to pass to the `caret::train()` function.
+\item{caret_params}{A list of parameters to pass to the `caret::train()` function.
 - Required: `method` (e.g., `"glm"`, `"rf"`).}
 
-\item{custom_fit}{A **custom function** for training user-defined models. Defaults to `NULL`.}
+\item{custom_fit}{A custom function for training user-defined models. Defaults to `NULL`.}
 
-\item{custom_predict}{A **custom function** for making predictions from user-defined models. Defaults to `NULL`.}
+\item{custom_predict}{A custom function for making predictions from user-defined models. Defaults to `NULL`.}
 
-\item{custom_loss}{Optional **custom function** for computing the loss of a trained model on the data. Should return a **vector** containing per-instance losses.}
+\item{custom_loss}{Optional custom function for computing the loss of a trained model on the data. Should return a vector containing per-instance losses.}
 
 \item{n_cores}{Number of CPU cores to use for parallel processing (`parallelize_batch = TRUE`). Defaults to `detectCores() - 1`.}
 
 \item{classify}{Indicate if this is a classification problem. Defaults to FALSE}
 }
 \value{
-A **list** containing:
+A list containing:
   \item{final_ml_model}{The final trained ML model.}
   \item{losses}{A matrix of losses where each column represents a batch's trained model. The first column contains zeros (baseline model).}
   \item{batch_indices}{The indices of observations in each batch.}
 }
 \description{
-This function performs batch-wise learning for both **supervised** and **unsupervised** machine learning models.
-}
-\examples{
-# Load necessary libraries
-library(caret)
-
-# Set seed for reproducibility
-set.seed(42)
-
-# Generate example dataset
-X_data <- data.frame(x1 = rnorm(100), x2 = rnorm(100), x3 = rnorm(100))
-Y_data <- rnorm(100)  # Continuous target variable for regression
-data_df <- data.frame(X_data, Y = Y_data)  # Ensure target variable is included
-
-# Define caret parameters for simple linear regression (no cross-validation)
-caret_params_lm <- list(
-  method = "lm",
-  trControl = trainControl(method = "none")
-)
-
-# Define the batch count (not used in this simple example)
-nb_batch <- 5
-
-# Run ML learning function
-result_lm <- ml_learning(
-  data = data_df,
-  formula = Y ~ .,  # Linear regression model
-  batch = nb_batch,
-  loss_name = 'se',
-  caret_params = caret_params_lm
-)
-}
-\seealso{
-\code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}
+This function performs batch-wise learning for machine learning models.
 }

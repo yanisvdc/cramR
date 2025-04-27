@@ -1,6 +1,6 @@
 #' Cram Policy: Estimator for Policy Value (Psi)
 #'
-#' Cram Policy: this function returns the cram estimator for the policy value (psi).
+#' This function returns the cram estimator for the policy value (psi).
 #'
 #' @param X A matrix or data frame of covariates for each sample.
 #' @param Y A vector of outcomes for the n individuals.

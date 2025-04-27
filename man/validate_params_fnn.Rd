@@ -2,14 +2,14 @@
 % Please edit documentation in R/validate_params_fnn.R
 \name{validate_params_fnn}
 \alias{validate_params_fnn}
-\title{Validate Parameters for Feedforward Neural Networks (FNNs)}
+\title{Cram Policy: Validate Parameters for Feedforward Neural Networks (FNNs)}
 \usage{
 validate_params_fnn(model_type, learner_type, model_params, X)
 }
 \arguments{
-\item{model_type}{The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}.}
+\item{model_type}{The model type for policy learning. Options include \code{"causal_forest"}, \code{"s_learner"}, and \code{"m_learner"}. Default is \code{"causal_forest"}. Note: you can also set model_type to NULL and specify custom_fit and custom_predict to use your custom model.}
 
-\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression and \code{"fnn"} for Feedforward Neural Network. Default is \code{"ridge"}.}
+\item{learner_type}{The learner type for the chosen model. Options include \code{"ridge"} for Ridge Regression, \code{"fnn"} for Feedforward Neural Network and \code{"caret"} for Caret. Default is \code{"ridge"}. if model_type is 'causal_forest', choose NULL, if model_type is 's_learner' or 'm_learner', choose between 'ridge', 'fnn' and 'caret'.}
 
 \item{model_params}{A named list of parameters provided by the user for configuring the FNN model.}
 
