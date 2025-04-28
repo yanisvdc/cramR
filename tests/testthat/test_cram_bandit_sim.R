@@ -4,8 +4,6 @@ library(contextual)
 
 test_that("cram_bandit_sim runs and returns expected structure with  batch epsilon greedy", {
 
-  skip_if_not_installed("contextual")
-
   horizon     <- 100L
   simulations <- 10L
   k <- 4
@@ -23,8 +21,6 @@ test_that("cram_bandit_sim runs and returns expected structure with  batch epsil
 
 test_that("cram_bandit_sim runs and returns expected structure with  batch = 1 epsilon greedy", {
 
-  skip_if_not_installed("contextual")
-
   horizon     <- 100L
   simulations <- 10L
   k <- 4
@@ -41,8 +37,6 @@ test_that("cram_bandit_sim runs and returns expected structure with  batch = 1 e
 })
 
 test_that("cram_bandit_sim runs and returns expected structure with ucb", {
-
-  skip_if_not_installed("contextual")
 
   horizon     <- 100L
   simulations <- 10L
@@ -62,8 +56,6 @@ test_that("cram_bandit_sim runs and returns expected structure with ucb", {
 
 test_that("cram_bandit_sim runs and returns expected structure with thompson", {
 
-  skip_if_not_installed("contextual")
-
   horizon     <- 100L
   simulations <- 10L
   k <- 4
@@ -81,8 +73,6 @@ test_that("cram_bandit_sim runs and returns expected structure with thompson", {
 
 
 test_that("cram_bandit_sim returns finite numeric outputs", {
-
-  skip_if_not_installed("contextual")
 
   horizon     <- 20L
   simulations <- 5L

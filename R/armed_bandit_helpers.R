@@ -2625,7 +2625,9 @@ is_rstudio <- function() {
 }
 
 
-#' @importFrom R.devices devOptions grDevices graphics.off
+#' @importFrom grDevices graphics.off
+#' @importFrom grDevices dev.off
+#' @importFrom R.devices devOptions
 set_external <- function(ext = TRUE,
                          width = 10,
                          height = 6) {

@@ -45,7 +45,8 @@ Imports:
     dplyr (>= 1.1.4),
     purrr,
     R6,
-    rjson
+    rjson,
+    R.devices
 Suggests: 
     testthat (>= 3.0.0),
     covr (>= 3.5.1),
