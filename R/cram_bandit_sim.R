@@ -82,9 +82,9 @@ cram_bandit_sim <- function(horizon, simulations,
                             bandit, policy,
                             alpha=0.05, do_parallel = FALSE, seed=42) {
 
-  if (!requireNamespace("contextual", quietly = TRUE)) {
-    stop("The 'contextual' package is required for this functionality. Please install it from GitHub: remotes::install_github('Nth-iteration-labs/contextual').")
-  }
+  # if (!requireNamespace("contextual", quietly = TRUE)) {
+  #   stop("The 'contextual' package is required for this functionality. Please install it from GitHub: remotes::install_github('Nth-iteration-labs/contextual').")
+  # }
 
   # Force garbage collection before starting
   gc(full = TRUE, verbose = FALSE)
