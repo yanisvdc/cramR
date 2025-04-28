@@ -140,7 +140,6 @@ head(sim$estimates)
 
 ```{r contextual-table, fig.alt = "Table of results"}
 sim$interactive_table
-
 ```
 
 ---

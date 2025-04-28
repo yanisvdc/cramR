@@ -20,6 +20,9 @@
   <a href="https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf">
     <img src="https://img.shields.io/badge/Read%20Paper-blue?logo=bookstack" alt="Read Paper">
   </a>
+  <a href="https://www.gnu.org/licenses/gpl-3.0">
+    <img src="https://img.shields.io/badge/License-GPLv3-brightgreen.svg" alt="GPL v3 License">
+  </a>
 </p>
 
 ---
