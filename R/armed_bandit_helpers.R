@@ -1173,16 +1173,16 @@ Simulator <- R6::R6Class(
         doParallel::stopImplicitCluster()
       }
       # nocov end
-    },
+    }
+  ),
+  private = list(
+    start_time = NULL,
+    end_time = NULL,
     finalize = function() {
       # set global seed back to value before
       contextual::set_global_seed(self$global_seed)
       #closeAllConnections()
     }
-  ),
-  private = list(
-    start_time = NULL,
-    end_time = NULL
   ),
   active = list(
     history = function(value) {

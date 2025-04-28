@@ -35,6 +35,8 @@
 - 🧠 **Typical use case: Policy Learning**
 - 🌍 **Real-World Applications**
 
+Please visit the [official website](https://yanisvdc.github.io/cramR ) for more details.
+
 <br>
 
 ##### 🎯 Train & Evaluate ML models

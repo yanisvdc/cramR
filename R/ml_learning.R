@@ -1,6 +1,5 @@
 # Load necessary libraries
 library(glmnet)         # For ridge regression (linear regression with penalty)
-library(keras)           # For feedforward neural networks in R
 library(doParallel)
 library(foreach)
 

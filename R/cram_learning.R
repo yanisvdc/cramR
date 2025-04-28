@@ -1,7 +1,6 @@
 # Load necessary libraries
 library(grf)            # For causal forest
 library(glmnet)         # For ridge regression (linear regression with penalty)
-library(keras)           # For feedforward neural networks in R
 library(doParallel)
 library(foreach)
 
@@ -128,7 +127,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
       ## FINAL MODEL
       if (!is.null(learner_type) && learner_type == "fnn") {
         # KERAS: serialize the final model at the last iteration
-        final_model <- if (t == nb_batch) serialize_model(trained_model) else NULL
+        final_model <- if (t == nb_batch) keras::serialize_model(trained_model) else NULL
       } else {
         # Any other model
         final_model <- if (t == nb_batch) trained_model else NULL
@@ -150,7 +149,7 @@ cram_learning <- function(X, D, Y, batch, model_type = "causal_forest",
     if (!is.null(learner_type) && learner_type == "fnn") {
       # KERAS: unserialize the final policy model
       serialized_model <- results[[nb_batch]]$final_model
-      final_policy_model <- unserialize_model(serialized_model)
+      final_policy_model <- keras::unserialize_model(serialized_model)
     } else {
       # Any other model
       final_policy_model <- results[[nb_batch]]$final_model

@@ -240,3 +240,11 @@ Compared to classic learning and evaluation methods, in terms of data usage for 
 - Künzel, S. R., Sekhon, J. S., Bickel, P. J., & Yu, B. (2019). Metalearners for estimating heterogeneous treatment effects using machine learning. Proceedings of the National Academy of Sciences of the United States of America, 116(10), 4156–4165. https://doi.org/10.1073/pnas.1804597116
 - Wager, S., & Athey, S. (2018). Estimation and inference of heterogeneous treatment effects using random forests. Journal of the American Statistical Association, 113(523), 1228-1242. 
 - Athey, S., & Imbens, G. (2016). Recursive partitioning for heterogeneous causal effects. Proceedings of the National Academy of Sciences, 113(27), 7353-7360.
+
+
+```{r cleanup-autograph, include=FALSE}
+autograph_files <- list.files(tempdir(), pattern = "^__autograph_generated_file.*\\.py$", full.names = TRUE)
+if (length(autograph_files) > 0) {
+  try(unlink(autograph_files, recursive = TRUE, force = TRUE), silent = TRUE)
+}
+

@@ -75,6 +75,9 @@ test_that("cram_ml runs with glm and classification loss (accuracy + logloss)", 
 })
 
 test_that("cram_ml runs with caret classification logloss + classProb TRUE", {
+
+  testthat::skip_if_not_installed("randomForest")
+
   # Set seed for reproducibility
   set.seed(42)
 
@@ -102,6 +105,9 @@ test_that("cram_ml runs with caret classification logloss + classProb TRUE", {
 })
 
 test_that("cram_ml runs with caret classification accuracy + classProb FALSE", {
+
+  testthat::skip_if_not_installed("randomForest")
+
   # Set seed for reproducibility
   set.seed(42)
 

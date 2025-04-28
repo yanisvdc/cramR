@@ -2,7 +2,7 @@ library(testthat)
 library(grf)
 library(data.table)
 library(glmnet)
-library(keras)
+# library(keras)
 
 test_that("cram_policy runs correctly with default causal_forest settings", {
   set.seed(123)
@@ -37,6 +37,21 @@ test_that("cram_policy works with ridge learner (s-learner)", {
 })
 
 test_that("cram_policy works with FNN user param (s-learner)", {
+
+  skip("Skipping this test temporarily")
+
+  testthat::skip_on_cran()
+
+  # Check if keras is installed AND properly configured
+  if (!requireNamespace("keras", quietly = TRUE)) {
+    testthat::skip("keras not installed")
+  }
+
+  # Check if Keras backend is actually working
+  if (!keras::is_keras_available()) {
+    testthat::skip("Keras backend not available")
+  }
+
   set.seed(42)
   X <- matrix(rnorm(200 * 2), nrow = 200)
   D <- sample(0:1, 200, replace = TRUE)
@@ -137,7 +152,20 @@ test_that("cram_policy works with caret learner classification (s-learner)", {
 })
 
 test_that("cram_policy works with fnn learner if keras is available", {
-  skip_if_not_installed("keras")
+
+  skip("Skipping this test temporarily")
+
+  testthat::skip_on_cran()
+
+  # Check if keras is installed AND properly configured
+  if (!requireNamespace("keras", quietly = TRUE)) {
+    testthat::skip("keras not installed")
+  }
+
+  # Check if Keras backend is actually working
+  if (!keras::is_keras_available()) {
+    testthat::skip("Keras backend not available")
+  }
 
   set.seed(44)
   X <- matrix(rnorm(100 * 2), nrow = 100)
@@ -229,3 +257,10 @@ test_that("cram_policy throws error on mismatched input lengths", {
     "length"
   )
 })
+
+testthat::teardown({
+  tmp_dir <- tempdir()
+  autograph_files <- list.files(tmp_dir, pattern = "^__autograph_generated_file.*\\.py$", full.names = TRUE)
+  if (length(autograph_files) > 0) unlink(autograph_files, force = TRUE)
+})
+

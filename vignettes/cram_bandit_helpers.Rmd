@@ -229,3 +229,11 @@ Accurately computing the estimand is critical for properly assessing the bias an
 # 🌟 Acknowledgments
 
 These helper functions were designed to faithfully reconstruct action probabilities for the policies implemented in [`contextual`](https://github.com/Nth-iteration-labs/contextual), while enabling reproducible Cram-based evaluation.
+
+
+```{r cleanup-autograph, include=FALSE}
+autograph_files <- list.files(tempdir(), pattern = "^__autograph_generated_file.*\\.py$", full.names = TRUE)
+if (length(autograph_files) > 0) {
+  try(unlink(autograph_files, recursive = TRUE, force = TRUE), silent = TRUE)
+}
+

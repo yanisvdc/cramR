@@ -14,5 +14,9 @@ Sys.setenv(PYTHONDONTWRITEBYTECODE = 1)
 
 test_check("cramR")
 
-
+testthat::teardown({
+  tmp_dir <- tempdir()
+  tf_temp_files <- list.files(tmp_dir, pattern = "^__autograph_generated_file.*\\.py$", full.names = TRUE)
+  unlink(tf_temp_files)
+})
 

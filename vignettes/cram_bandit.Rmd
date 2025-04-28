@@ -138,3 +138,11 @@ result$interactive_table
 
 - Jia, Z., Imai, K., & Li, M. L. (2024). The Cram Method for Efficient Simultaneous Learning and Evaluation. arXiv preprint arXiv:2403.07031.
 - Zhan et al. (2021). *Off-policy evaluation via adaptive weighting with data from contextual bandits.* KDD.
+
+
+```{r cleanup-autograph, include=FALSE}
+autograph_files <- list.files(tempdir(), pattern = "^__autograph_generated_file.*\\.py$", full.names = TRUE)
+if (length(autograph_files) > 0) {
+  try(unlink(autograph_files, recursive = TRUE, force = TRUE), silent = TRUE)
+}
+

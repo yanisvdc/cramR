@@ -6,7 +6,9 @@
 ^__pycache__$
 ^tests/testthat/_snaps/.*
 ^tests/testthat/_snaps$
-
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^.*\.py$
+^__autograph_generated_file.*
+^tensorflow/

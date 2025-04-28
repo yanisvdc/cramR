@@ -161,7 +161,7 @@ In this case, the model outputs hard predictions (labels, e.g. 0, 1, 2 etc.), an
 - Set `classify = TRUE` in `cram_ml()`
 
 
-```{r}
+```{r, eval = requireNamespace("randomForest", quietly = TRUE)}
 set.seed(42)
 
 # Generate binary classification dataset
@@ -197,7 +197,7 @@ In this setup, the model outputs **class probabilities**, and the loss is evalua
 - Set `classProbs = TRUE` in `trainControl`
 - Set `classify = TRUE` in `cram_ml()`
 
-```{r}
+```{r, eval = requireNamespace("randomForest", quietly = TRUE)}
 set.seed(42)
 
 # Generate binary classification dataset
@@ -278,3 +278,10 @@ print(res)
 - `cram_policy()`: Learn and evaluate a binary policy.
 - `cram_ml()`: Learn and evaluate ML models.
 - `cram_bandit()`: Cramming contextual bandits for on-policy statistical evaluation.
+
+```{r cleanup-autograph, include=FALSE}
+autograph_files <- list.files(tempdir(), pattern = "^__autograph_generated_file.*\\.py$", full.names = TRUE)
+if (length(autograph_files) > 0) {
+  try(unlink(autograph_files, recursive = TRUE, force = TRUE), silent = TRUE)
+}
+
