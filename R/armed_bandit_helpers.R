@@ -48,7 +48,7 @@ Simulator <- R6::R6Class(
                           policy_time_loop = FALSE) {
 
       # save current seed
-      self$global_seed <- contextual::get_global_seed()
+      self$global_seed <- get_global_seed()
 
       if (!is.list(agents)) agents <- list(agents)
 
@@ -287,7 +287,7 @@ Simulator <- R6::R6Class(
       message("Finished main loop.")
 
       self$internal_history$set_meta_data("sim_end_time",format(Sys.time(), "%a %b %d %X %Y"))
-      formatted_duration <- contextual::formatted_difftime(private$end_time - private$start_time)
+      formatted_duration <- formatted_difftime(private$end_time - private$start_time)
       self$internal_history$set_meta_data("sim_total_duration", formatted_duration)
       message(paste0("Completed simulation in ",formatted_duration))
 
@@ -346,7 +346,7 @@ Simulator <- R6::R6Class(
     end_time = NULL,
     finalize = function() {
       # set global seed back to value before
-      contextual::set_global_seed(self$global_seed)
+      set_global_seed(self$global_seed)
       #closeAllConnections()
     }
   ),
@@ -2584,7 +2584,7 @@ BatchContextualLinTSPolicy <- R6::R6Class(
         b                        <- self$theta$b[[arm]]
         theta_hat                <- A_inv %*% b
         sigma_hat                <- self$sigma * A_inv
-        theta_tilde              <- as.vector(contextual::mvrnorm(1, theta_hat, sigma_hat))
+        theta_tilde              <- as.vector(mvrnorm(1, theta_hat, sigma_hat))
         expected_rewards[arm]    <- Xa %*% theta_tilde
       }
       action$choice              <- which_max_tied(expected_rewards)

@@ -10,7 +10,7 @@ devtools::install_github("yanisvdc/cramR", force=TRUE)
 
 # Load the package
 library(cramR)
-
+library(caret)
 library(data.table)
 library(glmnet)
 
@@ -75,10 +75,13 @@ model_type <- 'causal_forest'
 # if model_type == 's_learner' or 'm_learner', choose between 'ridge', 'fnn' and 'caret'
 learner_type <- NULL
 
+# Baseline policy to compare against (list of 0/1 for each individual)
 # Options for baseline_policy:
 # A list representing the baseline policy assignment for each individual.
 # If NULL, a default baseline policy of zeros is created.
-# Example: all-zeros policy: as.list(rep(0, nrow(X))) / random policy:  as.list(sample(c(0, 1), nrow(X), replace = TRUE))
+# Examples of baseline policy:
+# - All-control baseline: as.list(rep(0, nrow(X))) or NULL
+# - Randomized baseline: as.list(sample(c(0, 1), nrow(X), replace = TRUE))
 baseline_policy <- as.list(rep(0, nrow(X)))
 
 # Whether to parallelize batch processing (i.e. the cram method learns T policies, with T the number of batches.
@@ -87,17 +90,23 @@ baseline_policy <- as.list(rep(0, nrow(X)))
 # Defaults to FALSE.
 parallelize_batch <- FALSE
 
-model_params <- NULL # NULL for default, causal_forest: list(num.trees = 100), ridge: list(alpha = 1)
-# fnn:
+model_params <- NULL # NULL for default
+# Model-specific parameters (more details in the article "Cram Policy part 2")
+# Examples: NULL defaults to the following:
+# - causal_forest: list(num.trees = 100)
+# - ridge: list(alpha = 1)
+# - caret: list(formula = Y ~ ., caret_params = list(method = "lm", trControl = trainControl(method = "none")))
+# - fnn (Feedforward Neural Network): see below
+# input_shape <- if (model_type == "s_learner") ncol(X) + 1 else ncol(X)
 # default_model_params <- list(
-#   input_layer = list(units = 64, activation = 'relu', input_shape = input_shape),  # Define default input layer
-#   layers = list(
-#   list(units = 32, activation = 'relu')
-#   ),
-#   output_layer = list(units = 1, activation = 'linear'),
-#   compile_args = list(optimizer = 'adam', loss = 'mse'),
-#   fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
-#   )
+#       input_layer = list(units = 64, activation = 'relu', input_shape = input_shape),
+#       layers = list(
+#         list(units = 32, activation = 'relu')
+#       ),
+#       output_layer = list(units = 1, activation = 'linear'),
+#       compile_args = list(optimizer = 'adam', loss = 'mse'),
+#       fit_params = list(epochs = 5, batch_size = 32, verbose = 0)
+#     )
 # see vignettes for more details
 
 alpha <- 0.05
