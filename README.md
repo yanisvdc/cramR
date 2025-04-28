@@ -11,7 +11,7 @@
   <a href="https://github.com/yanisvdc/cramR">
     <img src="https://img.shields.io/badge/View%20on-GitHub-black?logo=github" alt="View on GitHub">
   </a>
-  <a href="https://codecov.io/github/yanisvdc/cramR" > 
+  <a href="https://app.codecov.io/github/yanisvdc/cramR" > 
  <img src="https://codecov.io/github/yanisvdc/cramR/graph/badge.svg?token=7MX98QJ7Y0" alt="Coverage"/>
  </a>
   <a href="https://github.com/yanisvdc/cramR/issues">
@@ -35,7 +35,7 @@
 - 🧠 **Typical use case: Policy Learning**
 - 🌍 **Real-World Applications**
 
-Please visit the [official website](https://yanisvdc.github.io/cramR ) for more details.
+Please visit the [official website](https://yanisvdc.github.io/cramR/) for more details.
 
 <br>
 
@@ -84,9 +84,9 @@ Common examples include:
 ---
 
 ## 📚 Documentation
-- [Introduction & Cram Policy](articles/cram_policy.html)
-- [Function Reference](reference/index.html)
-- [What's New](news/index.html)
+- [Introduction & Cram Policy](https://yanisvdc.github.io/cramR/articles/cram_policy.html)
+- [Function Reference](https://yanisvdc.github.io/cramR/reference/index.html)
+- [What's New](https://yanisvdc.github.io/cramR/news/index.html)
 
 You can also explore additional tutorials and examples through the "Articles" menu in the top navigation bar of the website.
 

@@ -1,5 +1,5 @@
 
-citHeader("To cite cramR, please use:")
+citHeader("To cite cramR in publications, please use the following:")
 
 bibentry(
   "Manual",
@@ -14,4 +14,33 @@ bibentry(
   year = "2025",
   note = "Package developed and maintained by Yanis Vandecasteele.",
   url = "https://github.com/yanisvdc/cramR"
+)
+
+bibentry(
+  "TechReport",
+  title = "The Cram Method for Efficient Simultaneous Learning and Evaluation",
+  author = c(
+    person("Zeyang", "Jia"),
+    person("Kosuke", "Imai"),
+    person("Michael Lingzhi", "Li")
+  ),
+  institution = "Harvard Business School",
+  year = "2024",
+  url = "https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf",
+  note = "Accessed April 2025"
+)
+
+bibentry(
+  "Misc",
+  title = "Cramming Contextual Bandits for On-policy Statistical Evaluation",
+  author = c(
+    person("Zeyang", "Jia"),
+    person("Kosuke", "Imai"),
+    person("Michael Lingzhi", "Li")
+  ),
+  year = "2025",
+  eprint = "2403.07031",
+  archivePrefix = "arXiv",
+  primaryClass = "cs.LG",
+  url = "https://arxiv.org/abs/2403.07031"
 )

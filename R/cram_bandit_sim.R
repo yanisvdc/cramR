@@ -2,7 +2,7 @@ utils::globalVariables(c(
   "context", "theta_na", "theta", "sim", "num_nulls", "agent",
   "choice", "reward", "probas", "arms", "rewards", "estimate",
   "variance_est", "std_error", "list_betas", "prediction_error", "estimand", "est_rel_error",
-  "variance_prediction_error", "ci_lower", "ci_upper"
+  "variance_prediction_error", "ci_lower", "ci_upper", "inv", "Agent"
 ))
 
 
@@ -34,43 +34,44 @@ utils::globalVariables(c(
 #'   \item{interactive_table}{An interactive table summarizing the same key metrics in a user-friendly interface.}
 #'
 #' @examples
-#' # Number of time steps
-#' horizon       <- 500L
+#' if (requireNamespace("contextual", quietly = TRUE)) {
+#'   # Number of time steps
+#'   horizon       <- 500L
 #'
-#' # Number of simulations
-#' simulations   <- 100L
+#'   # Number of simulations
+#'   simulations   <- 100L
 #'
-#' # Number of arms
-#' k = 4
+#'   # Number of arms
+#'   k = 4
 #'
-#' # Number of context features
-#' d= 3
+#'   # Number of context features
+#'   d= 3
 #'
-#' # Reward beta parameters of linear model (the outcome generation models,
-#' # one for each arm, are linear with arm-specific parameters betas)
-#' list_betas <- cramR:::get_betas(simulations, d, k)
+#'   # Reward beta parameters of linear model (the outcome generation models,
+#'   # one for each arm, are linear with arm-specific parameters betas)
+#'   list_betas <- cramR:::get_betas(simulations, d, k)
 #'
-#' # Define the contextual linear bandit, where sigma is the scale
-#' # of the noise in the outcome linear model
-#' bandit        <- cramR:::ContextualLinearBandit$new(k = k,
+#'   # Define the contextual linear bandit, where sigma is the scale
+#'   # of the noise in the outcome linear model
+#'   bandit        <- cramR:::ContextualLinearBandit$new(k = k,
 #'                                                     d = d,
 #'                                                     list_betas = list_betas,
 #'                                                     sigma = 0.3)
 #'
-#' # Define the policy object (choose between Contextual Epsilon Greedy,
-#' # UCB Disjoint and Thompson Sampling)
-#' policy <- cramR:::BatchContextualEpsilonGreedyPolicy$new(epsilon=0.1,
+#'   # Define the policy object (choose between Contextual Epsilon Greedy,
+#'   # UCB Disjoint and Thompson Sampling)
+#'   policy <- cramR:::BatchContextualEpsilonGreedyPolicy$new(epsilon=0.1,
 #'                                                          batch_size=5)
-#' # policy <- cramR:::BatchLinUCBDisjointPolicyEpsilon$new(alpha=1.0,epsilon=0.1,batch_size=1)
-#' # policy <- cramR:::BatchContextualLinTSPolicy$new(v = 0.1, batch_size=1)
+#'   # policy <- cramR:::BatchLinUCBDisjointPolicyEpsilon$new(alpha=1.0,epsilon=0.1,batch_size=1)
+#'   # policy <- cramR:::BatchContextualLinTSPolicy$new(v = 0.1, batch_size=1)
 #'
 #'
-#' sim <- cram_bandit_sim(horizon, simulations,
+#'   sim <- cram_bandit_sim(horizon, simulations,
 #'                        bandit, policy,
 #'                        alpha=0.05, do_parallel = FALSE)
-#' sim$summary_table
+#'   sim$summary_table
+#' }
 #'
-#' @import contextual
 #' @importFrom magrittr %>%
 #' @import data.table
 #' @importFrom dplyr group_by group_modify ungroup summarise mutate select
@@ -81,6 +82,10 @@ utils::globalVariables(c(
 cram_bandit_sim <- function(horizon, simulations,
                             bandit, policy,
                             alpha=0.05, do_parallel = FALSE, seed=42) {
+
+  if (!requireNamespace("contextual", quietly = TRUE)) {
+    stop("The 'contextual' package is required for this functionality. Please install it from GitHub: remotes::install_github('Nth-iteration-labs/contextual').")
+  }
 
   # Force garbage collection before starting
   gc(full = TRUE, verbose = FALSE)
