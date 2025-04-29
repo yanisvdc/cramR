@@ -1,5 +1,20 @@
 utils::globalVariables(c("inv", "Agent"))
 
+# Imports
+#' @importFrom R6 R6Class
+#' @importFrom data.table data.table as.data.table set setorder setkeyv copy uniqueN setcolorder tstrsplit rbindlist fwrite setnames
+#' @importFrom foreach `%do%` `%dopar%` foreach
+#' @importFrom iterators icount
+#' @importFrom itertools isplitVector
+#' @importFrom parallel detectCores makeCluster stopCluster
+#' @importFrom doParallel stopImplicitCluster registerDoParallel
+#' @importFrom rjson toJSON
+#' @importFrom stats runif dgamma pgamma qgamma rgamma qnorm rbeta pnorm dnorm integrate
+#' @importFrom grDevices graphics.off dev.off
+#' @importFrom R.devices devOptions
+#' @importFrom magrittr %>%
+#' @importFrom dplyr filter
+
 
 # Ref: adapted from the contextual package
 

@@ -1,6 +1,5 @@
 library(testthat)
 library(data.table)
-library(contextual)
 
 test_that("cram_bandit_sim runs and returns expected structure with  batch epsilon greedy", {
 

@@ -46,7 +46,9 @@ Imports:
     purrr,
     R6,
     rjson,
-    R.devices
+    R.devices,
+    itertools,
+    iterators
 Suggests: 
     testthat (>= 3.0.0),
     covr (>= 3.5.1),
