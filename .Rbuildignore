@@ -1,14 +1,14 @@
-^.*\.Rproj$
-^\.Rproj\.user$
-^LICENSE\.md$
-^doc$
-^Meta$
-^__pycache__$
+# Tests
 ^tests/testthat/_snaps/.*
 ^tests/testthat/_snaps$
+
+# Pkgdown
 ^_pkgdown\.yml$
-^docs$
 ^pkgdown$
+
+# Residuals py
+^Meta$
+^__pycache__$
 ^.*\.py$
 ^__autograph_generated_file.*
 ^tensorflow/
@@ -20,6 +20,7 @@
 
 # IDE/Editor files
 ^\.Rproj\.user
+^\.Rproj\.user$
 ^.*\.Rproj$
 ^\.DS_Store
 ^Thumbs\.db
@@ -34,8 +35,9 @@
 
 # Documentation
 ^docs$
-^inst/doc
+^doc$
 
 # Redundant files
 ^README.html$
 ^LICENSE.md$
+^LICENSE\.md$

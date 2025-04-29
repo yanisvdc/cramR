@@ -1,6 +1,6 @@
 ---
 title: "Introduction & Cram Policy part 1"
-# output: rmarkdown::html_vignette
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Introduction & Cram Policy part 1}
   %\VignetteEngine{knitr::rmarkdown}

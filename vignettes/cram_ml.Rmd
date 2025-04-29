@@ -1,6 +1,6 @@
 ---
 title: "Cram ML"
-# output: rmarkdown::html_vignette
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Cram ML}
   %\VignetteEngine{knitr::rmarkdown}

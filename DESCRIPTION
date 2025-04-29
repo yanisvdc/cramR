@@ -60,8 +60,7 @@ Suggests:
     rmarkdown,
     randomForest,
     gbm,
-    nnet,
-    contextual
+    nnet
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
