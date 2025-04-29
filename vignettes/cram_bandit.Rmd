@@ -1,6 +1,6 @@
 ---
 title: "Cram Bandit"
-output: rmarkdown::html_vignette
+# output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Cram Bandit}
   %\VignetteEngine{knitr::rmarkdown}

@@ -1,7 +1,6 @@
-
 ---
 title: "Quick Start with CRAM"
-output: rmarkdown::html_vignette
+# output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Quick Start with CRAM}
   %\VignetteEngine{knitr::rmarkdown}
