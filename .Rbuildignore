@@ -12,3 +12,30 @@
 ^.*\.py$
 ^__autograph_generated_file.*
 ^tensorflow/
+
+# Version control
+^\.git
+^\.github
+^\.gitignore
+
+# IDE/Editor files
+^\.Rproj\.user
+^.*\.Rproj$
+^\.DS_Store
+^Thumbs\.db
+
+# Build artifacts
+^src/.*\.o$
+^\.Rcheck/
+
+# CI/CD
+^\.travis\.yml$
+^appveyor\.yml$
+
+# Documentation
+^docs$
+^inst/doc
+
+# Redundant files
+^README.html$
+^LICENSE.md$
