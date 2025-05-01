@@ -1,6 +1,6 @@
 Package: cramR
 Type: Package
-Title: The Cram Method for Efficient Simultaneous Learning and Evaluation
+Title: Cram Method for Efficient Simultaneous Learning and Evaluation
 Version: 0.1.0
 Date: 2025-04-02
 Authors@R: c(
@@ -11,24 +11,9 @@ Authors@R: c(
     person("Longlin", "Wang", email = "longlin_wang@g.harvard.edu", role = "ctb")
   )
 Maintainer: Yanis Vandecasteele <yanisvdc.ensae@gmail.com>
-Description: Performs the 'Cram' method, a general and efficient approach to simultaneous learning 
-    and evaluation using a generic machine learning algorithm. In a single pass of batched
-    data, the proposed method repeatedly trains a machine learning algorithm and tests its empirical performance. 
-    Because it utilizes the entire sample for both learning and evaluation, 'cramming' is 
-    significantly more data-efficient than sample-splitting. Unlike cross-validation, 
-    'Cram' evaluates the final learned model directly, providing sharper inference aligned 
-    with real-world deployment. The method naturally applies to both policy learning and 
-    contextual bandits, where decisions are based on individual features to 
-    maximize outcomes. 'cramR' includes cram_policy() for learning and evaluating individualized binary 
-    treatment rules, cram_ml() to train and assess the population-level performance of machine learning models,
-    and cram_bandit() for on-policy evaluation of contextual bandit algorithms. 
-    For all three functions, 'cramR' provides estimates of the average outcome that 
-    would result if the learned model were deployed, along with standard errors 
-    and confidence intervals for these estimates. Details of the method are described in Jia, Imai, and Li (2024) 
-    <https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf> 
-    and Jia et al. (2025) <doi:10.48550/arXiv.2403.07031>.
+Description: Performs the Cram method, a general and efficient approach to simultaneous learning and evaluation using a generic machine learning algorithm. In a single pass of batched data, the proposed method repeatedly trains a machine learning algorithm and tests its empirical performance. Because it utilizes the entire sample for both learning and evaluation, cramming is significantly more data-efficient than sample-splitting. Unlike cross-validation, Cram evaluates the final learned model directly, providing sharper inference aligned with real-world deployment. The method naturally applies to both policy learning and contextual bandits, where decisions are based on individual features to maximize outcomes. The package includes cram_policy() for learning and evaluating individualized binary treatment rules, cram_ml() to train and assess the population-level performance of machine learning models, and cram_bandit() for on-policy evaluation of contextual bandit algorithms. For all three functions, the package provides estimates of the average outcome that would result if the model were deployed, along with standard errors and confidence intervals for these estimates. Details of the method are described in Jia, Imai, and Li (2024) <https://www.hbs.edu/ris/Publication%20Files/2403.07031v1_a83462e0-145b-4675-99d5-9754aa65d786.pdf> and Jia et al. (2025) <doi:10.48550/arXiv.2403.07031>.
 License: GPL-3
-URL: https://github.com/yanisvdc/cramR https://yanisvdc.github.io/cramR/
+URL: https://github.com/yanisvdc/cramR, https://yanisvdc.github.io/cramR/
 BugReports: https://github.com/yanisvdc/cramR/issues
 Depends: R (>= 3.5.0)
 Imports:
