@@ -20,7 +20,7 @@ Description: Performs the 'Cram' method, a general and efficient approach to sim
     with real-world deployment. The method naturally applies to both policy learning and 
     contextual bandits, where decisions are based on individual features to 
     maximize outcomes. 'cramR' includes cram_policy() for learning and evaluating individualized binary 
-    treatment rules, cram_ml() for population-level evaluation of predictive models,
+    treatment rules, cram_ml() to train and assess the population-level performance of machine learning models,
     and cram_bandit() for on-policy evaluation of contextual bandit algorithms. 
     For all three functions, 'cramR' provides estimates of the average outcome that 
     would result if the learned model were deployed, along with standard errors 
