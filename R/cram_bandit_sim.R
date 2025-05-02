@@ -34,7 +34,7 @@ utils::globalVariables(c(
 #'   \item{interactive_table}{An interactive table summarizing the same key metrics in a user-friendly interface.}
 #'
 #' @examples
-#'
+#' \dontrun{
 #' # Number of time steps
 #' horizon       <- 500L
 #'
@@ -70,6 +70,7 @@ utils::globalVariables(c(
 #'                        bandit, policy,
 #'                        alpha=0.05, do_parallel = FALSE)
 #' sim$summary_table
+#' }
 #'
 #' @importFrom magrittr %>%
 #' @import data.table

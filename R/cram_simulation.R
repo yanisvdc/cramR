@@ -60,6 +60,7 @@ utils::globalVariables(c("X", "D", "Y", "sim_id", "."))
 #' }
 #'
 #' @examples
+#' \dontrun{
 #' set.seed(123)
 #'
 #' # dgp_X <- function(n) {
@@ -112,6 +113,7 @@ utils::globalVariables(c("X", "D", "Y", "sim_id", "."))
 #'
 #' result$raw_results
 #' result$interactive_table
+#' }
 #'
 #' @seealso \code{\link[grf]{causal_forest}}, \code{\link[glmnet]{cv.glmnet}}, \code{\link[keras]{keras_model_sequential}}
 #' @export
