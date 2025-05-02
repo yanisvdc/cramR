@@ -49,7 +49,7 @@ This function runs on-policy simulation for contextual bandit algorithms using t
 It evaluates the statistical properties of policy value estimates.
 }
 \examples{
-
+\dontrun{
 # Number of time steps
 horizon       <- 500L
 
@@ -85,5 +85,6 @@ sim <- cram_bandit_sim(horizon, simulations,
                        bandit, policy,
                        alpha=0.05, do_parallel = FALSE)
 sim$summary_table
+}
 
 }
