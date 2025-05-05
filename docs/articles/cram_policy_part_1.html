@@ -493,45 +493,151 @@ the article “Cram Policy part 2”)</li>
 </ul>
 </div>
 <div class="section level2">
-<h2 id="why-cram">Why Cram?<a class="anchor" aria-label="anchor" href="#why-cram"></a>
+<h2 id="comparing-evaluation-strategies-sample-splitting-cross-validation-and-cram">📐 Comparing Evaluation Strategies: Sample-Splitting,
+Cross-Validation, and Cram<a class="anchor" aria-label="anchor" href="#comparing-evaluation-strategies-sample-splitting-cross-validation-and-cram"></a>
 </h2>
-<p>Compared to classic learning and evaluation methods, in terms of data
-usage for both learning and evaluation:</p>
+<p>In this section, we compare classical strategies for model
+evaluation—namely sample-splitting and cross-validation—with the Cram
+method. While all three approaches may ultimately train a model using
+the full dataset, they differ fundamentally in how they estimate the
+generalization performance of that model.</p>
+<div class="section level3">
+<h3 id="sample-splitting">🔍 Sample-Splitting<a class="anchor" aria-label="anchor" href="#sample-splitting"></a>
+</h3>
+<p>Sample-splitting divides the data into a training set and a held-out
+test set (e.g., 80/20). The model is trained on the training portion,
+and its performance is assessed on the held-out set. This procedure
+produces an evaluation of a model that was not trained on all the data,
+which may understate the performance of the final model trained on the
+full dataset. Thus, the evaluation corresponds to:</p>
+<ul>
+<li>A partially trained model (fit on, say, 80% of the data),</li>
+<li>Evaluated on unseen data (the held-out 20%).</li>
+</ul>
+<p>This raises two issues:</p>
+<ul>
+<li>The model being evaluated is not the final model we would deploy
+(it’s undertrained).</li>
+<li>The evaluation uses only part of the available data, reducing
+statistical efficiency.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="cross-validation">🔄 Cross-Validation<a class="anchor" aria-label="anchor" href="#cross-validation"></a>
+</h3>
+<p>We consider k-fold cross-validation, which partitions the data into k
+equal-sized folds. For each fold, a model is trained on the remaining
+k-1 folds and evaluated on the held-out fold. This process ensures that
+each observation is used for both training and evaluation, but in
+different models. The final performance estimate is the average of
+fold-specific evaluation metrics and serves as a proxy for the expected
+performance of the model that would be trained on the full dataset.</p>
+<ul>
+<li>Each model is trained on a subset of the data (e.g., 4 folds out of
+5),</li>
+<li>Evaluation is performed over the entire dataset, but using different
+models for each portion.</li>
+</ul>
+<p>Thus, while cross-validation uses all data for evaluation, it only
+evaluates models trained on partial data. Crucially, the final model
+trained on the full dataset is never evaluated directly; its performance
+is approximated by averaging over surrogate models trained on
+subsets.</p>
+</div>
+<div class="section level3">
+<h3 id="cram">📈 Cram<a class="anchor" aria-label="anchor" href="#cram"></a>
+</h3>
+<p>Cram departs from these approaches by directly targeting the
+performance of the final trained model—i.e., the one trained on the
+entire dataset by casting evaluation as a statistical estimation
+problem: it estimates the population-level performance (e.g., expected
+outcome or loss) the model would achieve if deployed.</p>
+<p>Specifically:</p>
+<ul>
+<li>Cram trains a sequence of models on cumulative batches and evaluates
+each on the remaining data, as described in Algorithm 1,</li>
+<li>Then uses statistical estimators to estimate the expected
+performance of the final model trained on the entire dataset—i.e., the
+outcome we would observe if this model were deployed at the population
+level beyond the observed sample,</li>
+<li>It provides confidence intervals around this estimate, which
+quantify uncertainty: for example, a 95% confidence interval is
+constructed such that, under repeated samples from the same
+data-generating process, the interval would contain the true expected
+performance in 95% of cases.</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="key-distinction-summary-what-is-being-evaluated">🧠 Key Distinction Summary: What Is Being Evaluated?<a class="anchor" aria-label="anchor" href="#key-distinction-summary-what-is-being-evaluated"></a>
+</h3>
+<p>All methods aim to estimate the generalization performance of a model
+trained on the full dataset* (denoted as final model in the table below
+for readability). However, they differ in the <em>models trained during
+evaluation</em>, <em>the data used for evaluation</em>, and <em>how the
+final performance estimate is constructed</em>.</p>
 <table class="table">
 <colgroup>
-<col width="28%">
+<col width="8%">
 <col width="15%">
-<col width="28%">
-<col width="27%">
+<col width="22%">
+<col width="13%">
+<col width="39%">
 </colgroup>
 <thead><tr class="header">
 <th>Method</th>
-<th>Learning</th>
-<th>Evaluation</th>
-<th>Data Usage Overall</th>
+<th>Target of Evaluation</th>
+<th>Evaluation Models Trained</th>
+<th>Evaluation Data Used</th>
+<th>Evaluation Mechanism</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Sample Splitting</td>
-<td>Partial</td>
-<td>Partial</td>
-<td>❌ Inefficient</td>
+<td>Sample-Splitting</td>
+<td>Generalization performance of final model*</td>
+<td>One model trained on a subset</td>
+<td>Held-out subset</td>
+<td>Empirical performance on test set</td>
 </tr>
 <tr class="even">
 <td>Cross-Validation</td>
-<td>Partial</td>
-<td>Final model not evaluated directly, average performance across
-fold-specific models used as proxy</td>
-<td>⚠️ Partial for each fold-specific model</td>
+<td>Generalization performance of final model*</td>
+<td>
+<em>k</em> models trained on different subsets</td>
+<td>Entire data (across folds)</td>
+<td>Average of fold-specific evaluation metrics</td>
 </tr>
 <tr class="odd">
-<td><strong>Cram</strong></td>
-<td>✅ Full</td>
-<td>✅ Final model evaluated directly using all data</td>
-<td>✅ Fully reused for both learning and evaluation</td>
+<td>Cram</td>
+<td>Generalization performance of final model*</td>
+<td>Sequence of models trained on cumulative batches</td>
+<td>Entire data</td>
+<td>Statistical estimation targeting generalization performance of final
+model; provides confidence intervals and inference</td>
 </tr>
 </tbody>
 </table>
+<p>final model*: model trained on the full dataset</p>
+<ul>
+<li>
+<strong>Sample-splitting</strong> trains a single model on a subset
+of the data and evaluates it on a held-out portion. This is simple but
+statistically inefficient.</li>
+<li>
+<strong>Cross-validation</strong> trains multiple models, each on a
+subset of the data, and evaluates each on its corresponding held-out
+fold. The fold-specific evaluation metrics are then averaged to
+approximate the final model’s performance. Although commonly used as a
+proxy for the generalization performance of the final model, this
+average does not directly target or estimate the performance of the
+model trained on the full dataset.</li>
+<li>
+<strong>Cram</strong> trains models on cumulative data batches and
+evaluates each on the remaining data. It uses these evaluations to
+statistically estimate the generalization performance of the final model
+trained on all data, providing both a point estimate and valid
+confidence intervals for the expected performance if deployed.</li>
+</ul>
+</div>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

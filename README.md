@@ -88,7 +88,7 @@ Common examples include:
 ---
 
 ## 📚 Documentation
-- [Introduction & Cram Policy](https://yanisvdc.github.io/cramR/articles/cram_policy_part_1.html)
+- [Introduction & Cram Policy part 1](https://yanisvdc.github.io/cramR/articles/cram_policy_part_1.html)
 - [Function Reference](https://yanisvdc.github.io/cramR/reference/index.html)
 - [What's New](https://yanisvdc.github.io/cramR/news/index.html)
 
