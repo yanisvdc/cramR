@@ -570,22 +570,20 @@ performance in 95% of cases.</li>
 <div class="section level3">
 <h3 id="key-distinction-summary-what-is-being-evaluated">🧠 Key Distinction Summary: What Is Being Evaluated?<a class="anchor" aria-label="anchor" href="#key-distinction-summary-what-is-being-evaluated"></a>
 </h3>
-<p>All methods aim to estimate the generalization performance of a model
-trained on the full dataset* (denoted as final model in the table below
-for readability). However, they differ in the <em>models trained during
-evaluation</em>, <em>the data used for evaluation</em>, and <em>how the
-final performance estimate is constructed</em>.</p>
+<p>All methods aim to estimate the generalization performance of the
+model trained on the full dataset (denoted as final model in the table
+below for readability). However, they differ in the <em>models trained
+during evaluation</em>, <em>the data used for evaluation</em>, and
+<em>how the final performance estimate is constructed</em>.</p>
 <table class="table">
 <colgroup>
-<col width="8%">
-<col width="15%">
-<col width="22%">
-<col width="13%">
-<col width="39%">
+<col width="9%">
+<col width="27%">
+<col width="16%">
+<col width="46%">
 </colgroup>
 <thead><tr class="header">
 <th>Method</th>
-<th>Target of Evaluation</th>
 <th>Evaluation Models Trained</th>
 <th>Evaluation Data Used</th>
 <th>Evaluation Mechanism</th>
@@ -593,14 +591,12 @@ final performance estimate is constructed</em>.</p>
 <tbody>
 <tr class="odd">
 <td>Sample-Splitting</td>
-<td>Generalization performance of final model*</td>
 <td>One model trained on a subset</td>
 <td>Held-out subset</td>
 <td>Empirical performance on test set</td>
 </tr>
 <tr class="even">
 <td>Cross-Validation</td>
-<td>Generalization performance of final model*</td>
 <td>
 <em>k</em> models trained on different subsets</td>
 <td>Entire data (across folds)</td>
@@ -608,11 +604,10 @@ final performance estimate is constructed</em>.</p>
 </tr>
 <tr class="odd">
 <td>Cram</td>
-<td>Generalization performance of final model*</td>
 <td>Sequence of models trained on cumulative batches</td>
 <td>Entire data</td>
-<td>Statistical estimation targeting generalization performance of final
-model; provides confidence intervals and inference</td>
+<td>Statistical estimation of generalization performance of final model;
+provides confidence intervals and inference</td>
 </tr>
 </tbody>
 </table>

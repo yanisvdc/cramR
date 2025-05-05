@@ -262,13 +262,13 @@ Specifically:
 
 ### 🧠 Key Distinction Summary: What Is Being Evaluated?
 
-All methods aim to estimate the generalization performance of a model trained on the full dataset* (denoted as final model in the table below for readability). However, they differ in the *models trained during evaluation*, *the data used for evaluation*, and *how the final performance estimate is constructed*.
+All methods aim to estimate the generalization performance of the model trained on the full dataset (denoted as final model in the table below for readability). However, they differ in the *models trained during evaluation*, *the data used for evaluation*, and *how the final performance estimate is constructed*.
 
-| Method            | Target of Evaluation             | Evaluation Models Trained                          | Evaluation Data Used           | Evaluation Mechanism                                                                 |
-|------------------|----------------------------------|---------------------------------------------------|-------------------------------|----------------------------------------------------------------------------------------|
-| Sample-Splitting | Generalization performance of final model*         | One model trained on a subset                     | Held-out subset               | Empirical performance on test set                                                     |
-| Cross-Validation | Generalization performance of final model*         | *k* models trained on different subsets           | Entire data (across folds)    | Average of fold-specific evaluation metrics                                           |
-| Cram             | Generalization performance of final model*         | Sequence of models trained on cumulative batches | Entire data                   | Statistical estimation targeting generalization performance of final model; provides confidence intervals and inference |
+| Method            | Evaluation Models Trained                          | Evaluation Data Used           | Evaluation Mechanism                                                                 |
+|------------------|---------------------------------------------------|-------------------------------|----------------------------------------------------------------------------------------|
+| Sample-Splitting | One model trained on a subset                     | Held-out subset               | Empirical performance on test set                                                     |
+| Cross-Validation | *k* models trained on different subsets           | Entire data (across folds)    | Average of fold-specific evaluation metrics                                           |
+| Cram             | Sequence of models trained on cumulative batches | Entire data                   | Statistical estimation of generalization performance of final model; provides confidence intervals and inference |
 
 final model*: model trained on the full dataset 
 
