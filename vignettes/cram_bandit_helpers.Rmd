@@ -101,7 +101,7 @@ where:
 
 Best arms are identified via the estimated expected reward:
 
-\[ \text{(Expected reward)} = \( X_t^T \theta_k \) \]
+\[ \text{Expected reward} = X_t^T \theta_k \]
 
 
 ### 📊 Code helper

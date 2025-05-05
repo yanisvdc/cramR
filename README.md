@@ -51,6 +51,7 @@ In a single pass of batched data, the proposed method repeatedly trains an ML al
 
 Because it utilizes the entire sample for both learning and evaluation, cramming is significantly more data-efficient than sample-splitting, which reserves a portion of the data purely for evaluation.
 Also, a key distinction from **cross-validation** is that Cram evaluates the **final learned model** directly, rather than using as a proxy the average performance of multiple fold-specific models trained on different data subsets—resulting in sharper inference and better alignment with real-world deployment.
+More details about the Cram procedure can be found in the article [Introduction & Cram Policy part 1](https://yanisvdc.github.io/cramR/articles/cram_policy_part_1.html).
 
 ##### 🧠 Typical use case: Policy Learning
 
@@ -87,7 +88,7 @@ Common examples include:
 ---
 
 ## 📚 Documentation
-- [Introduction & Cram Policy](https://yanisvdc.github.io/cramR/articles/cram_policy.html)
+- [Introduction & Cram Policy](https://yanisvdc.github.io/cramR/articles/cram_policy_part_1.html)
 - [Function Reference](https://yanisvdc.github.io/cramR/reference/index.html)
 - [What's New](https://yanisvdc.github.io/cramR/news/index.html)
 
