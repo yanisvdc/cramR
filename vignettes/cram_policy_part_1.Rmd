@@ -251,7 +251,7 @@ Thus, while cross-validation uses all data for evaluation, it only evaluates mod
 
 ### 📈 Cram
 
-Cram departs from these approaches by directly targeting the performance of the final trained model—i.e., the one trained on the entire dataset by casting evaluation as a statistical estimation problem: it estimates the population-level performance (e.g., expected outcome or loss) the model would achieve if deployed.
+Cram departs from these approaches by directly targeting the performance of the final model trained on the entire dataset, casting evaluation as a statistical estimation problem: it estimates the population-level performance (e.g., expected outcome or loss) that the model would achieve if deployed.
 
 Specifically:
 
