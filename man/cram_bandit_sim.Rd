@@ -49,7 +49,7 @@ This function runs on-policy simulation for contextual bandit algorithms using t
 It evaluates the statistical properties of policy value estimates.
 }
 \examples{
-\dontrun{
+\donttest{
 # Number of time steps
 horizon       <- 500L
 

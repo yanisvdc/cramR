@@ -60,7 +60,7 @@ utils::globalVariables(c("X", "D", "Y", "sim_id", "."))
 #' }
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' set.seed(123)
 #'
 #' # dgp_X <- function(n) {

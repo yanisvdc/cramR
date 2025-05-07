@@ -34,7 +34,7 @@ utils::globalVariables(c(
 #'   \item{interactive_table}{An interactive table summarizing the same key metrics in a user-friendly interface.}
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' # Number of time steps
 #' horizon       <- 500L
 #'

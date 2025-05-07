@@ -101,7 +101,7 @@ induced by a provided dataset via row-wise bootstrapping.
 Results are averaged across Monte Carlo replicates for the given DGP.
 }
 \examples{
-\dontrun{
+\donttest{
 set.seed(123)
 
 # dgp_X <- function(n) {
