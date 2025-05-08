@@ -2298,6 +2298,19 @@ compute_estimand <- function(sim_data, list_betas, policy, policy_name, batch_si
 
 # BETAS PARAMS OF REWARD MODEL ---------------------------------------------------------------------
 
+#' Generate Reward Parameters for Simulated Linear Bandits
+#'
+#' Creates a list of matrices representing the arm-specific reward-generating parameters (betas)
+#' used in contextual linear bandit simulations. Each matrix corresponds to one simulation
+#' and contains normalized random coefficients.
+#'
+#' @param simulations Integer. Number of simulations.
+#' @param d Integer. Number of features (context dimensions).
+#' @param k Integer. Number of arms.
+#'
+#' @return A list of length \code{simulations + 1} (first element being discarded in the underlying
+#' simulation package), each containing a \code{d x k} matrix of normalized reward parameters.
+#' @export
 get_betas <- function(simulations, d, k) {
   # d: number of features
   # k: number of arms
@@ -2316,6 +2329,26 @@ get_betas <- function(simulations, d, k) {
 # CUSTOM CONTEXTUAL LINEAR BANDIT -------------------------------------------------------------------
 # store the parameters betas of the observed reward generation model
 
+#' Contextual Linear Bandit Environment
+#'
+#' An R6 class for simulating a contextual linear bandit environment with normally distributed rewards.
+#'
+#' @field rewards A vector of rewards for each arm in the current round.
+#' @field betas Coefficient matrix of the linear reward model (one column per arm).
+#' @field sigma Standard deviation of the Gaussian noise added to rewards.
+#' @field binary Logical, indicating whether to convert rewards into binary outcomes.
+#' @field weights The latent reward scores before noise and/or binarization.
+#' @field list_betas A list of coefficient matrices, one per simulation.
+#' @field sim_id Index for selecting which simulation's coefficients to use.
+#' @field class_name Name of the class for internal tracking.
+#'
+#' @section Methods:
+#' - `initialize(k, d, list_betas, sigma = 0.1, binary_rewards = FALSE)`: Constructor.
+#' - `post_initialization()`: Loads correct coefficients based on `sim_id`.
+#' - `get_context(t)`: Returns context and sets internal reward vector.
+#' - `get_reward(t, context_common, action)`: Returns observed reward for an action.
+#'
+#' @export
 ContextualLinearBandit <- R6::R6Class(
   "ContextualLinearBandit",
   inherit = Bandit,
@@ -2329,6 +2362,12 @@ ContextualLinearBandit <- R6::R6Class(
     list_betas  = NULL,
     sim_id      = NULL,
     class_name = "ContextualLinearBandit",
+
+    #' @param k Number of arms
+    #' @param d Number of features
+    #' @param list_betas A list of true beta matrices for each simulation
+    #' @param sigma Standard deviation of Gaussian noise
+    #' @param binary_rewards Logical, use binary rewards or not
     initialize  = function(k, d, list_betas, sigma = 0.1, binary_rewards = FALSE) {
       self$k                                    <- k
       self$d                                    <- d
@@ -2336,6 +2375,9 @@ ContextualLinearBandit <- R6::R6Class(
       self$binary                               <- binary_rewards
       self$list_betas <- list_betas
     },
+
+    #' @description Set the simulation-specific coefficients for the current simulation.
+    #' @return No return value; modifies the internal state of the object.
     post_initialization = function() {
       # self$betas                                <- matrix(runif(self$d*self$k, -1, 1), self$d, self$k)
       # self$betas                                <- self$betas / norm(self$betas, type = "2")
@@ -2343,6 +2385,9 @@ ContextualLinearBandit <- R6::R6Class(
       self$betas <- self$list_betas[[self$sim_id]]
 
     },
+
+    #' @param t Current time step
+    #' @return A list containing context vector `X` and arm count `k`
     get_context = function(t) {
 
       X                                         <- rnorm(self$d)
@@ -2361,6 +2406,11 @@ ContextualLinearBandit <- R6::R6Class(
         X = X
       )
     },
+
+    #' @param t Current time step
+    #' @param context_common Context shared across arms
+    #' @param action Action taken by the policy
+    #' @return A list with reward and optimal arm/reward info
     get_reward = function(t, context_common, action) {
       rewards        <- self$rewards
       optimal_arm    <- which_max_tied(self$weights)
@@ -2375,8 +2425,21 @@ ContextualLinearBandit <- R6::R6Class(
 
 # CUSTOM CONTEXTUAL LINEAR POLICIES -----------------------------------------------------------------
 
-
-# UCB DISJOINT WITH EPSILON
+#' LinUCB Disjoint Policy with Epsilon-Greedy Exploration
+#'
+#' Implements the disjoint LinUCB algorithm with upper confidence bounds and epsilon-greedy exploration.
+#'
+#' @field alpha Numeric, exploration parameter controlling the width of the confidence bound.
+#' @field epsilon Numeric, probability of selecting a random action (exploration).
+#' @field class_name Internal class name.
+#'
+#' @section Methods:
+#' - `initialize(alpha = 1.0, epsilon = 0.1)`: Create a new LinUCBDisjointPolicyEpsilon object.
+#' - `set_parameters(context_params)`: Initialize arm-level parameters.
+#' - `get_action(t, context)`: Selects an arm using epsilon-greedy UCB.
+#' - `set_reward(t, context, action, reward)`: Updates internal statistics based on observed reward.
+#'
+#' @export
 LinUCBDisjointPolicyEpsilon <- R6::R6Class(
   portable = FALSE,
   class = FALSE,
@@ -2385,15 +2448,30 @@ LinUCBDisjointPolicyEpsilon <- R6::R6Class(
     alpha = NULL,
     epsilon = NULL,
     class_name = "LinUCBDisjointPolicyEpsilon",
+
+    #' @description
+    #' Initializes the policy with UCB parameter \code{alpha} and exploration rate \code{epsilon}.
+    #' @param alpha Numeric. Controls width of the UCB bonus.
+    #' @param epsilon Numeric between 0 and 1. Probability of random action selection.
     initialize = function(alpha = 1.0, epsilon=0.1) {
       super$initialize()
       self$alpha <- alpha
       self$epsilon <- epsilon
     },
+
+    #' @description
+    #' Set arm-specific parameter structures.
+    #' @param context_params A list with context information, typically including the number of unique features.
     set_parameters = function(context_params) {
       ul <- length(context_params$unique)
       self$theta_to_arms <- list('A' = diag(1,ul,ul), 'b' = rep(0,ul))
     },
+
+    #' @description
+    #' Selects an arm using epsilon-greedy Upper Confidence Bound (UCB).
+    #' @param t Integer time step.
+    #' @param context A list with contextual features and number of arms.
+    #' @return A list containing the selected action.
     get_action = function(t, context) {
 
       if (runif(1) > self$epsilon) {
@@ -2424,6 +2502,14 @@ LinUCBDisjointPolicyEpsilon <- R6::R6Class(
 
       action
     },
+
+    #' @description
+    #' Updates internal statistics using the observed reward for the selected arm.
+    #' @param t Integer time step.
+    #' @param context Contextual features for all arms at time \code{t}.
+    #' @param action A list containing the chosen arm.
+    #' @param reward A list containing the observed reward for the selected arm.
+    #' @return Updated internal parameters.
     set_reward = function(t, context, action, reward) {
       arm    <- action$choice
       reward <- reward$reward
@@ -2439,6 +2525,17 @@ LinUCBDisjointPolicyEpsilon <- R6::R6Class(
 
 # BATCH VERSION OF CONTEXTUAL LINEAR POLICIES ----------------------------------------------------
 
+#' Batch Contextual Epsilon-Greedy Policy
+#'
+#' Implements an epsilon-greedy exploration strategy for contextual bandits with batched updates.
+#'
+#' @field epsilon Probability of selecting a random arm (exploration rate).
+#' @field batch_size Number of rounds per batch before updating model parameters.
+#' @field A_cc List of Gram matrices (one per arm), used to accumulate sufficient statistics across batches.
+#' @field b_cc List of reward-weighted context sums (one per arm), updated batch-wise.
+#' @field class_name Internal class name identifier.
+#'
+#' @export
 BatchContextualEpsilonGreedyPolicy <- R6::R6Class(
   portable = FALSE,
   class = FALSE,
@@ -2449,6 +2546,11 @@ BatchContextualEpsilonGreedyPolicy <- R6::R6Class(
     A_cc = NULL,
     b_cc = NULL,
     class_name = "BatchContextualEpsilonGreedyPolicy",
+
+    #' @description
+    #' Constructor for the Batch Epsilon-Greedy policy.
+    #' @param epsilon Numeric between 0 and 1. Probability of random arm selection.
+    #' @param batch_size Integer. Number of observations between parameter updates.
     initialize = function(epsilon = 0.1, batch_size=1) {
       super$initialize()
       self$epsilon <- epsilon
@@ -2456,6 +2558,10 @@ BatchContextualEpsilonGreedyPolicy <- R6::R6Class(
       self$A_cc <- A_cc
       self$b_cc <- b_cc
     },
+
+    #' @description
+    #' Initializes the parameter structures for each arm.
+    #' @param context_params A list with at least `d` (number of features) and `k` (number of arms).
     set_parameters = function(context_params) {
       d <- context_params$d
       k <- context_params$k
@@ -2463,6 +2569,12 @@ BatchContextualEpsilonGreedyPolicy <- R6::R6Class(
       self$A_cc <- replicate(k, diag(1, d, d), simplify = FALSE)
       self$b_cc <- replicate(k, rep(0,d), simplify = FALSE)
     },
+
+    #' @description
+    #' Chooses an arm based on epsilon-greedy logic and the current estimates.
+    #' @param t Integer time step.
+    #' @param context A list with contextual features and arm count.
+    #' @return A list with the selected action.
     get_action = function(t, context) {
 
       if (runif(1) > self$epsilon) {
@@ -2482,6 +2594,14 @@ BatchContextualEpsilonGreedyPolicy <- R6::R6Class(
 
       action
     },
+
+    #' @description
+    #' Updates model statistics based on observed reward. Updates occur once per batch.
+    #' @param t Integer time step.
+    #' @param context List of contextual features used for the action.
+    #' @param action A list with the chosen arm.
+    #' @param reward A list with the observed reward.
+    #' @return Updated parameter estimates.
     set_reward = function(t, context, action, reward) {
       arm    <- action$choice
       reward <- reward$reward
@@ -2501,6 +2621,24 @@ BatchContextualEpsilonGreedyPolicy <- R6::R6Class(
 )
 
 
+#' Batch Disjoint LinUCB Policy with Epsilon-Greedy
+#'
+#' Implements the disjoint LinUCB algorithm with upper confidence bounds and epsilon-greedy exploration, using batched updates.
+#'
+#' @field alpha Numeric, UCB exploration strength parameter.
+#' @field epsilon Numeric, probability of taking a random exploratory action.
+#' @field batch_size Integer, number of rounds per batch update.
+#' @field A_cc List of Gram matrices per arm, accumulated across batch.
+#' @field b_cc List of reward-weighted context vectors per arm.
+#' @field class_name Internal class name identifier.
+#'
+#' @section Methods:
+#' - `initialize(alpha = 1.0, epsilon = 0.1, batch_size = 1)`: Constructor.
+#' - `set_parameters(context_params)`: Initializes sufficient statistics for each arm.
+#' - `get_action(t, context)`: Selects an arm using UCB scores and epsilon-greedy rule.
+#' - `set_reward(t, context, action, reward)`: Updates statistics and refreshes model at batch intervals.
+#'
+#' @export
 BatchLinUCBDisjointPolicyEpsilon <- R6::R6Class(
   portable = FALSE,
   class = FALSE,
@@ -2512,6 +2650,12 @@ BatchLinUCBDisjointPolicyEpsilon <- R6::R6Class(
     A_cc = NULL,
     b_cc = NULL,
     class_name = "BatchLinUCBDisjointPolicyEpsilon",
+
+    #' @description
+    #' Constructor for batched LinUCB with epsilon-greedy exploration.
+    #' @param alpha Numeric. UCB width parameter (exploration strength).
+    #' @param epsilon Numeric. Probability of selecting a random arm.
+    #' @param batch_size Integer. Number of rounds before updating parameters.
     initialize = function(alpha = 1.0, epsilon=0.1, batch_size = 1) {
       super$initialize()
       self$alpha <- alpha
@@ -2520,6 +2664,10 @@ BatchLinUCBDisjointPolicyEpsilon <- R6::R6Class(
       self$A_cc <- A_cc
       self$b_cc <- b_cc
     },
+
+    #' @description
+    #' Initialize arm-specific parameter containers.
+    #' @param context_params List containing at least `unique` (feature size) and `k` (number of arms).
     set_parameters = function(context_params) {
       ul <- length(context_params$unique)
       k <- context_params$k
@@ -2527,6 +2675,12 @@ BatchLinUCBDisjointPolicyEpsilon <- R6::R6Class(
       self$A_cc <- replicate(k, diag(1, ul, ul), simplify = FALSE)
       self$b_cc <- replicate(k, rep(0,ul), simplify = FALSE)
     },
+
+    #' @description
+    #' Chooses an arm based on UCB and epsilon-greedy sampling.
+    #' @param t Integer timestep.
+    #' @param context List containing the context for the decision.
+    #' @return A list with the selected action.
     get_action = function(t, context) {
       if (runif(1) > self$epsilon) {
         expected_rewards <- rep(0.0, context$k)
@@ -2549,6 +2703,15 @@ BatchLinUCBDisjointPolicyEpsilon <- R6::R6Class(
       }
       action
     },
+
+    #' @description
+    #' Updates arm-specific sufficient statistics based on observed reward.
+    #' Parameter updates occur only at the end of a batch.
+    #' @param t Integer timestep.
+    #' @param context Context object used for decision-making.
+    #' @param action List containing the chosen action.
+    #' @param reward List containing the observed reward.
+    #' @return Updated internal model parameters.
     set_reward = function(t, context, action, reward) {
       arm    <- action$choice
       reward <- reward$reward
@@ -2567,6 +2730,23 @@ BatchLinUCBDisjointPolicyEpsilon <- R6::R6Class(
   )
 )
 
+#' Batch Contextual Thompson Sampling Policy
+#'
+#' Implements Thompson Sampling for linear contextual bandits with batch updates.
+#'
+#' @field sigma Numeric, posterior variance scale parameter.
+#' @field batch_size Integer, size of mini-batches before parameter updates.
+#' @field A_cc List of accumulated Gram matrices per arm.
+#' @field b_cc List of reward-weighted context sums per arm.
+#' @field class_name Internal name of the class.
+#'
+#' @section Methods:
+#' - `initialize(v = 0.2, batch_size = 1)`: Constructor, sets variance and batch size.
+#' - `set_parameters(context_params)`: Initializes arm-level matrices.
+#' - `get_action(t, context)`: Samples from the posterior and selects action.
+#' - `set_reward(t, context, action, reward)`: Updates posterior statistics using observed feedback.
+#'
+#' @export
 BatchContextualLinTSPolicy <- R6::R6Class(
   portable = FALSE,
   class = FALSE,
@@ -2577,6 +2757,11 @@ BatchContextualLinTSPolicy <- R6::R6Class(
     A_cc = NULL,
     b_cc = NULL,
     class_name = "BatchContextualLinTSPolicy",
+
+    #' @description
+    #' Constructor for the batch-based Thompson Sampling policy.
+    #' @param v Numeric. Standard deviation scaling parameter for posterior sampling.
+    #' @param batch_size Integer. Number of rounds before parameters are updated.
     initialize = function(v = 0.2, batch_size=1) {
       super$initialize()
       self$sigma   <- v^2
@@ -2584,6 +2769,10 @@ BatchContextualLinTSPolicy <- R6::R6Class(
       self$A_cc <- A_cc
       self$b_cc <- b_cc
     },
+
+    #' @description
+    #' Initializes per-arm sufficient statistics.
+    #' @param context_params List with entries: `unique` (feature vector), `k` (number of arms).
     set_parameters = function(context_params) {
       ul                 <- length(context_params$unique)
       k <- context_params$k
@@ -2591,6 +2780,12 @@ BatchContextualLinTSPolicy <- R6::R6Class(
       self$A_cc <- replicate(k, diag(1, ul, ul), simplify = FALSE)
       self$b_cc <- replicate(k, rep(0,ul), simplify = FALSE)
     },
+
+    #' @description
+    #' Samples from the posterior distribution of expected rewards and selects an action.
+    #' @param t Integer. Time step.
+    #' @param context List containing the current context and arm information.
+    #' @return A list with the chosen arm (`choice`).
     get_action = function(t, context) {
       expected_rewards           <- rep(0.0, context$k)
       for (arm in 1:context$k) {
@@ -2605,6 +2800,15 @@ BatchContextualLinTSPolicy <- R6::R6Class(
       action$choice              <- which_max_tied(expected_rewards)
       action
     },
+
+    #' @description
+    #' Updates Gram matrix and response vector for the chosen arm.
+    #' Parameters are refreshed every `batch_size` rounds.
+    #' @param t Integer. Time step.
+    #' @param context Context object containing feature info.
+    #' @param action Chosen action (arm index).
+    #' @param reward Observed reward for the action.
+    #' @return Updated internal parameters.
     set_reward = function(t, context, action, reward) {
       arm    <- action$choice
       reward <- reward$reward

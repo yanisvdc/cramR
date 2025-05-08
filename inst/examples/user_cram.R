@@ -435,12 +435,12 @@ k = 4
 d= 3
 
 # Reward beta parameters of linear model
-list_betas <- cramR:::get_betas(simulations, d, k)
+list_betas <- cramR::get_betas(simulations, d, k)
 
-bandit        <- cramR:::ContextualLinearBandit$new(k = k, d = d, list_betas = list_betas, sigma = 0.3)
-policy <- cramR:::BatchContextualEpsilonGreedyPolicy$new(epsilon=0.1, batch_size=5)
-# policy <- cramR:::BatchLinUCBDisjointPolicyEpsilon$new(alpha=1.0, epsilon=0.1, batch_size=1)
-# policy <- cramR:::BatchContextualLinTSPolicy$new(v = 0.1, batch_size=1)
+bandit        <- cramR::ContextualLinearBandit$new(k = k, d = d, list_betas = list_betas, sigma = 0.3)
+policy <- cramR::BatchContextualEpsilonGreedyPolicy$new(epsilon=0.1, batch_size=5)
+# policy <- cramR::BatchLinUCBDisjointPolicyEpsilon$new(alpha=1.0, epsilon=0.1, batch_size=1)
+# policy <- cramR::BatchContextualLinTSPolicy$new(v = 0.1, batch_size=1)
 
 
 sim <- cram_bandit_sim(horizon, simulations,

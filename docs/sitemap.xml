@@ -18,6 +18,10 @@
 <url><loc>https://yanisvdc.github.io/cramR/LICENSE.html</loc></url>
 <url><loc>https://yanisvdc.github.io/cramR/news/index.html</loc></url>
 <url><loc>https://yanisvdc.github.io/cramR/reference/averaged_cram.html</loc></url>
+<url><loc>https://yanisvdc.github.io/cramR/reference/BatchContextualEpsilonGreedyPolicy.html</loc></url>
+<url><loc>https://yanisvdc.github.io/cramR/reference/BatchContextualLinTSPolicy.html</loc></url>
+<url><loc>https://yanisvdc.github.io/cramR/reference/BatchLinUCBDisjointPolicyEpsilon.html</loc></url>
+<url><loc>https://yanisvdc.github.io/cramR/reference/ContextualLinearBandit.html</loc></url>
 <url><loc>https://yanisvdc.github.io/cramR/reference/cram_bandit.html</loc></url>
 <url><loc>https://yanisvdc.github.io/cramR/reference/cram_bandit_est.html</loc></url>
 <url><loc>https://yanisvdc.github.io/cramR/reference/cram_bandit_sim.html</loc></url>
@@ -35,7 +39,9 @@
 <url><loc>https://yanisvdc.github.io/cramR/reference/fit_model.html</loc></url>
 <url><loc>https://yanisvdc.github.io/cramR/reference/fit_model_ml.html</loc></url>
 <url><loc>https://yanisvdc.github.io/cramR/reference/generate_data.html</loc></url>
+<url><loc>https://yanisvdc.github.io/cramR/reference/get_betas.html</loc></url>
 <url><loc>https://yanisvdc.github.io/cramR/reference/index.html</loc></url>
+<url><loc>https://yanisvdc.github.io/cramR/reference/LinUCBDisjointPolicyEpsilon.html</loc></url>
 <url><loc>https://yanisvdc.github.io/cramR/reference/ml_learning.html</loc></url>
 <url><loc>https://yanisvdc.github.io/cramR/reference/model_predict.html</loc></url>
 <url><loc>https://yanisvdc.github.io/cramR/reference/model_predict_ml.html</loc></url>

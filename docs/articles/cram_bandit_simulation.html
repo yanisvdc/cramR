@@ -254,15 +254,15 @@ the recorded history, which are then discarded during analysis.</p></li>
 <span><span class="va">d</span><span class="op">=</span> <span class="fl">3</span></span>
 <span></span>
 <span><span class="co"># Reward beta parameters of linear model (the outcome generation models, one for each arm, are linear with arm-specific parameters betas)</span></span>
-<span><span class="va">list_betas</span> <span class="op">&lt;-</span> <span class="fu">cramR</span><span class="fu">:::</span><span class="fu">get_betas</span><span class="op">(</span><span class="va">simulations</span>, <span class="va">d</span>, <span class="va">k</span><span class="op">)</span></span>
+<span><span class="va">list_betas</span> <span class="op">&lt;-</span> <span class="fu">cramR</span><span class="fu">::</span><span class="fu"><a href="../reference/get_betas.html">get_betas</a></span><span class="op">(</span><span class="va">simulations</span>, <span class="va">d</span>, <span class="va">k</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Define the contextual linear bandit, where sigma is the scale of the noise in the outcome linear model</span></span>
-<span><span class="va">bandit</span>        <span class="op">&lt;-</span> <span class="fu">cramR</span><span class="fu">:::</span><span class="va">ContextualLinearBandit</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>k <span class="op">=</span> <span class="va">k</span>, d <span class="op">=</span> <span class="va">d</span>, list_betas <span class="op">=</span> <span class="va">list_betas</span>, sigma <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<span><span class="va">bandit</span>        <span class="op">&lt;-</span> <span class="fu">cramR</span><span class="fu">::</span><span class="va"><a href="../reference/ContextualLinearBandit.html">ContextualLinearBandit</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>k <span class="op">=</span> <span class="va">k</span>, d <span class="op">=</span> <span class="va">d</span>, list_betas <span class="op">=</span> <span class="va">list_betas</span>, sigma <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Define the policy object (choose between Contextual Epsilon Greedy, UCB Disjoint and Thompson Sampling)</span></span>
-<span><span class="va">policy</span> <span class="op">&lt;-</span> <span class="fu">cramR</span><span class="fu">:::</span><span class="va">BatchContextualEpsilonGreedyPolicy</span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>epsilon<span class="op">=</span><span class="fl">0.1</span>, batch_size<span class="op">=</span><span class="fl">5</span><span class="op">)</span></span>
-<span><span class="co"># policy &lt;- cramR:::BatchLinUCBDisjointPolicyEpsilon$new(alpha=1.0, epsilon=0.1, batch_size=1)</span></span>
-<span><span class="co"># policy &lt;- cramR:::BatchContextualLinTSPolicy$new(v = 0.1, batch_size=1)</span></span>
+<span><span class="va">policy</span> <span class="op">&lt;-</span> <span class="fu">cramR</span><span class="fu">::</span><span class="va"><a href="../reference/BatchContextualEpsilonGreedyPolicy.html">BatchContextualEpsilonGreedyPolicy</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>epsilon<span class="op">=</span><span class="fl">0.1</span>, batch_size<span class="op">=</span><span class="fl">5</span><span class="op">)</span></span>
+<span><span class="co"># policy &lt;- cramR::BatchLinUCBDisjointPolicyEpsilon$new(alpha=1.0, epsilon=0.1, batch_size=1)</span></span>
+<span><span class="co"># policy &lt;- cramR::BatchContextualLinTSPolicy$new(v = 0.1, batch_size=1)</span></span>
 <span></span>
 <span></span>
 <span><span class="va">sim</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cram_bandit_sim.html">cram_bandit_sim</a></span><span class="op">(</span><span class="va">horizon</span>, <span class="va">simulations</span>,</span>
@@ -273,7 +273,7 @@ the recorded history, which are then discarded during analysis.</p></li>
 <span><span class="co">#&gt; Number of batches: 1</span></span>
 <span><span class="co">#&gt; Starting main loop.</span></span>
 <span><span class="co">#&gt; Finished main loop.</span></span>
-<span><span class="co">#&gt; Completed simulation in 0:00:04.415</span></span>
+<span><span class="co">#&gt; Completed simulation in 0:00:04.755</span></span>
 <span><span class="co">#&gt; Computing statistics.</span></span></code></pre></div>
 <p><img src="cram_bandit_simulation_files/figure-html/contextual-example-1.png" alt="Cumulative regret curve over time for the selected policy" width="700"></p>
 <hr>
