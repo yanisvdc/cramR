@@ -142,9 +142,17 @@ test_that("cleanup __pycache__", {
   expect_false(dir.exists("__pycache__"))
 })
 
-testthat::teardown({
-  tmp_dir <- tempdir()
-  autograph_files <- list.files(tmp_dir, pattern = "^__autograph_generated_file.*\\.py$", full.names = TRUE)
-  if (length(autograph_files) > 0) unlink(autograph_files, force = TRUE)
-})
+# testthat::teardown({
+#   tmp_dir <- tempdir()
+#   autograph_files <- list.files(tmp_dir, pattern = "^__autograph_generated_file.*\\.py$", full.names = TRUE)
+#   if (length(autograph_files) > 0) unlink(autograph_files, force = TRUE)
+# })
 
+test_that("cleanup keras temp files", {
+  withr::defer({
+    tmp_dir <- tempdir()
+    autograph_files <- list.files(tmp_dir, pattern = "^__autograph_generated_file.*\\.py$", full.names = TRUE)
+    if (length(autograph_files) > 0) unlink(autograph_files, force = TRUE)
+  }, teardown_env())
+  expect_true(TRUE)  # dummy expectation to pass the test
+})
