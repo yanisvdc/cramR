@@ -63,7 +63,7 @@ Simulator <- R6::R6Class(
                           policy_time_loop = FALSE) {
 
       # save current seed
-      self$global_seed <- get_global_seed()
+      self$global_seed <- safe_get_seed()
 
       if (!is.list(agents)) agents <- list(agents)
 
@@ -312,7 +312,7 @@ Simulator <- R6::R6Class(
       self$internal_history$update_statistics()
 
       # load global seed
-      .Random.seed <- self$global_seed
+      # .Random.seed <- self$global_seed
 
       # set meta data and messages
       self$stop_parallel_backend()
@@ -358,12 +358,12 @@ Simulator <- R6::R6Class(
   ),
   private = list(
     start_time = NULL,
-    end_time = NULL,
-    finalize = function() {
-      # set global seed back to value before
-      set_global_seed(self$global_seed)
-      #closeAllConnections()
-    }
+    end_time = NULL
+    # finalize = function() {
+    #   # set global seed back to value before
+    #   set_global_seed(self$global_seed)
+    #   #closeAllConnections()
+    # }
   ),
   active = list(
     history = function(value) {
@@ -2322,6 +2322,10 @@ get_betas <- function(simulations, d, k) {
   # d: number of features
   # k: number of arms
 
+  if (!exists(".Random.seed", inherits = TRUE)) {
+    runif(1)  # trigger RNG init without modifying .GlobalEnv
+  }
+
   list_betas <- lapply(1:(simulations+1), function(i) {
     betas_matrix <- matrix(runif(d * k, -1, 1), d, k)
     betas_matrix <- betas_matrix / norm(betas_matrix, type = "2")
@@ -3164,20 +3168,28 @@ data_table_factors_to_numeric <- function(dt){
 }
 
 
-get_global_seed = function() {
-  current.seed = NA
-  if (exists(".Random.seed", envir=.GlobalEnv)) {
-    current.seed = .Random.seed
+safe_get_seed <- function() {
+  # Ensure RNG seed exists without modifying global state
+  if (!exists(".Random.seed", inherits = TRUE)) {
+    runif(1)  # Trigger RNG; now .Random.seed exists internally
   }
-  current.seed
+  get(".Random.seed", inherits = TRUE)
 }
 
+# get_global_seed = function() {
+#   current.seed = NA
+#   if (exists(".Random.seed", envir=.GlobalEnv)) {
+#     current.seed = .Random.seed
+#   }
+#   current.seed
+# }
 
-set_global_seed = function(x) {
-  if (length(x)>1) {
-    assign(".Random.seed", x, envir=.GlobalEnv)
-  }
-}
+
+# set_global_seed = function(x) {
+#   if (length(x)>1) {
+#     assign(".Random.seed", x, envir=.GlobalEnv)
+#   }
+# }
 
 
 
