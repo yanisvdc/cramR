@@ -75,7 +75,6 @@ You need to provide:
 
 ```{r contextual-example, fig.alt="Cumulative regret curve over time for the selected policy"}
 
-
 # Number of time steps
 horizon       <- 500L
 

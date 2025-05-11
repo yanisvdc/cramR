@@ -140,7 +140,10 @@ Simulator <- R6::R6Class(
         # setting MKL threads to 1 is disabled when running from RStudio.
 
         isRStudio <- Sys.getenv("RSTUDIO") == "1"
-        if (!isRStudio && "RevoUtilsMath" %in% rownames(installed.packages())) {
+        # if (!isRStudio && "RevoUtilsMath" %in% rownames(installed.packages())) {
+        #   RevoUtilsMath::setMKLthreads(1)
+        # }
+        if (!isRStudio && requireNamespace("RevoUtilsMath", quietly = TRUE)) {
           RevoUtilsMath::setMKLthreads(1)
         }
       }
