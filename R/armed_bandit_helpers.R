@@ -479,15 +479,15 @@ Agent <- R6::R6Class(
       self$policy$initialize_theta(context_initial_params$k)
       self$progress_file <- FALSE
       self$log_interval <- 1000L
-      cum_reward <<- 0.0
-      cum_regret <<- 0.0
-      agent_t <<- 0L
-      policy_t <<- 1L
+      cum_reward <- 0.0
+      cum_regret <- 0.0
+      agent_t <- 0L
+      policy_t <- 1L
       invisible(self)
     },
     do_step = function() {
 
-      agent_t  <<- agent_t + 1L
+      agent_t  <- agent_t + 1L
       context   <- bandit$get_context(agent_t)
       if(is.null(context)) return(list(context = NULL, action = NULL, reward = NULL))
       if(is.null(context$d)) context$d <- self$bandit$d
@@ -501,7 +501,7 @@ Agent <- R6::R6Class(
       } else {
         if (!is.null(reward[["optimal_reward"]])) {
           reward[["regret"]]      <- reward[["optimal_reward"]] - reward[["reward"]]
-          cum_regret              <<- cum_regret + reward[["regret"]]
+          cum_regret              <- cum_regret + reward[["regret"]]
           reward[["cum_regret"]]  <- cum_regret
         } else {
           reward[["regret"]]      <- 0.0
@@ -512,7 +512,7 @@ Agent <- R6::R6Class(
           context <- reward[["context"]]
         }
 
-        cum_reward                <<- cum_reward + reward[["reward"]]
+        cum_reward                <- cum_reward + reward[["reward"]]
         reward[["cum_reward"]]    <- cum_reward
 
         if (self$sparse == 0.0 || runif(1) > self$sparse) {
@@ -524,7 +524,7 @@ Agent <- R6::R6Class(
           reward$reward    <- theta$optimal_reward
           action$choice    <- theta$optimal_arm
         }
-        policy_t  <<- policy_t + 1L
+        policy_t  <- policy_t + 1L
       }
       if(isTRUE(self$progress_file)) {
         if (agent_t %% self$log_interval == 0) {
@@ -536,7 +536,7 @@ Agent <- R6::R6Class(
       list(context = context, action = action, reward = reward, theta = theta, policy_t = (policy_t-1))
     },
     set_t = function(t) {
-      agent_t <<- t
+      agent_t <- t
       invisible(self)
     },
     get_t = function(t) {
