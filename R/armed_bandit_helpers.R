@@ -1319,6 +1319,7 @@ Plot <- R6::R6Class(
       if (!isTRUE(no_par)) {
         dev.hold()
         old.par <- par(no.readonly = TRUE)
+        on.exit(par(old.par), add = TRUE)
         par(mar = c(5, 5, 1, 1))
       }
 
@@ -1617,6 +1618,7 @@ Plot <- R6::R6Class(
       if (!isTRUE(no_par)) {
         dev.hold()
         old.par <- par(no.readonly = TRUE)
+        on.exit(par(old.par), add = TRUE)
         par(mar = c(5, 5, 1, 1))
       }
 
