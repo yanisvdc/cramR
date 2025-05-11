@@ -1,12 +1,12 @@
 # Install devtools if not already installed
-install.packages("devtools")
-install.packages("remotes")
+# install.packages("devtools")
+# install.packages("remotes")
 
 
-# remotes::install_github("yanisvdc/cramR", ref = "batch", force=TRUE)
-
-# Install the cramR package from your GitHub repository
-devtools::install_github("yanisvdc/cramR", force=TRUE)
+# # Install the cramR package from your GitHub repository
+# devtools::install_github("yanisvdc/cramR", force=TRUE)
+# # or from CRAN when deployed:
+# install.packages("cramR")
 
 # Load the package
 library(cramR)
