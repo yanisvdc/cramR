@@ -98,6 +98,12 @@ You can also explore additional tutorials and examples through the "Articles" me
 
 ## 🛠️ Installation
 
+To install Cram from CRAN:
+```r
+# Install cramR from CRAN
+install.packages("cramR")
+```
+
 To install the development version of Cram from GitHub:
 ```r
 # Install devtools if needed
